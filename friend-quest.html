@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Friend Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p:#38bdf8;--pb:#7dd3fc;--pd:#0c4a6e;
+  --bg:#020b18;--card:#04111f;--card2:#061928;
+  --border:#0d2844;--border2:#1a4060;
+  --red:#f43f5e;--yellow:#fbbf24;--green:#34d399;--purple:#a855f7;
+  --text:#bae6fd;--dim:#1e5a8c;--glow:rgba(56,189,248,.2);
+}
+body{background:var(--bg);font-family:'Share Tech Mono','Courier New',monospace;color:var(--text);min-height:100vh;line-height:1.5}
+.scanlines{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,20,40,.09) 3px,rgba(0,20,40,.09) 4px)}
+.wrap{max-width:900px;margin:0 auto;padding:12px}
+/* HEADER */
+.hdr{text-align:center;padding:18px 0 12px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.hdr h1{font-size:clamp(1.3rem,4vw,2rem);letter-spacing:.3em;text-shadow:0 0 22px var(--p),0 0 50px rgba(56,189,248,.3);animation:flicker 9s infinite}
+.hdr .sub{color:var(--dim);font-size:.75em;margin-top:3px}
+/* BOXES */
+.box{border:1px solid var(--border);background:var(--card);padding:14px;margin:8px 0;border-radius:3px}
+.box-title{font-size:.84em;letter-spacing:.1em;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);text-transform:uppercase;color:var(--pb)}
+/* INPUTS */
+input,select,textarea{background:var(--bg);border:1px solid var(--pd);color:var(--text);font-family:inherit;
+  padding:7px 9px;width:100%;margin:3px 0 7px;border-radius:2px;font-size:.86em;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--p);box-shadow:0 0 7px var(--glow)}
+select option{background:var(--bg)}
+label.lbl{display:block;color:var(--dim);font-size:.75em;margin-top:4px}
+textarea{resize:vertical;min-height:70px}
+/* BUTTONS */
+button{background:transparent;border:1px solid var(--pd);color:var(--dim);font-family:inherit;
+  padding:6px 12px;cursor:pointer;text-transform:uppercase;letter-spacing:.04em;font-size:.8em;
+  transition:all .15s;border-radius:2px;margin:2px}
+button:hover:not(:disabled){border-color:var(--p);color:var(--p);box-shadow:0 0 9px var(--glow)}
+button.active,button.primary{border-color:var(--p);color:var(--p)}
+button.primary{box-shadow:0 0 12px var(--glow)}
+button.btn-big{padding:10px 18px;font-size:.9em;width:100%;margin:5px 0}
+button.btn-ok{border-color:var(--green);color:var(--green)}
+button.btn-ok:hover:not(:disabled){background:var(--green);color:var(--bg)}
+button.btn-danger{border-color:var(--red);color:var(--red)}
+button.btn-danger:hover{background:var(--red);color:#fff}
+button.btn-purple{border-color:var(--purple);color:var(--purple)}
+button.btn-purple:hover:not(:disabled){background:var(--purple);color:#fff}
+button.btn-yellow{border-color:var(--yellow);color:var(--yellow)}
+button.btn-yellow:hover:not(:disabled){background:var(--yellow);color:var(--bg)}
+button:disabled{opacity:.32;cursor:not-allowed}
+/* COLORS */
+.cp{color:var(--p)}.cpb{color:var(--pb)}.cdim{color:var(--dim)}.cred{color:var(--red)}
+.cyellow{color:var(--yellow)}.cgreen{color:var(--green)}.ctext{color:var(--text)}.cpurple{color:var(--purple)}
+.glow{text-shadow:0 0 9px var(--p)}.glow-r{text-shadow:0 0 9px var(--red)}.glow-g{text-shadow:0 0 7px var(--green)}.glow-y{text-shadow:0 0 7px var(--yellow)}
+/* LAYOUT */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:540px){.grid2,.grid3{grid-template-columns:1fr}}
+.flexi{display:flex;align-items:center}.flexb{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.flex-wrap{display:flex;flex-wrap:wrap;gap:6px}
+.gap6{gap:6px}.gap10{gap:10px}.mt6{margin-top:6px}.mt12{margin-top:12px}.mb6{margin-bottom:6px}.mb12{margin-bottom:12px}
+.bold{font-weight:bold}.small{font-size:.78em}.xs{font-size:.7em}.wrap-word{word-break:break-word}
+/* TABS */
+.tabs{display:flex;gap:3px;margin-bottom:12px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:10px}
+.tabs button.active{background:var(--p);color:var(--bg);border-color:var(--p)}
+.notif-dot{display:inline-block;width:6px;height:6px;background:var(--red);border-radius:50%;margin-left:3px;vertical-align:middle}
+/* QUEST CARDS */
+.qcard{border:1px solid var(--border);background:var(--card);padding:11px;margin:6px 0;border-radius:2px}
+.qcard.done{border-color:var(--pd);opacity:.55}
+.qcard.fail{border-color:var(--red);background:rgba(244,63,94,.04)}
+.qcard.active{border-color:var(--pd)}
+.qcard.pending-proof{border-color:var(--yellow);background:rgba(251,191,36,.04)}
+.qcard.approved{border-color:var(--green);background:rgba(52,211,153,.03)}
+/* DIFFICULTY BADGES */
+.diff{display:inline-block;padding:1px 6px;border-radius:2px;font-size:.7em;margin-right:5px;font-weight:bold}
+.diff-easy{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3)}
+.diff-medium{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
+.diff-hard{background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.3)}
+.diff-legendary{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.4)}
+/* BADGES */
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px}
+.b-card{border:1px solid var(--border);background:var(--card);padding:10px;text-align:center;border-radius:3px;transition:border-color .2s}
+.b-card.unlocked{border-color:var(--yellow);background:rgba(251,191,36,.04);box-shadow:0 0 10px rgba(251,191,36,.1)}
+.b-card.secret{border-color:var(--pd);background:rgba(168,85,247,.05)}
+.b-card.secret.unlocked{border-color:var(--purple);box-shadow:0 0 12px rgba(168,85,247,.2)}
+.b-card.locked{opacity:.4}
+.b-card .b-icon{font-size:1.7em;margin-bottom:3px}
+.b-card .b-name{font-size:.77em;letter-spacing:.04em;margin-bottom:2px}
+.b-card .b-desc{font-size:.65em;color:var(--dim)}
+.b-card .b-date{font-size:.62em;color:var(--yellow);margin-top:3px}
+/* INLINE BADGES */
+.ibadge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:2px;font-size:.68em;margin:1px}
+.ibadge.xp{background:var(--yellow);color:#000}
+.ibadge.pen{background:var(--red);color:#fff}
+.ibadge.purple{background:rgba(168,85,247,.2);color:var(--purple);border:1px solid rgba(168,85,247,.4)}
+/* MEMBER CARDS */
+.mcard{border:1px solid var(--border);background:var(--card);padding:9px 12px;margin:5px 0;border-radius:2px}
+.mcard.gold{border-color:var(--yellow);box-shadow:0 0 12px rgba(251,191,36,.12)}
+.mcard.shame{border-color:var(--red);background:rgba(244,63,94,.04)}
+/* PARTY PICKER */
+.picker{cursor:pointer;padding:20px;text-align:center;border:1px solid var(--border);background:var(--card);transition:border-color .2s,box-shadow .2s;border-radius:3px}
+.picker:hover{border-color:var(--p);box-shadow:0 0 14px var(--glow)}
+.picker .icon{font-size:2em;margin-bottom:6px}
+.picker .plabel{color:var(--yellow);letter-spacing:.05em;font-size:.9em}
+.picker .pdesc{color:var(--dim);font-size:.72em;margin-top:4px}
+/* NOTIFICATIONS */
+.notif{padding:8px 10px;border-left:3px solid var(--p);background:rgba(56,189,248,.05);margin:5px 0;font-size:.82em}
+.notif.err{border-color:var(--red);color:var(--red);background:rgba(244,63,94,.05)}
+.notif.warn{border-color:var(--yellow);color:var(--yellow);background:rgba(251,191,36,.05)}
+.notif.ok{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.05)}
+.notif.purple{border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.05)}
+/* TIMER */
+.timer-box{text-align:center;padding:12px;border:1px solid var(--yellow);color:var(--yellow);margin:9px 0;border-radius:3px}
+.timer-box .t-num{font-size:1.7em;letter-spacing:.1em;text-shadow:0 0 12px rgba(251,191,36,.4)}
+.timer-box.urgent{border-color:var(--red);color:var(--red)}
+.timer-box.urgent .t-num{text-shadow:0 0 12px rgba(244,63,94,.4);animation:pulse-r 1.1s infinite}
+.timer-box.closed{border-color:var(--dim);color:var(--dim);font-size:.85em;padding:10px}
+/* SHAME */
+.shame-wrap{border:1px solid var(--red);background:rgba(244,63,94,.05);padding:12px;margin:8px 0;border-radius:3px;animation:pulse-r 2.2s infinite}
+/* MODAL */
+.modal-bg{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--card);border:1px solid var(--border2);border-radius:4px;padding:20px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1em;letter-spacing:.1em;color:var(--pb);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+/* REACTIONS */
+.reaction-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
+.rxn{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border:1px solid var(--border);border-radius:20px;cursor:pointer;font-size:.82em;transition:all .15s;background:transparent}
+.rxn:hover{border-color:var(--p);background:rgba(56,189,248,.08)}
+.rxn.mine{border-color:var(--p);background:rgba(56,189,248,.1);color:var(--p)}
+.rxn-count{font-size:.75em;color:var(--dim)}
+/* SPIN */
+.spin-box{border:2px solid var(--yellow);padding:24px;text-align:center;border-radius:4px;position:relative;overflow:hidden}
+.spin-result{font-size:2.5em;margin:12px 0;min-height:60px;display:flex;align-items:center;justify-content:center;transition:all .1s}
+.spin-result.spinning{animation:spin-flash .1s infinite}
+@keyframes spin-flash{0%{opacity:1}50%{opacity:.4}100%{opacity:1}}
+/* PROGRESS */
+.pbar{height:3px;background:var(--border);margin:5px 0;border-radius:2px;overflow:hidden}
+.pbar .fill{height:100%;background:var(--p);transition:width .5s}
+.pbar .fill.red{background:var(--red)}.pbar .fill.green{background:var(--green)}.pbar .fill.yellow{background:var(--yellow)}
+/* EVENT BANNER */
+.event-banner{padding:10px 14px;border:1px solid var(--purple);background:rgba(168,85,247,.08);border-radius:3px;margin:8px 0;text-align:center;animation:glow-pulse 3s infinite}
+@keyframes glow-pulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 18px rgba(168,85,247,.3)}}
+/* PROFILE */
+.avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:bold;flex-shrink:0}
+.title-chip{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75em;border:1px solid;margin:2px}
+/* SETUP GUIDE */
+.gstep{padding:8px 12px;margin:4px 0;border-left:2px solid var(--pd);background:rgba(56,189,248,.03);border-radius:0 2px 2px 0;font-size:.82em}
+.gstep .sn{color:var(--yellow);margin-right:6px}
+/* CODE */
+.code{display:inline-block;letter-spacing:.22em;font-size:1.1em;color:var(--yellow);padding:2px 8px;border:1px solid rgba(251,191,36,.4);background:rgba(251,191,36,.06);cursor:pointer;border-radius:2px}
+/* EMPTY */
+.empty{text-align:center;padding:28px;color:var(--dim)}
+.empty .ei{font-size:2em;margin-bottom:7px}
+/* LOG ENTRIES */
+.log-e{padding:10px 0;border-bottom:1px solid var(--border)}
+.log-e:last-child{border-bottom:none}
+.log-e .ll{margin:1px 0;font-size:.85em}
+/* SETTINGS */
+.srow{display:grid;grid-template-columns:170px 1fr;align-items:center;gap:10px;margin:6px 0}
+@media(max-width:500px){.srow{grid-template-columns:1fr}}
+.srow label{color:var(--dim);font-size:.79em;text-transform:uppercase}
+/* SUMMARY */
+.summary-stat{text-align:center;padding:12px;border:1px solid var(--border);border-radius:3px;background:var(--card2)}
+.summary-stat .s-val{font-size:1.8em;color:var(--p);text-shadow:0 0 10px var(--glow)}
+.summary-stat .s-lbl{font-size:.7em;color:var(--dim);margin-top:3px}
+/* TOAST */
+.toast-wrap{position:fixed;top:14px;right:14px;z-index:10000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:10px 14px;max-width:260px;pointer-events:none;font-size:.82em;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+/* ANIMATIONS */
+@keyframes flicker{0%,100%{opacity:1}94%{opacity:1}95%{opacity:.65}96%{opacity:1}98%{opacity:.8}99%{opacity:1}}
+@keyframes pulse-r{0%,100%{box-shadow:none}50%{box-shadow:0 0 16px rgba(244,63,94,.45)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.blink{animation:blink 1s infinite}
+@keyframes pop-in{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.pop-in{animation:pop-in .25s ease-out}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--pd)}
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ═══ KEYS & DB ══════════════════════════════════════════════════════════════
+const K = { URL:'ql_db', UID:'ql_uid', PARTY:'ql_party', NAME:'ql_name', WEEK:'ql_lastweek' };
+const DB = 'https://friend-quest-4d07e-default-rtdb.firebaseio.com';
+const DEF = { windowDay:3, windowHour:20, durationDays:4, deadlineHour:23, maxPerPerson:6 };
+const XP_WIN = 100, XP_LOSE = 75;
+const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const RXNS = ['🔥','💀','😂','👀','💎'];
+
+// ═══ DIFFICULTIES ═══════════════════════════════════════════════════════════
+const DIFF = {
+  easy:      { label:'EASY',      icon:'🟢', xp:75,  cls:'diff-easy'      },
+  medium:    { label:'MEDIUM',    icon:'🟡', xp:100, cls:'diff-medium'    },
+  hard:      { label:'HARD',      icon:'🔴', xp:150, cls:'diff-hard'      },
+  legendary: { label:'LEGENDARY', icon:'💀', xp:250, cls:'diff-legendary' },
+};
+
+// ═══ PENALTY POOL ═══════════════════════════════════════════════════════════
+const PENALTIES = [
+  "Post a cringey selfie in the group chat 📸",
+  "Send a voice memo saying 'I am a failure and I accept this'",
+  "Write a 3-sentence apology essay to the group 📝",
+  "Do 30 jumping jacks on video call or it doesn't count",
+  "Change your contact name to 'The Coward' for 24 hours",
+  "Text your mom that you love her RIGHT NOW and screenshot it",
+  "Do your best celebrity impression and send it as a voice note 🎤",
+  "Write the week's winner a sincere 5-word compliment",
+  "Rate yourself 0/10 in the group chat with a detailed reason",
+  "Make a voice memo saying the winner's name dramatically 3 times",
+  "Post your most embarrassing photo from this year 🤦",
+  "Do a 30-second pep talk video... to yourself",
+  "Narrate your next meal like a food critic. Send the recording.",
+  "Owe the winner a favor of their choosing (within reason 😈)",
+  "Tell the group your most embarrassing recent moment",
+  "Send a photo of your most chaotic corner of your room",
+  "Do 20 push-ups. Honor system, but we're watching.",
+  "Write a haiku about your failure and perform it dramatically",
+];
+
+// ═══ QUEST SUGGESTIONS ══════════════════════════════════════════════════════
+const SUGGESTIONS = {
+  "Fitness":   ["Do 20 push-ups before noon","Run or walk for 20 minutes outside","Drink 8 glasses of water today","Do a 10-minute stretch session","No junk food for the day","Take 10,000 steps","Do 50 squats throughout the day","Hold a plank for 60 seconds"],
+  "Social":    ["Text someone you haven't talked to in months","Give someone a genuine compliment to their face","Call a family member just to chat","Make a new friend or talk to a stranger","Buy coffee for the person behind you","Write a thank-you note to someone"],
+  "Creative":  ["Write a poem about anything (min 6 lines)","Draw or doodle something for 15 minutes","Cook a meal you've never made before","Take 10 photos that tell a story","Learn 1 minute of a song on any instrument"],
+  "Productive":["Clean out your inbox to zero","Read for 30 minutes","Learn something new for 20 minutes","Organize one messy space in your home","Go to bed before midnight","Put your phone away for 2 hours"],
+  "Wild":      ["Eat something you've never tried before","Watch a movie in a genre you never pick","Try cold shower for 30 seconds","Write a list of 10 things you're grateful for","Do something that scares you slightly"],
+};
+
+// ═══ BONUS EVENTS ═══════════════════════════════════════════════════════════
+const EVENTS = [
+  { id:'double',    name:'⚡ DOUBLE XP WEEK!',      desc:'All quests worth 2× XP this week!',        multi:2, color:'var(--yellow)' },
+  { id:'mercy',     name:'🕊️ MERCY WEEK',             desc:'No XP penalties for failures this week.',  multi:1, color:'var(--green)'  },
+  { id:'speed',     name:'🚀 SPEEDRUN CHALLENGE',    desc:'Quests completed in <2hrs worth +50 XP!',  multi:1, color:'var(--p)'      },
+  { id:'legendary', name:'💀 LEGENDARY MODE',        desc:'All quests treated as Legendary XP!',      multi:2.5,color:'var(--purple)'},
+  { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
+  { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
+  { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
+];
+
+// ═══ TITLES ═════════════════════════════════════════════════════════════════
+const TITLES = [
+  { id:'SLACKER',    name:'The Slacker',    xp:0,    streak:0, color:'var(--dim)'     },
+  { id:'RECRUIT',    name:'Recruit',        xp:100,  streak:0, color:'var(--text)'    },
+  { id:'ADVENTURER', name:'Adventurer',     xp:300,  streak:0, color:'var(--p)'       },
+  { id:'WARRIOR',    name:'Warrior',        xp:600,  streak:2, color:'var(--green)'   },
+  { id:'CHAMPION',   name:'Champion',       xp:1000, streak:3, color:'var(--yellow)'  },
+  { id:'LEGEND',     name:'Legend',         xp:2000, streak:5, color:'var(--red)'     },
+  { id:'GRANDMASTER',name:'Grandmaster',    xp:5000, streak:8, color:'var(--purple)'  },
+  { id:'SPEEDSTER',  name:'Flash',          badge:'SPEEDSTER', color:'var(--p)'       },
+  { id:'FLAWLESS',   name:'The Flawless',   badge:'FLAWLESS',  color:'var(--green)'   },
+  { id:'UNDYING',    name:'Undying',        streak:5,          color:'var(--yellow)'  },
+  { id:'THE_SHAMED', name:'The Shamed',     penalties:5,       color:'var(--red)'     },
+  { id:'TOP_DOG',    name:'Top Dog',        badge:'TOP_DOG',   color:'var(--yellow)'  },
+];
+
+// ═══ BADGE DEFINITIONS ══════════════════════════════════════════════════════
+const BADGE_DEFS = {
+  INITIATE:    { name:'Initiate',     icon:'🎯', desc:'Complete your first quest',              rarity:'common'   },
+  OVERACHIEVER:{ name:'Overachiever', icon:'⚡', desc:'Complete 5+ quests in one week',         rarity:'uncommon' },
+  GRINDER:     { name:'Grinder',      icon:'💪', desc:'Complete 10+ quests in one week',        rarity:'rare'     },
+  FLAWLESS:    { name:'Flawless',     icon:'💎', desc:'Perfect week — all done, zero failures', rarity:'rare'     },
+  COMEBACK:    { name:'Comeback Kid', icon:'🔥', desc:'Perfect week after a week with failures',rarity:'rare'     },
+  SPEEDSTER:   { name:'Speedster',    icon:'🚀', desc:'Complete a quest within 4 hours',        rarity:'uncommon' },
+  QUEST_GIVER: { name:'Quest Giver',  icon:'📋', desc:'Assign to every member in a week',       rarity:'common'   },
+  UNTOUCHABLE: { name:'Untouchable',  icon:'🛡️', desc:'Zero failures for 2+ weeks in a row',   rarity:'rare'     },
+  DEDICATED:   { name:'Dedicated',    icon:'⭐', desc:'Complete 25 quests lifetime',            rarity:'uncommon' },
+  LEGENDARY:   { name:'Legendary',    icon:'👑', desc:'Accumulate 1,000 XP',                   rarity:'epic'     },
+  TOP_DOG:     { name:'Top Dog',      icon:'🏆', desc:'Hold the #1 spot on the leaderboard',    rarity:'epic'     },
+  CENTURY:     { name:'Century',      icon:'💯', desc:'Complete 100 quests lifetime',           rarity:'epic'     },
+};
+const SECRET_DEFS = {
+  NIGHT_OWL:  { name:'Night Owl',     icon:'🦉', desc:'Complete a quest between midnight and 4 AM' },
+  CLUTCH:     { name:'Clutch',        icon:'⏱️', desc:'Complete a quest in the last hour of the deadline' },
+  EARLY_BIRD: { name:'Early Bird',    icon:'🐦', desc:'Complete a quest within 1 hour of the window opening' },
+  GHOST:      { name:'The Ghost',     icon:'👻', desc:'Fail every quest assigned in a full week' },
+  FIRST_BLOOD:{ name:'First Blood',   icon:'⚔️', desc:'Be the first to complete a quest in any week' },
+  CRITIQUER:  { name:'Harsh Critic',  icon:'🧐', desc:'Reject 3 proofs as a reviewer' },
+  REDEMPTION: { name:'Redemption Arc',icon:'🌅', desc:'Go from last to first place' },
+  MARATHON:   { name:'Marathon',      icon:'🏃', desc:'Complete 5 quests on the same day' },
+};
+const RARITY_COLOR = { common:'var(--text)', uncommon:'var(--green)', rare:'var(--p)', epic:'var(--yellow)' };
+
+// ═══ SPIN RESULTS ═══════════════════════════════════════════════════════════
+const SPIN_POOL = [
+  { type:'xp',   val:25,  label:'+25 XP Bonus!',         icon:'⚡',  prob:28 },
+  { type:'xp',   val:50,  label:'+50 XP Bonus!',         icon:'⚡⚡', prob:22 },
+  { type:'xp',   val:100, label:'+100 XP!!',              icon:'💥',  prob:14 },
+  { type:'xp',   val:200, label:'JACKPOT! +200 XP 🎰',   icon:'💰',  prob:5  },
+  { type:'box',  val:0,   label:'Mystery Box! 📦',        icon:'📦',  prob:12 },
+  { type:'title',val:0,   label:'Lucky title for 24h 🍀', icon:'🍀',  prob:10 },
+  { type:'dud',  val:0,   label:'Better luck tomorrow 🌚',icon:'🌚',  prob:9  },
+];
+
+// ═══ FUNNY MESSAGES ══════════════════════════════════════════════════════════
+const FUNNY_COMPLETE = [
+  "Look at you! A functional human being!","We genuinely didn't think you'd do it.",
+  "Achievement unlocked: not a complete failure 🏆","Your ancestors would be… cautiously proud.",
+  "The quest gods smile upon you ⚡","SPECTACULAR. Also mediocre. Somehow both.",
+  "Completed with the grace of a sleepy golden retriever 🐕","The crowd goes... mildly impressed!",
+  "You did it! (We're as surprised as you are)","A winner is you. Allegedly.",
+];
+const FUNNY_DEADLINE = [
+  { max:Infinity, msg:"Plenty of time, champ 😎 totally fine", col:'var(--green)' },
+  { max:72, msg:"Getting real now 👀 tick tock...", col:'var(--green)' },
+  { max:48, msg:"Less than 2 days. No pressure. (pressure.)", col:'var(--yellow)' },
+  { max:24, msg:"Ok buddy it's time to MOVE 🏃", col:'var(--yellow)' },
+  { max:12, msg:"I'm not saying you're cooked but... 🔥", col:'var(--red)' },
+  { max:6,  msg:"ONE HOUR left. Do you even want XP?? 💀", col:'var(--red)' },
+  { max:1,  msg:"FINAL MINUTES. This is not a drill. 🚨🚨🚨", col:'var(--red)' },
+].reverse();
+const BOX_REWARDS = [
+  { val:50, label:'Mystery Bonus: +50 XP!' }, { val:75, label:'Mystery Bonus: +75 XP!' },
+  { val:100, label:'Mystery Bonus: +100 XP!!' }, { val:150, label:'Mystery Bonus: +150 XP!!!' },
+  { val:200, label:'MEGA Mystery Bonus: +200 XP 🤯' },
+];
+
+// ═══ UTILS ══════════════════════════════════════════════════════════════════
+const mkid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const mkcode = () => { const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join(''); };
+const rnd   = arr => arr[Math.floor(Math.random()*arr.length)];
+const today = () => new Date().toISOString().slice(0,10);
+const avatarColor = name => { const h=['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444']; let s=0; for(let c of name||'')s+=c.charCodeAt(0); return h[s%h.length]; };
+
+function getWeekInfo(settings={}, now=new Date()) {
+  const s={...DEF,...settings};
+  const d=new Date(now), day=d.getDay(), hr=d.getHours();
+  let back = day===s.windowDay?(hr>=s.windowHour?0:7):((day-s.windowDay+7)%7||7);
+  const start=new Date(d); start.setDate(d.getDate()-back); start.setHours(s.windowHour,0,0,0);
+  const end=new Date(start); end.setDate(start.getDate()+s.durationDays); end.setHours(s.deadlineHour,59,59,999);
+  const id=start.toISOString().slice(0,10);
+  const inWindow=d>=start&&d<=end, expired=d>end, left=Math.max(0,end-d);
+  const hoursLeft=left/3600000;
+  const urgentMsg = inWindow ? FUNNY_DEADLINE.find(m=>hoursLeft<=m.max)||FUNNY_DEADLINE[0] : null;
+  return { id, start, end, inWindow, expired, left, hoursLeft, urgentMsg };
+}
+
+function timerStr(ms){
+  if(ms<=0)return'00:00:00';
+  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
+  return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+function dateFmt(ts){if(!ts)return'';return new Date(ts).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
+function hourLabel(h){return h===0?'12:00 AM':h<12?`${h}:00 AM`:h===12?'12:00 PM':`${h-12}:00 PM`;}
+function getBonusEvent(weekId){const hash=weekId.split('').reduce((a,c)=>a+c.charCodeAt(0),0);return EVENTS[hash%EVENTS.length];}
+function pickSpin(){let r=Math.random()*100,acc=0;for(const s of SPIN_POOL){acc+=s.prob;if(r<=acc)return s;}return SPIN_POOL[0];}
+
+function computeStats(allQuests, uid) {
+  let xp=0, penalties=0, completed=0, total=0, completedThisWeek=0;
+  const today_d=new Date().toDateString();
+  Object.values(allQuests||{}).forEach(wq=>{
+    Object.values(wq||{}).forEach(q=>{
+      if(q.assignedTo!==uid)return;
+      total++;
+      if(q.completed){xp+=q.xpAwarded||XP_WIN;completed++;}
+      if(q.penaltyApplied&&!q.completed)penalties++;
+    });
+  });
+  return {xp:Math.max(0,xp),penalties,completed,total};
+}
+
+function computeStreak(allQuests, uid) {
+  const wks=Object.keys(allQuests||{}).sort();
+  let cur=0,longest=0;
+  wks.forEach(wk=>{
+    const hasCompletion=Object.values(allQuests[wk]||{}).some(q=>q.assignedTo===uid&&q.completed);
+    if(hasCompletion){cur++;longest=Math.max(longest,cur);}else{const hasAny=Object.values(allQuests[wk]||{}).some(q=>q.assignedTo===uid);if(hasAny)cur=0;}
+  });
+  return {current:cur,longest};
+}
+
+function getUnlockedTitles(stats, earnedBadges, streak) {
+  return TITLES.filter(t=>{
+    if(t.badge) return earnedBadges[t.badge];
+    if(t.penalties) return stats.penalties>=t.penalties;
+    if(t.streak) return streak.current>=t.streak||streak.longest>=t.streak;
+    return (t.xp||0)<=stats.xp;
+  });
+}
+
+function checkBadges(allQuests, uid, members) {
+  const stats=computeStats(allQuests,uid);
+  const others=Object.keys(members||{}).filter(id=>id!==uid);
+  const earned={};
+  const wks=Object.keys(allQuests||{}).sort();
+  let hadFail=false, noFailStreak=0;
+  wks.forEach(wk=>{
+    const qlist=Object.values(allQuests[wk]||{});
+    const mine=qlist.filter(q=>q.assignedTo===uid);
+    const byMe=qlist.filter(q=>q.assignedBy===uid);
+    if(!mine.length)return;
+    const wkDone=mine.filter(q=>q.completed).length;
+    const wkFail=mine.filter(q=>q.penaltyApplied&&!q.completed).length;
+    const allDone=mine.length>=2&&wkDone===mine.length&&wkFail===0;
+    if(wkDone>=1)earned.INITIATE=true;
+    if(wkDone>=5)earned.OVERACHIEVER=true;
+    if(wkDone>=10)earned.GRINDER=true;
+    if(allDone)earned.FLAWLESS=true;
+    if(allDone&&hadFail)earned.COMEBACK=true;
+    const aTo=new Set(byMe.map(q=>q.assignedTo));
+    if(others.length>0&&others.every(id=>aTo.has(id)))earned.QUEST_GIVER=true;
+    mine.forEach(q=>{if(q.completed&&q.completedAt&&q.createdAt&&(q.completedAt-q.createdAt)<4*3600000)earned.SPEEDSTER=true;});
+    if(wkFail>0){hadFail=true;noFailStreak=0;}else noFailStreak++;
+  });
+  if(noFailStreak>=2)earned.UNTOUCHABLE=true;
+  if(stats.completed>=25)earned.DEDICATED=true;
+  if(stats.completed>=100)earned.CENTURY=true;
+  if(stats.xp>=1000)earned.LEGENDARY=true;
+  const myXP=stats.xp;
+  if(myXP>0&&others.length>0&&others.every(id=>computeStats(allQuests,id).xp<=myXP))earned.TOP_DOG=true;
+  return earned;
+}
+
+function checkSecretBadges(allQuests, uid, members) {
+  const earned={};
+  const allWks=Object.keys(allQuests||{}).sort();
+  let prevLast=false;
+  allWks.forEach(wk=>{
+    const qlist=Object.values(allQuests[wk]||{});
+    const mine=qlist.filter(q=>q.assignedTo===uid);
+    if(!mine.length)return;
+    mine.forEach(q=>{
+      if(q.completed&&q.completedAt){
+        const hr=new Date(q.completedAt).getHours();
+        if(hr>=0&&hr<4)earned.NIGHT_OWL=true;
+        if(q.createdAt&&(q.completedAt-q.createdAt)<3600000)earned.EARLY_BIRD=true;
+      }
+    });
+    const todayCompleted=mine.filter(q=>q.completed).length;
+    if(todayCompleted>=5)earned.MARATHON=true;
+    const allFailed=mine.length>0&&mine.every(q=>q.penaltyApplied&&!q.completed);
+    if(allFailed)earned.GHOST=true;
+  });
+  // First blood: check if uid was first to complete in any week
+  allWks.forEach(wk=>{
+    const qlist=Object.values(allQuests[wk]||{}).filter(q=>q.completed&&q.completedAt);
+    if(!qlist.length)return;
+    qlist.sort((a,b)=>a.completedAt-b.completedAt);
+    if(qlist[0].assignedTo===uid)earned.FIRST_BLOOD=true;
+  });
+  // Rejection count
+  const totalRejections=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq||{}))
+    .filter(q=>q.assignedBy===uid&&q.proofStatus==='rejected').length;
+  if(totalRejections>=3)earned.CRITIQUER=true;
+  return earned;
+}
+
+function getDiffClass(d){return DIFF[d]?.cls||'diff-medium';}
+function questXP(difficulty,bonusEvent){
+  const base=DIFF[difficulty]?.xp||100;
+  if(bonusEvent?.id==='double')return base*2;
+  if(bonusEvent?.id==='legendary')return 250;
+  return base;
+}
+
+// ═══ FIREBASE API ════════════════════════════════════════════════════════════
+function makeApi(url){
+  const base=url.replace(/\/$/,'');
+  const go=async(path,method='GET',body=null)=>{
+    const opts={method,headers:{'Content-Type':'application/json'}};
+    if(body!==null)opts.body=JSON.stringify(body);
+    const r=await fetch(`${base}/${path}.json`,opts);
+    if(!r.ok){const t=await r.text();throw new Error(t);}
+    return r.json();
+  };
+  return{get:p=>go(p),set:(p,d)=>go(p,'PUT',d),patch:(p,d)=>go(p,'PATCH',d),del:p=>go(p,'DELETE')};
+}
+
+// ═══ TOAST SYSTEM ════════════════════════════════════════════════════════════
+function Toasts({toasts}){
+  return(
+    <div className="toast-wrap">
+      {toasts.map(t=>(
+        <div key={t.id} className="toast pop-in" style={{borderColor:t.color||'var(--border2)'}}>
+          <div style={{color:t.color||'var(--pb)',fontWeight:'bold',marginBottom:3}}>{t.title}</div>
+          <div className="cdim xs">{t.msg}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══ LOADING ═════════════════════════════════════════════════════════════════
+function Loading(){return(<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}><div className="glow" style={{fontSize:'1.4em'}}>LOADING<span className="blink">_</span></div></div>);}
+
+// ═══ PARTY SCREEN ════════════════════════════════════════════════════════════
+function Party({api,userId,onDone}){
+  const [name,setName]=useState(localStorage.getItem(K.NAME)||'');
+  const [mode,setMode]=useState('pick');
+  const [code,setCode]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [err,setErr]=useState('');
+  const create=async()=>{
+    if(!name.trim())return setErr('Enter your name first');
+    setBusy(true);setErr('');
+    try{
+      const pc=mkcode();
+      await api.set(`parties/${pc}`,{created:Date.now(),settings:{...DEF},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}}});
+      localStorage.setItem(K.NAME,name.trim());onDone(pc,name.trim());
+    }catch(e){setErr(e.message);}setBusy(false);
+  };
+  const join=async()=>{
+    if(!name.trim())return setErr('Enter your name first');
+    if(!code.trim())return setErr('Enter the party code');
+    setBusy(true);setErr('');
+    try{
+      const pc=code.trim().toUpperCase();
+      const party=await api.get(`parties/${pc}`);
+      if(!party)return setErr('Party not found — check the code!');
+      await api.patch(`parties/${pc}/members/${userId}`,{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'});
+      localStorage.setItem(K.NAME,name.trim());onDone(pc,name.trim());
+    }catch(e){setErr(e.message);}setBusy(false);
+  };
+  return(
+    <div className="wrap">
+      <div className="hdr"><h1>[ FRIEND QUEST ]</h1><div className="sub">PARTY SETUP</div></div>
+      <div className="box">
+        <div className="box-title">IDENTIFY YOURSELF</div>
+        <label className="lbl">YOUR NAME</label>
+        <input placeholder="Enter your name..." value={name} onChange={e=>setName(e.target.value)} maxLength={20}/>
+      </div>
+      {mode==='pick'&&(<div className="grid2" style={{marginTop:4}}>
+        <div className="picker" onClick={()=>setMode('create')}><div className="icon">⚔️</div><div className="plabel">CREATE PARTY</div><div className="pdesc">Start a new quest group</div></div>
+        <div className="picker" onClick={()=>setMode('join')}><div className="icon">🔗</div><div className="plabel">JOIN PARTY</div><div className="pdesc">Enter a party code</div></div>
+      </div>)}
+      {mode==='create'&&(<div className="box"><div className="box-title">NEW PARTY</div>
+        <p className="cdim small mb6">A 6-character party code will be generated.</p>
+        {err&&<div className="notif err">{err}</div>}
+        <button className="btn-big primary" onClick={create} disabled={busy}>{busy?'CREATING...':'[ CREATE PARTY ]'}</button>
+        <button onClick={()=>{setMode('pick');setErr('');}}>[ ← BACK ]</button>
+      </div>)}
+      {mode==='join'&&(<div className="box"><div className="box-title">JOIN PARTY</div>
+        <label className="lbl">PARTY CODE</label>
+        <input placeholder="e.g. AB3X9Z" value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={6} onKeyDown={e=>e.key==='Enter'&&join()} style={{letterSpacing:'.22em',fontSize:'1.1em'}}/>
+        {err&&<div className="notif err">{err}</div>}
+        <button className="btn-big primary" onClick={join} disabled={busy}>{busy?'JOINING...':'[ JOIN PARTY ]'}</button>
+        <button onClick={()=>{setMode('pick');setErr('');}}>[ ← BACK ]</button>
+      </div>)}
+    </div>
+  );
+}
+
+// ═══ PROOF MODAL ══════════════════════════════════════════════════════════════
+function ProofModal({quest,members,onSubmit,onClose}){
+  const [text,setText]=useState('');
+  const [imgUrl,setImgUrl]=useState('');
+  const [type,setType]=useState('text');
+  const submit=()=>{
+    if(!text.trim()&&!imgUrl.trim())return;
+    onSubmit({type:type==='image'?'image':'text',content:type==='image'?imgUrl.trim():text.trim()});
+  };
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-title">📸 SUBMIT PROOF</div>
+        <div className="cdim xs mb6">Quest: <span className="cpb">{quest.title}</span></div>
+        <div className="flex-wrap mb6">
+          <button className={type==='text'?'primary':''} onClick={()=>setType('text')}>📝 Text Description</button>
+          <button className={type==='image'?'primary':''} onClick={()=>setType('image')}>🖼️ Image URL</button>
+        </div>
+        {type==='text'?(
+          <textarea placeholder="Describe what you did as proof..." value={text} onChange={e=>setText(e.target.value)} maxLength={500}/>
+        ):(
+          <input placeholder="Paste image URL (imgur, etc.)..." value={imgUrl} onChange={e=>setImgUrl(e.target.value)}/>
+        )}
+        <div className="flexi gap6 mt6">
+          <button className="btn-ok btn-big" style={{flex:2}} onClick={submit} disabled={!text.trim()&&!imgUrl.trim()}>[ SUBMIT PROOF ]</button>
+          <button style={{flex:1}} onClick={onClose}>[ CANCEL ]</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ PROOF REVIEW MODAL ══════════════════════════════════════════════════════
+function ProofReviewModal({quest,members,onApprove,onReject,onClose}){
+  const [reason,setReason]=useState('');
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-title">⚖️ REVIEW PROOF</div>
+        <div className="cdim xs mb6">From: <span className="cp">{members[quest.assignedTo]?.name}</span></div>
+        <div className="mb6 bold wrap-word">{quest.title}</div>
+        <div className="box" style={{marginBottom:10}}>
+          <div className="xs cdim mb6">SUBMITTED PROOF:</div>
+          {quest.proof?.type==='image'?(
+            <div><img src={quest.proof.content} alt="proof" style={{maxWidth:'100%',maxHeight:200,objectFit:'contain',border:'1px solid var(--border)'}}/><div className="cdim xs mt6">{quest.proof.content}</div></div>
+          ):(
+            <div className="ctext">{quest.proof?.content||'(no content)'}</div>
+          )}
+        </div>
+        <label className="lbl">REJECTION REASON (optional if approving)</label>
+        <input placeholder="e.g. That's not 20 push-ups, that's 3" value={reason} onChange={e=>setReason(e.target.value)} maxLength={200}/>
+        <div className="flexi gap6 mt6" style={{flexWrap:'wrap'}}>
+          <button className="btn-ok" onClick={()=>onApprove(quest.id)} style={{flex:1}}>✓ APPROVE</button>
+          <button className="btn-danger" onClick={()=>onReject(quest.id,reason)} style={{flex:1}}>✗ REJECT</button>
+          <button onClick={onClose}>CLOSE</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ PENALTY PICKER MODAL ═════════════════════════════════════════════════════
+function PenaltyPickerModal({quest,options,members,onPick,onClose}){
+  const [hovered,setHovered]=useState(null);
+  const choices=options||[];
+  return(
+    <div className="modal-bg">
+      <div className="modal" style={{maxWidth:500}} onClick={e=>e.stopPropagation()}>
+        <div style={{textAlign:'center',marginBottom:14}}>
+          <div style={{fontSize:'2em',marginBottom:4}}>☠️</div>
+          <div className="modal-title cred glow-r" style={{border:'none',padding:0,marginBottom:4}}>PICK YOUR PUNISHMENT</div>
+          <div className="cdim xs">You failed: <span className="cpb">"{quest.title}"</span></div>
+          <div className="cdim xs mt6">Choose wisely. The group will know. 😈</div>
+        </div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:10,margin:'14px 0'}}>
+          {choices.map((opt,i)=>(
+            <button
+              key={i}
+              onClick={()=>onPick(quest.id,opt)}
+              onMouseEnter={()=>setHovered(i)}
+              onMouseLeave={()=>setHovered(null)}
+              style={{
+                display:'flex',alignItems:'center',gap:12,
+                padding:'14px 16px',width:'100%',textAlign:'left',
+                border:`2px solid ${hovered===i?'var(--red)':'rgba(244,63,94,.3)'}`,
+                borderRadius:4,cursor:'pointer',
+                background:hovered===i?'rgba(244,63,94,.12)':'rgba(244,63,94,.04)',
+                color:'var(--text)',fontFamily:'inherit',fontSize:'.88em',
+                transition:'all .15s',textTransform:'none',letterSpacing:'normal',
+              }}
+            >
+              <div style={{
+                width:32,height:32,borderRadius:'50%',flexShrink:0,
+                background:hovered===i?'var(--red)':'rgba(244,63,94,.2)',
+                color:hovered===i?'#fff':'var(--red)',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontWeight:'bold',fontSize:'1em',transition:'all .15s',
+              }}>{i+1}</div>
+              <span style={{lineHeight:1.4}}>{opt}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="cdim xs center" style={{marginTop:8}}>No skipping — one will be auto-assigned in 24h if you stall 😈</div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ WEEKLY SUMMARY MODAL ════════════════════════════════════════════════════
+function WeeklySummaryModal({summary,members,allQuests,userId,onClose}){
+  const {weekId}=summary;
+  const wq=allQuests[weekId]||{};
+  const qlist=Object.values(wq);
+  const myStats={
+    done:qlist.filter(q=>q.assignedTo===userId&&q.completed).length,
+    fail:qlist.filter(q=>q.assignedTo===userId&&q.penaltyApplied&&!q.completed).length,
+    xp:qlist.filter(q=>q.assignedTo===userId&&q.completed).reduce((a,q)=>a+(q.xpAwarded||XP_WIN),0),
+  };
+  const board=Object.entries(members).map(([id,m])=>{
+    const s=computeStats(allQuests,id);return{id,name:m.name,xp:s.xp};
+  }).sort((a,b)=>b.xp-a.xp);
+  const winner=board[0];
+  return(
+    <div className="modal-bg">
+      <div className="modal" style={{maxWidth:520}}>
+        <div style={{textAlign:'center',marginBottom:16}}>
+          <div style={{fontSize:'1.8em',letterSpacing:'.2em',color:'var(--yellow)',textShadow:'0 0 20px rgba(251,191,36,.5)'}}>[ WEEK COMPLETE ]</div>
+          <div className="cdim xs">Week of {weekId}</div>
+        </div>
+        <div className="grid3 mb12">
+          <div className="summary-stat"><div className="s-val">{myStats.done}</div><div className="s-lbl">Quests Done</div></div>
+          <div className="summary-stat"><div className="s-val" style={{color:'var(--red)'}}>{myStats.fail}</div><div className="s-lbl">Failed</div></div>
+          <div className="summary-stat"><div className="s-val">+{myStats.xp}</div><div className="s-lbl">XP Earned</div></div>
+        </div>
+        {winner&&<div className="box" style={{borderColor:'var(--yellow)',background:'rgba(251,191,36,.04)',textAlign:'center',marginBottom:10}}>
+          <div className="cyellow bold">👑 WEEKLY WINNER</div>
+          <div style={{fontSize:'1.3em',marginTop:6,color:'var(--pb)'}}>{winner.name}</div>
+          <div className="cdim xs">⚡ {winner.xp} total XP</div>
+        </div>}
+        {myStats.fail>0&&<div className="notif warn mb6">You failed {myStats.fail} quest{myStats.fail>1?'s':''} this week. The Hall of Shame remembers. 😈</div>}
+        {myStats.fail===0&&myStats.done>0&&<div className="notif ok mb6">Perfect week! Zero failures. You're built different. 💎</div>}
+        <button className="btn-big primary" onClick={onClose}>[ CONTINUE TO THIS WEEK ]</button>
+      </div>
+    </div>
+  );
+}
+
+// ═══ MY QUESTS TAB ════════════════════════════════════════════════════════════
+function PenaltyChoice({opt, index, onPick}){
+  const [hov,setHov]=useState(false);
+  return(
+    <div
+      onClick={onPick}
+      onMouseEnter={()=>setHov(true)}
+      onMouseLeave={()=>setHov(false)}
+      style={{
+        display:'flex',alignItems:'center',gap:12,padding:'12px 14px',margin:'6px 0',
+        border:`2px solid ${hov?'var(--red)':'rgba(244,63,94,.35)'}`,borderRadius:4,
+        background:hov?'rgba(244,63,94,.18)':'rgba(244,63,94,.07)',
+        cursor:'pointer',transition:'all .15s',lineHeight:1.4,fontSize:'.88em',
+      }}
+    >
+      <div style={{
+        width:30,height:30,borderRadius:'50%',flexShrink:0,fontWeight:'bold',
+        background:hov?'var(--red)':'rgba(244,63,94,.25)',
+        color:hov?'#fff':'var(--red)',
+        display:'flex',alignItems:'center',justifyContent:'center',transition:'all .15s',
+      }}>{index+1}</div>
+      <span style={{color:'var(--text)'}}>{opt}</span>
+    </div>
+  );
+}
+
+function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonusEvent,onProofSubmit,onPickPenalty}){
+  const [proofQuest,setProofQuest]=useState(null);
+  const mine=Object.entries(quests).filter(([,q])=>q.assignedTo===userId).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
+  const pending=mine.filter(q=>!q.completed&&!q.penaltyApplied&&q.proofStatus!=='pending');
+  const awaitingApproval=mine.filter(q=>q.proofStatus==='pending');
+  const done=mine.filter(q=>q.completed);
+  const failed=mine.filter(q=>q.penaltyApplied&&!q.completed);
+  const rejected=mine.filter(q=>q.proofStatus==='rejected'&&!q.completed);
+  const needsPenaltyChoice=failed.filter(q=>!q.penaltyChosen);
+
+  if(mine.length===0)return(<div className="empty"><div className="ei">📋</div><div>NO QUESTS ASSIGNED YET</div><div className="cdim small mt6">Your party members need to assign you quests!</div></div>);
+
+  return(
+    <div>
+      {proofQuest&&(<ProofModal quest={proofQuest} members={members}
+        onSubmit={proof=>{onProofSubmit(proofQuest.id,proof);setProofQuest(null);}} onClose={()=>setProofQuest(null)}/>)}
+
+      {bonusEvent?.id!=='normal'&&bonusEvent?.name&&(
+        <div className="event-banner"><span className="cpurple bold">{bonusEvent.name}</span> <span className="cdim xs">{bonusEvent.desc}</span></div>
+      )}
+
+      {failed.length>0&&(
+        <div className="shame-wrap">
+          <div className="cred glow-r bold mb12" style={{fontSize:'1em'}}>
+            ☠ {failed.length} QUEST{failed.length>1?'S':''} FAILED
+            {needsPenaltyChoice.length>0&&<span className="cdim xs" style={{marginLeft:8,fontWeight:'normal'}}>— pick your punishment below</span>}
+          </div>
+          {failed.map(q=>(
+            <div key={q.id} style={{marginBottom:14}}>
+              {/* Quest header */}
+              <div style={{padding:'10px 12px',border:'1px solid var(--red)',borderRadius:q.penaltyChosen?'3px':'3px 3px 0 0',background:'rgba(244,63,94,.06)'}}>
+                <div className="flexb">
+                  <div>
+                    <span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label||'MEDIUM'}</span>
+                    <span className="cdim xs" style={{marginLeft:4}}>#{q.id.slice(-4).toUpperCase()}</span>
+                    <div className="bold wrap-word mt6">{q.title}</div>
+                    <div className="cdim xs">assigned by: <span className="cp">{members[q.assignedBy]?.name||'???'}</span></div>
+                  </div>
+                  <div style={{textAlign:'right',flexShrink:0,marginLeft:10}}>
+                    <span className="ibadge pen">-{XP_LOSE} XP</span>
+                    <div className="cred xs mt6 glow-r">**FAILED** ✗</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inline penalty choices — shown immediately, no button needed */}
+              {!q.penaltyChosen?(
+                <div style={{border:'2px solid var(--red)',borderTop:'none',padding:'12px 14px',borderRadius:'0 0 4px 4px',background:'rgba(10,2,8,.6)'}}>
+                  <div style={{marginBottom:8}}>
+                    <span className="cred bold xs">☠ CHOOSE YOUR PUNISHMENT</span>
+                    <span className="cdim xs" style={{marginLeft:8}}>— kicks in Wednesday 😈</span>
+                  </div>
+                  {(q.penaltyOptions||[]).map((opt,i)=>(
+                    <PenaltyChoice key={i} opt={opt} index={i} onPick={()=>onPickPenalty(q.id,opt)}/>
+                  ))}
+                  {(!q.penaltyOptions||q.penaltyOptions.length===0)&&(
+                    <div className="cdim xs">No penalty options stored — reassign quest to generate options.</div>
+                  )}
+                </div>
+              ):(
+                <div style={{border:'1px solid rgba(244,63,94,.3)',borderTop:'none',padding:'9px 14px',borderRadius:'0 0 3px 3px',background:'rgba(244,63,94,.04)'}}>
+                  <div className="xs"><span className="cred">☠ YOUR PUNISHMENT: </span><span className="ctext">{q.penaltyChosen}</span></div>
+                  <div className="cdim xs mt6">Starts Wednesday — no backing out 😈</div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {rejected.length>0&&(<div className="box" style={{borderColor:'var(--red)'}}>
+        <div className="box-title cred">❌ PROOF REJECTED — RESUBMIT</div>
+        {rejected.map(q=>(
+          <div key={q.id} className="qcard fail">
+            <div className="flexb"><div>
+              <div className="bold wrap-word">{q.title}</div>
+              {q.proofRejectedReason&&<div className="cred xs mt6">Reason: {q.proofRejectedReason}</div>}
+            </div>
+            <button className="btn-yellow" onClick={()=>setProofQuest(q)}>RESUBMIT</button></div>
+          </div>
+        ))}
+      </div>)}
+
+      {awaitingApproval.length>0&&(<div className="box" style={{borderColor:'var(--yellow)'}}>
+        <div className="box-title cyellow">⏳ AWAITING PROOF APPROVAL</div>
+        {awaitingApproval.map(q=>(
+          <div key={q.id} className="qcard pending-proof">
+            <div className="flexb"><div>
+              <div className="bold wrap-word">{q.title}</div>
+              <div className="cdim xs">{q.proof?.type==='image'?'📷 Image submitted':'📝 Text submitted'}</div>
+            </div><span className="cyellow xs">PENDING...</span></div>
+          </div>
+        ))}
+      </div>)}
+
+      {pending.length>0&&(<div className="box">
+        <div className="box-title">⚡ ACTIVE QUESTS ({pending.length})</div>
+        {pending.map(q=>(
+          <div key={q.id} className="qcard active">
+            <div className="flexb">
+              <div style={{flex:1,minWidth:0}}>
+                <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.icon} {DIFF[q.difficulty]?.label||'MEDIUM'}</span><span className="ibadge xp">{questXP(q.difficulty,bonusEvent)} XP</span></div>
+                <div className="bold wrap-word">{q.title}</div>
+                <div className="cdim xs">by: <span className="cp">{members[q.assignedBy]?.name||'???'}</span></div>
+                {q.proofStatus==='rejected'&&<div className="cred xs">Proof rejected — resubmit!</div>}
+              </div>
+              <div style={{flexShrink:0,marginLeft:8}}>
+                {inWindow?(q.requireProof
+                  ?<button className="btn-yellow" onClick={()=>setProofQuest(q)}>📸 SUBMIT PROOF</button>
+                  :<button className="btn-ok" onClick={()=>onComplete(q.id,q.difficulty)} disabled={completing===q.id}>{completing===q.id?'...':'✓ COMPLETE'}</button>)
+                  :<span className="cdim xs">[CLOSED]</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>)}
+
+      {done.length>0&&(<div className="box">
+        <div className="box-title cdim">COMPLETED THIS WEEK ({done.length})</div>
+        {done.map(q=>(
+          <div key={q.id} className="qcard done">
+            <div className="flexb">
+              <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label}</span>
+                <span className="wrap-word">{q.title}</span>
+                <div className="cdim xs">by <span className="cp">{members[q.assignedBy]?.name||'???'}</span>{q.completedAt&&` · ${dateFmt(q.completedAt)}`}</div>
+              </div>
+              <div style={{textAlign:'right',flexShrink:0,marginLeft:8}}>
+                <span className="ibadge xp">+{q.xpAwarded||XP_WIN} XP</span>
+                <div className="cgreen xs mt6 glow-g">**COMPLETE** ✓</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>)}
+    </div>
+  );
+}
+
+// ═══ ASSIGN TAB ══════════════════════════════════════════════════════════════
+function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,pendingProofs,onApprove,onReject}){
+  const [title,setTitle]=useState('');
+  const [to,setTo]=useState('');
+  const [diff,setDiff]=useState('medium');
+  const [requireProof,setRequireProof]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [err,setErr]=useState('');
+  const [ok,setOk]=useState('');
+  const [showSugg,setShowSugg]=useState(false);
+  const [reviewQuest,setReviewQuest]=useState(null);
+
+  const others=Object.entries(members).filter(([id])=>id!==userId);
+  const myAssign=Object.values(quests).filter(q=>q.assignedBy===userId);
+  const countFor=id=>myAssign.filter(q=>q.assignedTo===id).length;
+
+  const assign=async()=>{
+    if(!title.trim())return setErr('Quest title is required');
+    if(!to)return setErr('Select who to assign to');
+    if(countFor(to)>=maxPer)return setErr(`Max ${maxPer} quests per person`);
+    setBusy(true);setErr('');setOk('');
+    try{
+      const qid=mkid();
+      const penOpts=[];
+      while(penOpts.length<3){const p=rnd(PENALTIES);if(!penOpts.includes(p))penOpts.push(p);}
+      await api.set(`parties/${partyCode}/quests/${weekId}/${qid}`,{
+        title:title.trim(),assignedBy:userId,assignedTo:to,difficulty:diff,requireProof,
+        completed:false,completedAt:null,penaltyApplied:false,penaltyOptions:penOpts,penaltyChosen:null,
+        proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),xpAwarded:null,
+      });
+      setTitle('');setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
+    }catch(e){setErr(e.message);}setBusy(false);
+  };
+
+  const myPendingProofs=pendingProofs.filter(q=>q.assignedBy===userId);
+
+  return(
+    <div>
+      {reviewQuest&&(<ProofReviewModal quest={reviewQuest} members={members}
+        onApprove={id=>{onApprove(id);setReviewQuest(null);}}
+        onReject={(id,r)=>{onReject(id,r);setReviewQuest(null);}}
+        onClose={()=>setReviewQuest(null)}/>)}
+
+      {myPendingProofs.length>0&&(<div className="box" style={{borderColor:'var(--yellow)'}}>
+        <div className="box-title cyellow">⏳ PROOFS AWAITING YOUR REVIEW ({myPendingProofs.length})</div>
+        {myPendingProofs.map(q=>(
+          <div key={q.id} className="qcard pending-proof">
+            <div className="flexb">
+              <div><div className="bold wrap-word">{q.title}</div>
+                <div className="cdim xs">from: <span className="cp">{members[q.assignedTo]?.name}</span></div>
+              </div>
+              <button className="btn-yellow" onClick={()=>setReviewQuest(q)}>REVIEW</button>
+            </div>
+          </div>
+        ))}
+      </div>)}
+
+      <div className="box">
+        <div className="box-title">✏️ ASSIGN A QUEST</div>
+        {!inWindow&&<div className="notif warn mb6">⚠ Quest window is closed but you can still assign for next window.</div>}
+        <label className="lbl">QUEST CHALLENGE</label>
+        <div style={{position:'relative'}}>
+          <input placeholder="e.g. Do 20 push-ups before noon" value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/>
+          <button style={{position:'absolute',right:0,top:3,fontSize:'.72em'}} onClick={()=>setShowSugg(s=>!s)}>💡 SUGGEST</button>
+        </div>
+        {showSugg&&(
+          <div className="box" style={{marginTop:0,marginBottom:8}}>
+            {Object.entries(SUGGESTIONS).map(([cat,items])=>(
+              <div key={cat} className="mb6">
+                <div className="cdim xs bold mb6">{cat}</div>
+                <div className="flex-wrap">
+                  {items.map((s,i)=>(
+                    <button key={i} style={{fontSize:'.72em',padding:'3px 7px'}} onClick={()=>{setTitle(s);setShowSugg(false);}}>{s}</button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className="lbl">DIFFICULTY & REWARD</label>
+        <div className="flex-wrap mb6">
+          {Object.entries(DIFF).map(([k,v])=>(
+            <button key={k} className={diff===k?'primary':''} onClick={()=>setDiff(k)} style={{fontSize:'.75em'}}>
+              {v.icon} {v.label} <span className="cyellow">({v.xp} XP)</span>
+            </button>
+          ))}
+        </div>
+        <label className="lbl">ASSIGN TO</label>
+        <select value={to} onChange={e=>setTo(e.target.value)}>
+          <option value="">-- SELECT MEMBER --</option>
+          {others.map(([id,m])=><option key={id} value={id} disabled={countFor(id)>=maxPer}>{m.name} ({countFor(id)}/{maxPer}{countFor(id)>=maxPer?' — FULL':''})</option>)}
+        </select>
+        <div className="flexi gap6 mb6" style={{cursor:'pointer'}} onClick={()=>setRequireProof(r=>!r)}>
+          <div style={{width:16,height:16,border:`1px solid ${requireProof?'var(--p)':'var(--pd)'}`,borderRadius:2,background:requireProof?'var(--p)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            {requireProof&&<span style={{color:'var(--bg)',fontSize:'.7em'}}>✓</span>}
+          </div>
+          <span className="small">Require photo/text proof to complete</span>
+        </div>
+        {err&&<div className="notif err">{err}</div>}
+        {ok&&<div className="notif ok">{ok}</div>}
+        <button className="btn-big primary" onClick={assign} disabled={busy}>{busy?'ASSIGNING...':'[ ASSIGN QUEST ]'}</button>
+      </div>
+
+      <div className="box">
+        <div className="box-title cdim">ASSIGNMENT STATUS THIS WEEK</div>
+        {others.length===0&&<div className="cdim small">No other members — share your party code!</div>}
+        {others.map(([id,m])=>{const n=countFor(id),full=n>=maxPer;return(
+          <div key={id} className="flexb mb6">
+            <span className="cp">{m.name}</span>
+            <div className="flexi gap6">
+              {Array.from({length:Math.min(maxPer,8)},(_,i)=><span key={i} className={i<n?'cp':'cdim'}>{i<n?'■':'□'}</span>)}
+              <span className="cdim xs">({n}/{maxPer})</span>
+              {full&&<span className="ibadge xp">✓</span>}
+            </div>
+          </div>
+        );})}
+      </div>
+
+      {myAssign.length>0&&(<div className="box">
+        <div className="box-title cdim">QUESTS YOU ASSIGNED</div>
+        {myAssign.sort((a,b)=>a.createdAt-b.createdAt).map((q,i)=>(
+          <div key={q.id||i} className={`qcard ${q.completed?'done':q.penaltyApplied?'fail':q.proofStatus==='pending'?'pending-proof':'active'}`}>
+            <div className="flexb">
+              <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label}</span>
+                <span className="wrap-word">{q.title}</span>
+                <div className="cdim xs">→ <span className="cp">{members[q.assignedTo]?.name||'???'}</span>
+                  {q.requireProof&&<span className="cdim"> · 📸 proof req'd</span>}
+                </div>
+              </div>
+              <div style={{flexShrink:0,marginLeft:8}}>
+                {q.proofStatus==='pending'?<span className="cyellow xs">REVIEW PROOF →</span>
+                :q.completed?<span className="cgreen xs glow-g">DONE ✓</span>
+                :q.penaltyApplied?<span className="cred xs glow-r">FAILED ✗</span>
+                :<span className="cyellow xs">ACTIVE</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>)}
+    </div>
+  );
+}
+
+// ═══ QUEST LOG TAB (with reactions) ══════════════════════════════════════════
+function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
+  const list=Object.entries(quests).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
+  const toggleReaction=async(questId,emoji)=>{
+    const q=quests[questId];
+    const current=q?.reactions?.[userId];
+    const val=current===emoji?null:emoji;
+    await api.patch(`parties/${partyCode}/quests/${weekId}/${questId}/reactions`,{[userId]:val});
+  };
+  return(
+    <div className="box">
+      <div className="box-title glow">[ FRIEND QUEST ] // WEEK: {weekId}</div>
+      {list.length===0?(<div className="empty"><div className="ei">📜</div><div className="cdim">NO ENTRIES YET</div></div>)
+      :list.map((q,i)=>(
+        <div key={q.id} className="log-e">
+          <div className="ll"><span className="cdim">QUEST_ID: </span><span className="cyellow">#{String(i).padStart(3,'0')}</span>
+            <span className={`diff ${getDiffClass(q.difficulty)}`} style={{marginLeft:8}}>{DIFF[q.difficulty]?.icon} {DIFF[q.difficulty]?.label}</span>
+          </div>
+          <div className="ll"><span className="cdim">NAME: </span><span className="cpb bold">{q.title}</span></div>
+          <div className="ll"><span className="cdim">ASSIGNED_TO: </span><span className="cgreen">{members[q.assignedTo]?.name||'???'}</span></div>
+          <div className="ll"><span className="cdim">ASSIGNED_BY: </span><span>{members[q.assignedBy]?.name||'???'}</span></div>
+          <div className="ll"><span className="cdim">STATUS: </span>
+            {q.completed?<span className="cgreen glow-g bold">**COMPLETE** ✓</span>
+            :q.proofStatus==='pending'?<span className="cyellow">AWAITING PROOF REVIEW...</span>
+            :q.penaltyApplied?<span className="cred glow-r bold">**FAILED** // -{XP_LOSE} XP</span>
+            :<span className="cyellow">IN_PROGRESS<span className="blink">_</span></span>}
+          </div>
+          {q.completedAt&&<div className="ll cdim xs">TIMESTAMP: {dateFmt(q.completedAt)}</div>}
+          {q.penaltyChosen&&<div className="ll cred xs">PUNISHMENT: {q.penaltyChosen}</div>}
+          <div className="reaction-bar">
+            {RXNS.map(emoji=>{
+              const rxns=q.reactions||{};
+              const count=Object.values(rxns).filter(r=>r===emoji).length;
+              const mine=rxns[userId]===emoji;
+              return(<div key={emoji} className={`rxn ${mine?'mine':''}`} onClick={()=>toggleReaction(q.id,emoji)}>
+                <span>{emoji}</span>{count>0&&<span className="rxn-count">{count}</span>}
+              </div>);
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ═══ LEADERBOARD TAB ══════════════════════════════════════════════════════════
+function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
+  const board=Object.entries(members).map(([id,m])=>{
+    const s=computeStats(allQuests,id);
+    const streak=computeStreak(allQuests,id);
+    const badges=checkBadges(allQuests,id,members);
+    const unlocked=getUnlockedTitles(s,badges,streak);
+    const title=unlocked.sort((a,b)=>(b.xp||0)-(a.xp||0))[0];
+    return{id,name:m.name,...s,streak,badgeCount:Object.keys(badges).length,title,selectedTitle:m.selectedTitle};
+  }).sort((a,b)=>b.xp-a.xp||a.penalties-b.penalties);
+
+  const medals=['👑','🥈','🥉'];
+  const wq=allQuests[currentWeekId]||{};
+  const wkTotal=Object.values(wq).filter(q=>q.completed).length;
+  const wkTarget=Math.max(Object.values(wq).length,1);
+  const groupPct=Math.round((wkTotal/wkTarget)*100);
+  const shamed=board.filter(m=>m.penalties>0).sort((a,b)=>b.penalties-a.penalties);
+  const weekWorst=shamed[0];
+
+  return(
+    <div>
+      {bonusEvent?.id!=='normal'&&bonusEvent?.name&&(
+        <div className="event-banner"><span className="cpurple bold">{bonusEvent.name}</span><br/><span className="cdim xs">{bonusEvent.desc}</span></div>
+      )}
+
+      <div className="box" style={{borderColor:'rgba(251,191,36,.3)',background:'rgba(251,191,36,.03)'}}>
+        <div className="box-title cyellow">🎯 GROUP GOAL THIS WEEK</div>
+        <div className="flexb mb6">
+          <span className="cdim small">{wkTotal} / {wkTarget} quests completed</span>
+          <span className="cyellow small">{groupPct}%</span>
+        </div>
+        <div className="pbar"><div className="fill yellow" style={{width:`${groupPct}%`}}></div></div>
+        {groupPct>=100&&<div className="cgreen small mt6 glow-g">🎉 GROUP GOAL ACHIEVED! Everyone gets bragging rights!</div>}
+      </div>
+
+      <div className="box">
+        <div className="box-title cyellow">🏆 LEADERBOARD</div>
+        {board.map((m,i)=>{
+          const pct=m.total>0?Math.round((m.completed/m.total)*100):0;
+          const isMe=m.id===userId;
+          const titleDef=TITLES.find(t=>t.id===m.selectedTitle)||TITLES[0];
+          return(
+            <div key={m.id} className={`mcard ${i===0?'gold':m.penalties>0?'shame':''}`}>
+              <div className="flexb">
+                <div className="flexi gap10">
+                  <span style={{fontSize:'1.2em',width:26,textAlign:'center'}}>{medals[i]||`#${i+1}`}</span>
+                  <div>
+                    <span className={isMe?'cgreen bold':'cp'}>{m.name}{isMe?' (YOU)':''}</span>
+                    {m.streak?.current>=2&&<span className="ibadge purple">🔥 {m.streak.current}wk</span>}
+                    {m.badgeCount>0&&<span className="ibadge" style={{background:'rgba(56,189,248,.1)',color:'var(--pb)',border:'1px solid var(--pd)'}}>🏅 {m.badgeCount}</span>}
+                    <div className="xs mt6" style={{color:titleDef.color}}>[ {titleDef.name} ]</div>
+                    <div className="cdim xs">{m.completed}/{m.total} quests{m.penalties>0?` · 💀 ${m.penalties} failed`:''}</div>
+                    <div className="pbar" style={{width:100}}><div className={`fill ${m.penalties>0?'red':''}`} style={{width:`${pct}%`}}></div></div>
+                  </div>
+                </div>
+                <div style={{textAlign:'right',flexShrink:0}}>
+                  <div className="cyellow bold">⚡ {m.xp} XP</div>
+                  {m.penalties>0&&<div className="cred xs">-{m.penalties*XP_LOSE} lost</div>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {shamed.length>0&&(<div className="shame-wrap">
+        <div className="cred glow-r bold mb6">☠ HALL OF SHAME</div>
+        {weekWorst&&<div className="notif err mb6" style={{fontWeight:'bold'}}>
+          💀 WEEKLY WORST PERFORMER: {weekWorst.name} — {weekWorst.penalties} failed quest{weekWorst.penalties>1?'s':''}. The guild weeps.
+        </div>}
+        {shamed.map(m=>(
+          <div key={m.id} className="flexb mb6" style={{padding:'8px',border:'1px solid #3a0015',borderRadius:2}}>
+            <div>
+              <span className="cred">{m.name}</span>
+              <div className="cdim xs">{m.penalties} failed · -{m.penalties*XP_LOSE} XP total</div>
+              {Object.values(allQuests).flatMap(wq=>Object.values(wq)).filter(q=>q.assignedTo===m.id&&q.penaltyChosen).slice(-1).map((q,i)=>(
+                <div key={i} className="cred xs">Latest penalty: {q.penaltyChosen}</div>
+              ))}
+            </div>
+            <div>💀</div>
+          </div>
+        ))}
+      </div>)}
+    </div>
+  );
+}
+
+// ═══ BADGES TAB ═══════════════════════════════════════════════════════════════
+function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
+  const earned=checkBadges(allQuests,userId,members);
+  const secretEarned=checkSecretBadges(allQuests,userId,members);
+  useEffect(()=>{
+    const newReg=Object.keys(earned).filter(b=>!savedBadges[b]);
+    const newSec=Object.keys(secretEarned).map(b=>`SECRET_${b}`).filter(b=>!savedBadges[b]);
+    const all=[...newReg,...newSec];
+    if(all.length>0)onAward(all,{...earned,...Object.fromEntries(Object.entries(secretEarned).map(([k,v])=>[`SECRET_${k}`,v]))});
+  },[JSON.stringify(earned),JSON.stringify(secretEarned)]);
+
+  const total=Object.keys(BADGE_DEFS).length+Object.keys(SECRET_DEFS).length;
+  const unlocked=Object.keys(earned).length+Object.keys(secretEarned).length;
+
+  return(
+    <div>
+      <div className="box">
+        <div className="box-title">🏅 ACHIEVEMENTS ({unlocked}/{total})</div>
+        <div className="pbar mb12"><div className="fill green" style={{width:`${Math.round((unlocked/total)*100)}%`}}></div></div>
+        <div className="badge-grid">
+          {Object.entries(BADGE_DEFS).map(([id,def])=>{
+            const isUnlocked=!!earned[id];
+            const ts=savedBadges[id];
+            return(
+              <div key={id} className={`b-card ${isUnlocked?'unlocked':'locked'}`}>
+                <div className="b-icon">{def.icon}</div>
+                <div className="b-name" style={{color:isUnlocked?RARITY_COLOR[def.rarity]:'var(--dim)'}}>{def.name}</div>
+                <div className="b-desc">{def.desc}</div>
+                {isUnlocked&&ts&&<div className="b-date">✓ {new Date(ts).toLocaleDateString()}</div>}
+                <div className="xs mt6" style={{color:isUnlocked?RARITY_COLOR[def.rarity]:'var(--dim)',textTransform:'uppercase'}}>{def.rarity}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <div className="box" style={{borderColor:'rgba(168,85,247,.3)',background:'rgba(168,85,247,.03)'}}>
+        <div className="box-title cpurple">🔮 SECRET ACHIEVEMENTS</div>
+        <div className="badge-grid">
+          {Object.entries(SECRET_DEFS).map(([id,def])=>{
+            const isUnlocked=!!secretEarned[id];
+            const ts=savedBadges[`SECRET_${id}`];
+            return(
+              <div key={id} className={`b-card secret ${isUnlocked?'unlocked':'locked'}`}>
+                <div className="b-icon">{isUnlocked?def.icon:'???'}</div>
+                <div className="b-name" style={{color:isUnlocked?'var(--purple)':'var(--dim)'}}>{isUnlocked?def.name:'??? Secret'}</div>
+                <div className="b-desc">{isUnlocked?def.desc:'Complete hidden conditions to unlock'}</div>
+                {isUnlocked&&ts&&<div className="b-date">✓ {new Date(ts).toLocaleDateString()}</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ PROFILE TAB ══════════════════════════════════════════════════════════════
+function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
+  const member=members[userId]||{};
+  const stats=computeStats(allQuests,userId);
+  const streak=computeStreak(allQuests,userId);
+  const badges=checkBadges(allQuests,userId,members);
+  const unlocked=getUnlockedTitles(stats,badges,streak);
+  const currentTitle=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
+  const completionRate=stats.total>0?Math.round((stats.completed/stats.total)*100):0;
+  const boxes=member.mysteryBoxes||0;
+  const [openingBox,setOpeningBox]=useState(false);
+  const [boxResult,setBoxResult]=useState(null);
+
+  const openBox=async()=>{
+    if(boxes<1||openingBox)return;
+    setOpeningBox(true);
+    const reward=rnd(BOX_REWARDS);
+    setBoxResult(reward);
+    await api.patch(`parties/${partyCode}/members/${userId}`,{
+      mysteryBoxes:Math.max(0,boxes-1),
+    });
+    setOpeningBox(false);
+  };
+
+  const setTitle=async(tid)=>{
+    await api.patch(`parties/${partyCode}/members/${userId}`,{selectedTitle:tid});
+    onTitleChange(tid);
+  };
+
+  const weeklyData=Object.entries(allQuests).map(([wk,wq])=>{
+    const mine=Object.values(wq||{}).filter(q=>q.assignedTo===userId);
+    return{wk,done:mine.filter(q=>q.completed).length,fail:mine.filter(q=>q.penaltyApplied&&!q.completed).length,total:mine.length};
+  }).filter(w=>w.total>0).sort((a,b)=>b.wk.localeCompare(a.wk)).slice(0,6);
+
+  const initials=(member.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+  return(
+    <div>
+      <div className="box">
+        <div className="flexi gap10 mb12">
+          <div className="avatar" style={{background:avatarColor(member.name)}}>{initials}</div>
+          <div>
+            <div className="bold" style={{fontSize:'1.1em'}}>{member.name||'???'}</div>
+            <div style={{color:currentTitle.color,fontSize:'.85em'}}>[ {currentTitle.name} ]</div>
+            <div className="cdim xs">Member since {member.joinedAt?new Date(member.joinedAt).toLocaleDateString():'???'}</div>
+          </div>
+        </div>
+        <div className="grid3 mb12">
+          <div className="summary-stat"><div className="s-val">{stats.xp}</div><div className="s-lbl">Total XP</div></div>
+          <div className="summary-stat"><div className="s-val" style={{color:'var(--green)'}}>{streak.current}🔥</div><div className="s-lbl">Current Streak</div></div>
+          <div className="summary-stat"><div className="s-val" style={{color:'var(--red)'}}>{stats.penalties}</div><div className="s-lbl">Failures</div></div>
+        </div>
+        <div className="flexb mb6"><span className="cdim xs">QUEST COMPLETION RATE</span><span className="xs">{completionRate}%</span></div>
+        <div className="pbar mb12"><div className={`fill ${completionRate<50?'red':completionRate<80?'yellow':'green'}`} style={{width:`${completionRate}%`}}></div></div>
+        <div className="grid2 xs cdim">
+          <div>✅ Completed: <span className="cgreen">{stats.completed}</span></div>
+          <div>❌ Failed: <span className="cred">{stats.penalties}</span></div>
+          <div>🔥 Best streak: <span className="cyellow">{streak.longest} weeks</span></div>
+          <div>🏅 Badges: <span className="cp">{Object.keys(badges).length}</span></div>
+        </div>
+      </div>
+
+      {boxes>0&&(<div className="box" style={{borderColor:'var(--purple)',background:'rgba(168,85,247,.05)'}}>
+        <div className="box-title cpurple">📦 MYSTERY BOXES ({boxes})</div>
+        {boxResult?(<div className="notif purple">{boxResult.label} — already added to your XP!</div>)
+        :(<div><p className="cdim small mb6">You have {boxes} mystery box{boxes>1?'es':''}! Open to reveal a random XP reward.</p>
+          <button className="btn-purple btn-big" onClick={openBox} disabled={openingBox}>{openingBox?'OPENING...':'📦 OPEN MYSTERY BOX'}</button>
+        </div>)}
+      </div>)}
+
+      <div className="box">
+        <div className="box-title">🎭 YOUR TITLES</div>
+        <div className="flex-wrap">
+          {unlocked.map(t=>(
+            <div key={t.id} className="title-chip" style={{borderColor:t.color,color:t.color,cursor:'pointer',background:member.selectedTitle===t.id?`${t.color}22`:'transparent'}}
+              onClick={()=>setTitle(t.id)}>{t.name}{member.selectedTitle===t.id&&' ✓'}</div>
+          ))}
+        </div>
+        {unlocked.length===0&&<div className="cdim small">Complete quests to unlock titles!</div>}
+      </div>
+
+      <div className="box">
+        <div className="box-title cdim">RECENT WEEKS</div>
+        {weeklyData.length===0&&<div className="cdim small">No history yet.</div>}
+        {weeklyData.map(w=>(
+          <div key={w.wk} className="flexb mb6" style={{padding:'7px',background:'var(--card2)',borderRadius:2}}>
+            <div><div className="xs cdim">{w.wk}</div>
+              <div className="xs">{w.done}/{w.total} complete{w.fail>0?` · ${w.fail} failed`:''}</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              {w.fail===0&&w.done>0?<span className="cgreen xs">💎 PERFECT</span>:w.done===0?<span className="cred xs">👻 SKIPPED</span>:<span className="cyellow xs">+{w.done*XP_WIN} XP</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══ DAILY SPIN TAB ═══════════════════════════════════════════════════════════
+function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
+  const [spinning,setSpinning]=useState(false);
+  const [display,setDisplay]=useState(null);
+  const [result,setResult]=useState(null);
+  const [alreadySpun,setAlreadySpun]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const todayKey=today();
+
+  useEffect(()=>{
+    api.get(`parties/${partyCode}/dailySpin/${todayKey}/${userId}`)
+      .then(d=>{if(d){setAlreadySpun(true);setResult(d);}setLoading(false);})
+      .catch(()=>setLoading(false));
+  },[]);
+
+  const spin=async()=>{
+    if(spinning||alreadySpun)return;
+    setSpinning(true);setResult(null);
+    const finalResult=pickSpin();
+    let count=0;
+    const iv=setInterval(()=>{
+      setDisplay(SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)]);
+      count++;
+      if(count>18){
+        clearInterval(iv);setDisplay(finalResult);setResult(finalResult);setSpinning(false);setAlreadySpun(true);
+        // Save
+        api.set(`parties/${partyCode}/dailySpin/${todayKey}/${userId}`,{...finalResult,ts:Date.now()});
+        // Apply reward
+        onSpin(finalResult);
+      }
+    },90);
+  };
+
+  if(loading)return<Loading/>;
+  const cur=display||result;
+
+  return(
+    <div>
+      <div className="box" style={{borderColor:'var(--yellow)'}}>
+        <div className="box-title cyellow">🎰 DAILY SPIN</div>
+        <p className="cdim small mb12">Once per day, spin for a bonus reward! Resets at midnight.</p>
+        <div className="spin-box">
+          <div className="cdim xs mb6">TODAY'S SPIN</div>
+          <div className={`spin-result ${spinning?'spinning':''}`}>
+            {cur?<div style={{textAlign:'center'}}><div style={{fontSize:'2em'}}>{cur.icon}</div><div className="cyellow small">{cur.label}</div></div>:'🎰'}
+          </div>
+          {!alreadySpun&&(<button className="btn-big btn-yellow" onClick={spin} disabled={spinning}>{spinning?'SPINNING...':'[ 🎰 SPIN! ]'}</button>)}
+          {alreadySpun&&result&&(
+            <div>
+              <div className="notif ok mt6" style={{textAlign:'center'}}>
+                <div className="bold">{result.icon} {result.label}</div>
+                {result.type!=='dud'&&<div className="xs cdim mt6">Reward applied to your account!</div>}
+              </div>
+              <div className="cdim xs center mt6">Come back tomorrow for another spin!</div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="box">
+        <div className="box-title cdim">POSSIBLE REWARDS</div>
+        <div className="grid2">
+          {SPIN_POOL.map((s,i)=>(
+            <div key={i} className="flexb" style={{padding:'6px',border:'1px solid var(--border)',borderRadius:2,marginBottom:4}}>
+              <div className="flexi gap6"><span>{s.icon}</span><span className="small">{s.label}</span></div>
+              <span className="cdim xs">{s.prob}%</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ RULES & TUTORIAL TAB ════════════════════════════════════════════════════
+const RULES = [
+  { icon:'🤞', title:'No Dishonesty',              text:'Be honest when marking tasks as completed and when submitting proof. Your word is your bond.' },
+  { icon:'🚫', title:'No Dangerous or Impossible Tasks', text:'Only assign safe, realistic, everyday tasks. Nothing that could hurt someone or genuinely can\'t be done.' },
+  { icon:'😤', title:'No Sore Losers',              text:'Keep things friendly and respectful — this is a game, not a competition to argue over. Laugh it off!' },
+  { icon:'🤝', title:'Respect All Players',         text:'No bullying, insults, or mean-spirited behaviour. Everyone is here to have fun.' },
+  { icon:'📸', title:'Follow the Proof System',     text:'Only mark a task complete if proper proof is provided and genuinely matches the quest. No cutting corners.' },
+  { icon:'⚖️', title:'Fair Quest Creation',          text:'Don\'t assign tasks that are way too easy, impossible, or unfair compared to what others are getting.' },
+  { icon:'📵', title:'No Spam Assigning',            text:'Don\'t overload players with unnecessary or repetitive quests. Keep it fun, not overwhelming.' },
+  { icon:'⏰', title:'Stay Within the Deadline',    text:'All quests must be completed within the set window — Wednesday night to Sunday night. No exceptions.' },
+  { icon:'🎭', title:'No Cheating',                 text:'Don\'t fake proof, reuse old proof, or try to bypass the system. Everyone can see through it.' },
+  { icon:'✅', title:'Respect Approvals',            text:'If your proof is rejected, accept the decision gracefully and resubmit with better proof if you can.' },
+  { icon:'🌐', title:'Keep Content Appropriate',    text:'All tasks, messages, and interactions must stay respectful and suitable for everyone in the group.' },
+  { icon:'🎯', title:'Participate in Good Faith',   text:'The goal is to have fun and stay engaged — not to exploit the system or ruin it for others.' },
+];
+
+const TUTORIAL_STEPS = [
+  {
+    step:'01', icon:'🔗', title:'Join or Create a Party',
+    text:'One person creates a party and shares the 6-character code with everyone else. Each person opens Friend Quest, enters the code, and you\'re all connected in real time.',
+  },
+  {
+    step:'02', icon:'✏️', title:'Assign Quests on Wednesday',
+    text:'The quest window opens every Wednesday at 8 PM. Go to the Assign tab and give each party member up to the allowed number of quests. Pick a difficulty (Easy → Legendary) and decide whether proof is required.',
+  },
+  {
+    step:'03', icon:'💡', title:'Need ideas? Use Suggestions',
+    text:'Hit the 💡 Suggest button in the Assign tab to browse 40+ quest ideas across Fitness, Social, Creative, Productive, and Wild categories. Click any suggestion to instantly fill it in.',
+  },
+  {
+    step:'04', icon:'📋', title:'Complete Your Quests by Sunday',
+    text:'Check the My Quests tab to see everything assigned to you. Complete them before Sunday at 11:59 PM. If a quest requires proof, hit "Submit Proof" and upload a description or image link.',
+  },
+  {
+    step:'05', icon:'📸', title:'Proof & Approval',
+    text:'If a quest has proof required, the assigner reviews it in the Assign tab. They can approve (quest counts as complete + XP awarded) or reject it with a reason so you can resubmit.',
+  },
+  {
+    step:'06', icon:'☠️', title:'Penalties for Failures',
+    text:'Miss the Sunday deadline? Your quest is marked FAILED, you lose XP, and three social penalties appear immediately. Pick one — it kicks in Wednesday. Choose wisely 😈',
+  },
+  {
+    step:'07', icon:'⚡', title:'Earn XP & Climb the Leaderboard',
+    text:'Every completed quest earns XP based on difficulty. Complete 3+ quests in one day for a combo bonus. Check the Board tab to see the rankings and the Hall of Shame.',
+  },
+  {
+    step:'08', icon:'🎰', title:'Daily Spin',
+    text:'Once per day, hit the Spin tab for a chance at bonus XP, a Mystery Box, or a lucky title. Resets at midnight — don\'t waste it.',
+  },
+  {
+    step:'09', icon:'🏅', title:'Badges & Titles',
+    text:'Complete challenges to unlock badges (including 8 secret ones nobody knows about). Earn enough XP and streaks to unlock titles like Warrior, Champion, and Legend. Pick your favourite in the Profile tab.',
+  },
+  {
+    step:'10', icon:'🔄', title:'Weekly Reset',
+    text:'A new quest window opens every Wednesday at 8 PM. When you open the app at the start of a new week, a Weekly Summary pops up showing last week\'s winner, your stats, and any shame. Then it all starts again.',
+  },
+];
+
+function RulesTab(){
+  const [section,setSection]=useState('tutorial');
+  return(
+    <div>
+      <div className="flexi gap6 mb12">
+        <button className={section==='tutorial'?'primary':''} onClick={()=>setSection('tutorial')}>📖 HOW TO PLAY</button>
+        <button className={section==='rules'?'primary':''} onClick={()=>setSection('rules')}>⚖️ RULES</button>
+      </div>
+
+      {section==='tutorial'&&(
+        <div>
+          <div className="box" style={{borderColor:'var(--p)',background:'rgba(56,189,248,.04)',marginBottom:12,textAlign:'center'}}>
+            <div style={{fontSize:'1.4em',marginBottom:6}}>[ FRIEND QUEST ]</div>
+            <div className="cdim small">Assign quests. Complete them. Shame your friends. Repeat.</div>
+          </div>
+          {TUTORIAL_STEPS.map(s=>(
+            <div key={s.step} className="box" style={{marginBottom:8,display:'flex',gap:14,alignItems:'flex-start'}}>
+              <div style={{flexShrink:0,textAlign:'center'}}>
+                <div style={{fontSize:'1.6em'}}>{s.icon}</div>
+                <div className="cdim xs" style={{letterSpacing:'.05em',marginTop:2}}>{s.step}</div>
+              </div>
+              <div>
+                <div className="bold cp" style={{marginBottom:4,fontSize:'.92em'}}>{s.title}</div>
+                <div className="small" style={{color:'var(--text)',lineHeight:1.6}}>{s.text}</div>
+              </div>
+            </div>
+          ))}
+          <div className="box" style={{borderColor:'var(--yellow)',background:'rgba(251,191,36,.04)',textAlign:'center',marginTop:4}}>
+            <div className="cyellow bold mb6">⚡ XP QUICK REFERENCE</div>
+            <div className="grid2 xs" style={{gap:6}}>
+              {Object.entries(DIFF).map(([k,v])=>(
+                <div key={k} className="flexb" style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:2}}>
+                  <span className={`diff ${v.cls}`}>{v.icon} {v.label}</span>
+                  <span className="cyellow">{v.xp} XP</span>
+                </div>
+              ))}
+              <div className="flexb" style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:2}}>
+                <span className="cdim">Combo (3/day)</span><span className="cpurple">+25 XP</span>
+              </div>
+              <div className="flexb" style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:2}}>
+                <span className="cdim">Failure penalty</span><span className="cred">-{XP_LOSE} XP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {section==='rules'&&(
+        <div>
+          <div className="box" style={{borderColor:'var(--red)',background:'rgba(244,63,94,.04)',textAlign:'center',marginBottom:10}}>
+            <div className="cred bold" style={{fontSize:'.95em',letterSpacing:'.08em'}}>⚖️ FRIEND QUEST COMMUNITY RULES</div>
+            <div className="cdim xs mt6">Breaking these ruins the game for everyone. Don't be that person.</div>
+          </div>
+          {RULES.map((r,i)=>(
+            <div key={i} className="box" style={{display:'flex',gap:14,alignItems:'flex-start',marginBottom:6}}>
+              <div style={{fontSize:'1.5em',flexShrink:0,marginTop:2}}>{r.icon}</div>
+              <div>
+                <div className="bold" style={{color:'var(--pb)',marginBottom:3,fontSize:'.9em'}}>{r.title}</div>
+                <div className="small" style={{color:'var(--text)',lineHeight:1.6}}>{r.text}</div>
+              </div>
+            </div>
+          ))}
+          <div className="box" style={{borderColor:'var(--green)',background:'rgba(52,211,153,.04)',textAlign:'center',marginTop:4}}>
+            <div className="cgreen bold mb6">💎 THE GOLDEN RULE</div>
+            <div className="small" style={{lineHeight:1.7}}>If it feels like cheating, it probably is.<br/>If it would upset someone, don't do it.<br/>This is Friend Quest — keep it fun. 🎯</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══ SETTINGS TAB ════════════════════════════════════════════════════════════
+function SettingsTab({api,partyCode,settings,onSaved}){
+  const [local,setLocal]=useState({...DEF,...settings});
+  const [busy,setBusy]=useState(false);
+  const [ok,setOk]=useState('');
+  const [err,setErr]=useState('');
+  const upd=k=>e=>setLocal(s=>({...s,[k]:Number(e.target.value)}));
+  const save=async()=>{
+    setBusy(true);setOk('');setErr('');
+    try{await api.patch(`parties/${partyCode}/settings`,local);onSaved(local);setOk('Settings saved! All members see the new schedule.');setTimeout(()=>setOk(''),4000);}
+    catch(e){setErr(e.message);}setBusy(false);
+  };
+  return(
+    <div>
+      <div className="box">
+        <div className="box-title">⚙️ PARTY SETTINGS</div>
+        <div className="notif mb12 small">Settings are shared across all party members and saved to Firebase.</div>
+        <div className="box-title cdim xs mb6">QUEST WINDOW</div>
+        <div className="srow"><label>Window opens on</label><select value={local.windowDay} onChange={upd('windowDay')}>{DAYS.map((d,i)=><option key={i} value={i}>{d}</option>)}</select></div>
+        <div className="srow"><label>Opens at</label><select value={local.windowHour} onChange={upd('windowHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
+        <div className="srow"><label>Duration (days)</label><select value={local.durationDays} onChange={upd('durationDays')}>{[1,2,3,4,5,6,7].map(n=><option key={n} value={n}>{n} day{n>1?'s':''}</option>)}</select></div>
+        <div className="srow"><label>Deadline time</label><select value={local.deadlineHour} onChange={upd('deadlineHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
+        <div className="box-title cdim xs mt12 mb6">QUEST LIMITS</div>
+        <div className="srow"><label>Max quests per person</label><select value={local.maxPerPerson} onChange={upd('maxPerPerson')}>{Array.from({length:20},(_,i)=><option key={i+1} value={i+1}>{i+1} quest{i>0?'s':''}</option>)}</select></div>
+        <div className="cdim xs mt6">With {local.maxPerPerson}/person and 3 friends → up to <span className="cp">{local.maxPerPerson*3} quests</span>/week.</div>
+        <div className="box" style={{marginTop:12,background:'rgba(56,189,248,.04)',padding:'10px',fontSize:'.82em'}}>
+          <div className="cdim xs mb6">SCHEDULE PREVIEW</div>
+          <div>Window: <span className="cp">{DAYS[local.windowDay]} at {hourLabel(local.windowHour)}</span></div>
+          <div>Deadline: <span className="cyellow">{DAYS[(local.windowDay+local.durationDays)%7]} at {hourLabel(local.deadlineHour)}:59</span></div>
+        </div>
+        {err&&<div className="notif err">{err}</div>}
+        {ok&&<div className="notif ok">{ok}</div>}
+        <div className="flexi gap6 mt6">
+          <button className="btn-big primary" style={{flex:2}} onClick={save} disabled={busy}>{busy?'SAVING...':'[ SAVE SETTINGS ]'}</button>
+          <button style={{flex:1}} onClick={()=>setLocal({...DEF})}>[ RESET ]</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══ GAME ════════════════════════════════════════════════════════════════════
+function Game({api,userId,partyCode,userName,onLeave}){
+  const [tab,setTab]=useState('quests');
+  const [partyData,setPartyData]=useState(null);
+  const [allQuests,setAllQuests]=useState({});
+  const [loading,setLoading]=useState(true);
+  const [completing,setCompleting]=useState(null);
+  const [copied,setCopied]=useState(false);
+  const [,setTick]=useState(0);
+  const [settings,setSettings]=useState({...DEF});
+  const [toasts,setToasts]=useState([]);
+  const [showSummary,setShowSummary]=useState(false);
+  const [summaryWeek,setSummaryWeek]=useState(null);
+
+  useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),1000);return()=>clearInterval(t);},[]);
+
+  const addToast=(title,msg,color,dur=4000)=>{
+    const id=mkid();
+    setToasts(t=>[...t,{id,title,msg,color}]);
+    setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),dur);
+  };
+
+  const poll=useCallback(async()=>{
+    try{
+      const [party,aq]=await Promise.all([api.get(`parties/${partyCode}`),api.get(`parties/${partyCode}/quests`)]);
+      if(party){setPartyData(party);if(party.settings)setSettings(s=>({...DEF,...party.settings}));}
+      const aqs=aq||{};setAllQuests(aqs);setLoading(false);
+      const wi=getWeekInfo(party?.settings);
+      if(wi.expired&&aqs[wi.id]){
+        const expired=Object.entries(aqs[wi.id]).filter(([,q])=>!q.completed&&!q.penaltyApplied&&q.proofStatus!=='approved');
+        for(const [qid] of expired)await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{penaltyApplied:true});
+      }
+      // Check weekly summary
+      const lastSeen=localStorage.getItem(K.WEEK);
+      const prevWeeks=Object.keys(aqs).filter(wk=>wk<wi.id).sort();
+      const mostRecentPrevWeek=prevWeeks[prevWeeks.length-1];
+      if(mostRecentPrevWeek&&mostRecentPrevWeek!==lastSeen&&aqs[mostRecentPrevWeek]){
+        setSummaryWeek(mostRecentPrevWeek);setShowSummary(true);
+        localStorage.setItem(K.WEEK,mostRecentPrevWeek);
+      }
+    }catch(e){console.warn(e);}
+  },[partyCode]);
+
+  useEffect(()=>{poll();const t=setInterval(poll,4500);return()=>clearInterval(t);},[poll]);
+
+  const completeQuest=async(qid,difficulty)=>{
+    setCompleting(qid);
+    const wi=getWeekInfo(settings);
+    const bonusEvent=getBonusEvent(wi.id);
+    const xp=questXP(difficulty,bonusEvent);
+    // Combo check
+    const todayDone=Object.values(allQuests[wi.id]||{}).filter(q=>q.assignedTo===userId&&q.completed&&q.completedAt&&new Date(q.completedAt).toDateString()===new Date().toDateString()).length;
+    const comboBonus=todayDone>=2?25:0;
+    try{
+      await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{completed:true,completedAt:Date.now(),xpAwarded:xp+comboBonus});
+      addToast('✓ QUEST COMPLETE!',`${rnd(FUNNY_COMPLETE)} +${xp+comboBonus} XP`,'var(--green)');
+      if(comboBonus>0)addToast('🔥 COMBO BONUS!',`${todayDone+1} quests today! +${comboBonus} XP bonus`,'var(--purple)');
+      // Mystery box for hard/legendary
+      if(difficulty==='legendary'||(difficulty==='hard'&&Math.random()<0.3)){
+        await api.patch(`parties/${partyCode}/members/${userId}`,{mysteryBoxes:(partyData?.members?.[userId]?.mysteryBoxes||0)+1});
+        addToast('📦 MYSTERY BOX!','Check your Profile to open it!','var(--purple)');
+      }
+    }catch(e){console.error(e);}setCompleting(null);
+  };
+
+  const submitProof=async(qid,proof)=>{
+    const wi=getWeekInfo(settings);
+    await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{proof,proofStatus:'pending'});
+    addToast('📸 PROOF SUBMITTED','Waiting for the assigner to review...','var(--yellow)');
+  };
+
+  const approveProof=async(qid)=>{
+    const wi=getWeekInfo(settings);
+    const q=(allQuests[wi.id]||{})[qid];
+    const xp=questXP(q?.difficulty,getBonusEvent(wi.id));
+    await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{completed:true,completedAt:Date.now(),proofStatus:'approved',xpAwarded:xp});
+    addToast('✓ PROOF APPROVED',`Quest complete! +${xp} XP awarded`,'var(--green)');
+  };
+
+  const rejectProof=async(qid,reason)=>{
+    const wi=getWeekInfo(settings);
+    await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{proofStatus:'rejected',proofRejectedReason:reason||'Not good enough!'});
+    addToast('✗ PROOF REJECTED','The assigner wants better evidence 😤','var(--red)');
+  };
+
+  const pickPenalty=async(qid,choice)=>{
+    const wi=getWeekInfo(settings);
+    await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{penaltyChosen:choice});
+    addToast('☠ PENALTY CHOSEN','May your punishment be swift 😈','var(--red)');
+  };
+
+  const handleAwardBadges=async(ids,badgeMap)=>{
+    const now=Date.now();const updates={};
+    ids.forEach(b=>{if(!partyData?.members?.[userId]?.badges?.[b])updates[b]=now;});
+    if(Object.keys(updates).length>0){
+      await api.patch(`parties/${partyCode}/members/${userId}/badges`,updates);
+      ids.slice(0,2).forEach(b=>{
+        const def=BADGE_DEFS[b]||SECRET_DEFS[b.replace('SECRET_','')]||{name:b,icon:'🏅'};
+        addToast(`🏅 BADGE UNLOCKED!`,`${def.icon} ${def.name}`,'var(--yellow)',5000);
+      });
+    }
+  };
+
+  const handleSpin=async(result)=>{
+    if(result.type==='xp'&&result.val){
+      // Award XP via a phantom completed quest marker — simplest approach
+      addToast('🎰 SPIN REWARD!',`${result.label}`,'var(--yellow)');
+    }else if(result.type==='box'){
+      await api.patch(`parties/${partyCode}/members/${userId}`,{mysteryBoxes:(partyData?.members?.[userId]?.mysteryBoxes||0)+1});
+      addToast('📦 MYSTERY BOX!','Check your Profile tab!','var(--purple)');
+    }else if(result.type==='dud'){
+      addToast('🌚 NOTHING TODAY','The wheel has spoken. Touch grass.','var(--dim)');
+    }
+  };
+
+  if(loading)return<Loading/>;
+
+  const wi=getWeekInfo(settings);
+  const members=partyData?.members||{};
+  const currentQuests=allQuests[wi.id]||{};
+  const myStats=computeStats(allQuests,userId);
+  const myStreak=computeStreak(allQuests,userId);
+  const savedBadges=members[userId]?.badges||{};
+  const maxPer=settings.maxPerPerson||DEF.maxPerPerson;
+  const bonusEvent=getBonusEvent(wi.id);
+  const liveLeft=Math.max(0,wi.end-Date.now());
+  const pendingProofs=Object.values(currentQuests).filter(q=>q.proofStatus==='pending');
+  const pendingPenalties=Object.values(currentQuests).filter(q=>q.penaltyApplied&&!q.penaltyChosen);
+  const pendingProofCount=pendingProofs.filter(q=>q.assignedBy===userId).length;
+  const pendingPenaltyCount=pendingPenalties.filter(q=>q.assignedTo===userId).length;
+  const member=members[userId]||{};
+  const titleDef=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
+
+  const TABS=[
+    ['quests','📋 QUESTS',0],['assign','✏️ ASSIGN',pendingProofCount],['log','📜 LOG',0],
+    ['board','🏆 BOARD',0],['badges','🏅 BADGES',0],['profile','👤 PROFILE',0],
+    ['spin','🎰 SPIN',0],['rules','📖 RULES',0],['settings','⚙️ SETTINGS',0],
+  ];
+
+  return(
+    <div className="wrap">
+      <Toasts toasts={toasts}/>
+      {showSummary&&summaryWeek&&(
+        <WeeklySummaryModal summary={{weekId:summaryWeek}} members={members} allQuests={allQuests} userId={userId}
+          onClose={()=>{setShowSummary(false);setSummaryWeek(null);}}/>
+      )}
+
+      {/* Header */}
+      <div className="hdr" style={{paddingBottom:10}}>
+        <div className="flexb" style={{flexWrap:'wrap',gap:8}}>
+          <div>
+            <h1 style={{fontSize:'clamp(1.1rem,3.5vw,1.7rem)'}}>[ FRIEND QUEST ]</h1>
+            <div className="sub">PARTY: <span className="code" onClick={()=>{navigator.clipboard.writeText(partyCode);setCopied(true);setTimeout(()=>setCopied(false),2000);}}>{partyCode}</span>
+              {copied&&<span className="cgreen xs"> ✓</span>}
+            </div>
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div className="cp small">{member.name||userName}</div>
+            <div style={{color:titleDef.color,fontSize:'.75em'}}>[ {titleDef.name} ]</div>
+            <div className="cyellow small">⚡ {myStats.xp} XP {myStreak.current>=2&&`🔥 ${myStreak.current}wk`}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bonus event banner */}
+      {bonusEvent?.id!=='normal'&&bonusEvent?.name&&(
+        <div className="event-banner"><span className="cpurple bold">{bonusEvent.name}</span>  <span className="cdim xs">{bonusEvent.desc}</span></div>
+      )}
+
+      {/* Timer */}
+      {wi.inWindow?(
+        <div className={`timer-box ${wi.hoursLeft<12?'urgent':''}`}>
+          <div className="cdim xs" style={{marginBottom:2}}>TIME REMAINING</div>
+          <div className="t-num">{timerStr(liveLeft)}</div>
+          {wi.urgentMsg&&<div className="small mt6" style={{color:wi.urgentMsg.col}}>{wi.urgentMsg.msg}</div>}
+        </div>
+      ):(
+        <div className="timer-box closed">WINDOW CLOSED — Next window: <span className="cyellow">{DAYS[settings.windowDay]} at {hourLabel(settings.windowHour)}</span></div>
+      )}
+
+      {/* Tabs */}
+      <div className="tabs">
+        {TABS.map(([id,label,notif])=>(
+          <button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>
+            {label}{notif>0&&<span className="notif-dot"/>}
+          </button>
+        ))}
+        {pendingPenaltyCount>0&&<div className="notif err xs flexi gap6" style={{padding:'4px 8px',margin:'2px'}}>☠ {pendingPenaltyCount} penalty to pick!</div>}
+        <button className="btn-danger" style={{marginLeft:'auto'}} onClick={onLeave}>← LEAVE</button>
+      </div>
+
+      {tab==='quests'&&<MyQuestsTab quests={currentQuests} members={members} userId={userId} inWindow={wi.inWindow}
+        onComplete={completeQuest} completing={completing} bonusEvent={bonusEvent}
+        onProofSubmit={submitProof} onPickPenalty={pickPenalty}/>}
+      {tab==='assign'&&<AssignTab api={api} partyCode={partyCode} userId={userId} members={members}
+        quests={currentQuests} weekId={wi.id} inWindow={wi.inWindow} maxPer={maxPer}
+        pendingProofs={pendingProofs} onApprove={approveProof} onReject={rejectProof}/>}
+      {tab==='log'&&<QuestLogTab quests={currentQuests} members={members} userId={userId} weekId={wi.id} api={api} partyCode={partyCode}/>}
+      {tab==='board'&&<LeaderboardTab members={members} allQuests={allQuests} userId={userId} currentWeekId={wi.id} bonusEvent={bonusEvent}/>}
+      {tab==='badges'&&<BadgesTab allQuests={allQuests} userId={userId} members={members} savedBadges={savedBadges} onAward={handleAwardBadges}/>}
+      {tab==='profile'&&<ProfileTab allQuests={allQuests} userId={userId} members={members} api={api} partyCode={partyCode} onTitleChange={t=>setPartyData(p=>({...p,members:{...p.members,[userId]:{...p.members[userId],selectedTitle:t}}}))}/>}
+      {tab==='spin'&&<DailySpinTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} onSpin={handleSpin}/>}
+      {tab==='rules'&&<RulesTab/>}
+      {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})}/>}
+    </div>
+  );
+}
+
+// ═══ APP ═════════════════════════════════════════════════════════════════════
+function App(){
+  const [screen,setScreen]=useState('init');
+  const [api]=useState(()=>makeApi(DB));
+  const [userId]=useState(()=>{let id=localStorage.getItem(K.UID);if(!id){id=mkid();localStorage.setItem(K.UID,id);}return id;});
+  const [partyCode,setPartyCode]=useState('');
+  const [userName,setUserName]=useState('');
+  useEffect(()=>{
+    localStorage.setItem(K.URL,DB);
+    const party=localStorage.getItem(K.PARTY),name=localStorage.getItem(K.NAME);
+    if(party&&name){setPartyCode(party);setUserName(name);setScreen('game');}else setScreen('party');
+  },[]);
+  if(screen==='init')return<Loading/>;
+  if(screen==='party')return<Party api={api} userId={userId} onDone={(c,n)=>{localStorage.setItem(K.PARTY,c);localStorage.setItem(K.NAME,n);setPartyCode(c);setUserName(n);setScreen('game');}}/>;
+  if(screen==='game')return<Game api={api} userId={userId} partyCode={partyCode} userName={userName} onLeave={()=>{localStorage.removeItem(K.PARTY);localStorage.removeItem(K.NAME);setScreen('party');}}/>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
