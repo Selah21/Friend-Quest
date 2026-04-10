@@ -178,6 +178,55 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .pop-in{animation:pop-in .25s ease-out}
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--pd)}
+/* CHAT */
+.chat-area{max-height:420px;overflow-y:auto;padding:10px 12px;min-height:180px;scroll-behavior:smooth}
+.chat-bubble{max-width:80%;padding:8px 12px;word-break:break-word;font-size:.85em;line-height:1.5}
+.chat-bubble.mine{background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);border-radius:12px 12px 3px 12px}
+.chat-bubble.theirs{background:var(--card2);border:1px solid var(--border);border-radius:12px 12px 12px 3px}
+.chat-input-row{border-top:1px solid var(--border);padding:10px 12px;display:flex;gap:8px}
+/* GROUP CHIP */
+.gchip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border2);border-radius:3px;background:var(--card2);cursor:pointer;transition:border-color .15s}
+.gchip:hover{border-color:var(--p)}
+/* PET SYSTEM */
+.pet-emoji{display:inline-block;line-height:1;transition:all .3s;position:relative;z-index:1}
+.pet-emoji.flourishing{animation:pet-bounce .65s ease-in-out infinite alternate}
+.pet-emoji.stable{animation:pet-float 2.8s ease-in-out infinite}
+.pet-emoji.strained{animation:pet-droop 2.2s ease-in-out infinite}
+.pet-emoji.critical{animation:pet-weak 1.4s ease-in-out infinite}
+.pet-emoji.lost{animation:pet-spirit 2.5s ease-in-out infinite;filter:grayscale(1) opacity(.5)}
+@keyframes pet-bounce{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-14px) scale(1.1)}}
+@keyframes pet-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes pet-droop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(6px) rotate(3deg)}}
+@keyframes pet-weak{0%,100%{transform:scale(1) rotate(-2deg);opacity:.65}50%{transform:scale(.9) rotate(2deg);opacity:.35}}
+@keyframes pet-spirit{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-14px);opacity:.85}}
+@keyframes aura-pulse{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.25);opacity:.65}}
+.pet-bar{height:7px;background:var(--border);border-radius:4px;overflow:hidden;margin:6px 0}
+.pet-bar .fill{height:100%;border-radius:4px;transition:width .9s ease}
+.item-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:8px}
+.item-card{border:1px solid var(--border);background:var(--card);padding:10px;text-align:center;border-radius:3px;transition:all .2s}
+.item-card.unlocked{cursor:pointer}.item-card.unlocked:hover{border-color:var(--p);box-shadow:0 0 8px var(--glow)}
+.item-card.equipped{border-color:var(--yellow);background:rgba(251,191,36,.07);box-shadow:0 0 10px rgba(251,191,36,.12)}
+.item-card.locked{opacity:.38;cursor:not-allowed}
+.item-card.seasonal{border-color:rgba(168,85,247,.6);background:rgba(168,85,247,.05)}
+.item-card.seasonal.unlocked:hover{border-color:var(--purple);box-shadow:0 0 10px rgba(168,85,247,.3)}
+.archive-card{border:1px solid var(--border);background:var(--card2);padding:12px;border-radius:3px;margin:6px 0;display:flex;align-items:center;gap:12px}
+.archive-card.spirit{opacity:.55;filter:grayscale(.5)}
+/* COINS */
+.coin-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:20px;font-size:.75em;color:var(--yellow)}
+/* SHOP */
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px}
+.shop-card{border:1px solid var(--border);background:var(--card);padding:12px;border-radius:3px;text-align:center;transition:all .2s;cursor:pointer}
+.shop-card:hover:not(.cant-afford):not(.owned){border-color:var(--yellow);box-shadow:0 0 10px rgba(251,191,36,.15)}
+.shop-card.cant-afford{opacity:.42;cursor:not-allowed}
+.shop-card.owned{border-color:var(--green);background:rgba(52,211,153,.04);cursor:default}
+.shop-card.active-boost{border-color:var(--p);background:rgba(56,189,248,.06);animation:glow-pulse 3s infinite}
+/* AVATAR PICKER */
+.av-emoji-grid{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.av-opt{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;border:2px solid transparent;cursor:pointer;font-size:1.4em;transition:all .15s;background:var(--card2)}
+.av-opt:hover,.av-opt.sel{border-color:var(--p);box-shadow:0 0 8px var(--glow)}
+.av-color-grid{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.av-color{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s}
+.av-color:hover,.av-color.sel{border-color:#fff;box-shadow:0 0 6px rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
@@ -186,45 +235,45 @@ button:disabled{opacity:.32;cursor:not-allowed}
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback } = React;
 
-// ═══ KEYS & DB ══════════════════════════════════════════════════════════════
-const K = { URL:'ql_db', UID:'ql_uid', PARTY:'ql_party', NAME:'ql_name', WEEK:'ql_lastweek' };
+// âââ KEYS & DB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const K = { URL:'ql_db', UID:'ql_uid', PARTY:'ql_party', NAME:'ql_name', WEEK:'ql_lastweek', GROUPS:'ql_groups', CHAT_TS:'ql_chat_ts' };
 const DB = 'https://friend-quest-4d07e-default-rtdb.firebaseio.com';
-const DEF = { windowDay:3, windowHour:20, durationDays:4, deadlineHour:23, maxPerPerson:6 };
+const DEF = { windowDay:3, windowHour:20, durationDays:4, deadlineHour:23, maxPerPerson:6, chatEnabled:true };
 const XP_WIN = 100, XP_LOSE = 75;
 const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const RXNS = ['🔥','💀','😂','👀','💎'];
+const RXNS = ['ð¥','ð','ð','ð','ð'];
 
-// ═══ DIFFICULTIES ═══════════════════════════════════════════════════════════
+// âââ DIFFICULTIES âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const DIFF = {
-  easy:      { label:'EASY',      icon:'🟢', xp:75,  cls:'diff-easy'      },
-  medium:    { label:'MEDIUM',    icon:'🟡', xp:100, cls:'diff-medium'    },
-  hard:      { label:'HARD',      icon:'🔴', xp:150, cls:'diff-hard'      },
-  legendary: { label:'LEGENDARY', icon:'💀', xp:250, cls:'diff-legendary' },
+  easy:      { label:'EASY',      icon:'ð¢', xp:75,  cls:'diff-easy'      },
+  medium:    { label:'MEDIUM',    icon:'ð¡', xp:100, cls:'diff-medium'    },
+  hard:      { label:'HARD',      icon:'ð´', xp:150, cls:'diff-hard'      },
+  legendary: { label:'LEGENDARY', icon:'ð', xp:250, cls:'diff-legendary' },
 };
 
-// ═══ PENALTY POOL ═══════════════════════════════════════════════════════════
+// âââ PENALTY POOL âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const PENALTIES = [
-  "Post a cringey selfie in the group chat 📸",
+  "Post a cringey selfie in the group chat ð¸",
   "Send a voice memo saying 'I am a failure and I accept this'",
-  "Write a 3-sentence apology essay to the group 📝",
+  "Write a 3-sentence apology essay to the group ð",
   "Do 30 jumping jacks on video call or it doesn't count",
   "Change your contact name to 'The Coward' for 24 hours",
   "Text your mom that you love her RIGHT NOW and screenshot it",
-  "Do your best celebrity impression and send it as a voice note 🎤",
+  "Do your best celebrity impression and send it as a voice note ð¤",
   "Write the week's winner a sincere 5-word compliment",
   "Rate yourself 0/10 in the group chat with a detailed reason",
   "Make a voice memo saying the winner's name dramatically 3 times",
-  "Post your most embarrassing photo from this year 🤦",
+  "Post your most embarrassing photo from this year ð¤¦",
   "Do a 30-second pep talk video... to yourself",
   "Narrate your next meal like a food critic. Send the recording.",
-  "Owe the winner a favor of their choosing (within reason 😈)",
+  "Owe the winner a favor of their choosing (within reason ð)",
   "Tell the group your most embarrassing recent moment",
   "Send a photo of your most chaotic corner of your room",
   "Do 20 push-ups. Honor system, but we're watching.",
   "Write a haiku about your failure and perform it dramatically",
 ];
 
-// ═══ QUEST SUGGESTIONS ══════════════════════════════════════════════════════
+// âââ QUEST SUGGESTIONS ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const SUGGESTIONS = {
   "Fitness":   ["Do 20 push-ups before noon","Run or walk for 20 minutes outside","Drink 8 glasses of water today","Do a 10-minute stretch session","No junk food for the day","Take 10,000 steps","Do 50 squats throughout the day","Hold a plank for 60 seconds"],
   "Social":    ["Text someone you haven't talked to in months","Give someone a genuine compliment to their face","Call a family member just to chat","Make a new friend or talk to a stranger","Buy coffee for the person behind you","Write a thank-you note to someone"],
@@ -233,18 +282,18 @@ const SUGGESTIONS = {
   "Wild":      ["Eat something you've never tried before","Watch a movie in a genre you never pick","Try cold shower for 30 seconds","Write a list of 10 things you're grateful for","Do something that scares you slightly"],
 };
 
-// ═══ BONUS EVENTS ═══════════════════════════════════════════════════════════
+// âââ BONUS EVENTS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const EVENTS = [
-  { id:'double',    name:'⚡ DOUBLE XP WEEK!',      desc:'All quests worth 2× XP this week!',        multi:2, color:'var(--yellow)' },
-  { id:'mercy',     name:'🕊️ MERCY WEEK',             desc:'No XP penalties for failures this week.',  multi:1, color:'var(--green)'  },
-  { id:'speed',     name:'🚀 SPEEDRUN CHALLENGE',    desc:'Quests completed in <2hrs worth +50 XP!',  multi:1, color:'var(--p)'      },
-  { id:'legendary', name:'💀 LEGENDARY MODE',        desc:'All quests treated as Legendary XP!',      multi:2.5,color:'var(--purple)'},
+  { id:'double',    name:'â¡ DOUBLE XP WEEK!',      desc:'All quests worth 2Ã XP this week!',        multi:2, color:'var(--yellow)' },
+  { id:'mercy',     name:'ðï¸ MERCY WEEK',             desc:'No XP penalties for failures this week.',  multi:1, color:'var(--green)'  },
+  { id:'speed',     name:'ð SPEEDRUN CHALLENGE',    desc:'Quests completed in <2hrs worth +50 XP!',  multi:1, color:'var(--p)'      },
+  { id:'legendary', name:'ð LEGENDARY MODE',        desc:'All quests treated as Legendary XP!',      multi:2.5,color:'var(--purple)'},
   { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
   { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
   { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
 ];
 
-// ═══ TITLES ═════════════════════════════════════════════════════════════════
+// âââ TITLES âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const TITLES = [
   { id:'SLACKER',    name:'The Slacker',    xp:0,    streak:0, color:'var(--dim)'     },
   { id:'RECRUIT',    name:'Recruit',        xp:100,  streak:0, color:'var(--text)'    },
@@ -260,73 +309,167 @@ const TITLES = [
   { id:'TOP_DOG',    name:'Top Dog',        badge:'TOP_DOG',   color:'var(--yellow)'  },
 ];
 
-// ═══ BADGE DEFINITIONS ══════════════════════════════════════════════════════
+// âââ BADGE DEFINITIONS ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const BADGE_DEFS = {
-  INITIATE:    { name:'Initiate',     icon:'🎯', desc:'Complete your first quest',              rarity:'common'   },
-  OVERACHIEVER:{ name:'Overachiever', icon:'⚡', desc:'Complete 5+ quests in one week',         rarity:'uncommon' },
-  GRINDER:     { name:'Grinder',      icon:'💪', desc:'Complete 10+ quests in one week',        rarity:'rare'     },
-  FLAWLESS:    { name:'Flawless',     icon:'💎', desc:'Perfect week — all done, zero failures', rarity:'rare'     },
-  COMEBACK:    { name:'Comeback Kid', icon:'🔥', desc:'Perfect week after a week with failures',rarity:'rare'     },
-  SPEEDSTER:   { name:'Speedster',    icon:'🚀', desc:'Complete a quest within 4 hours',        rarity:'uncommon' },
-  QUEST_GIVER: { name:'Quest Giver',  icon:'📋', desc:'Assign to every member in a week',       rarity:'common'   },
-  UNTOUCHABLE: { name:'Untouchable',  icon:'🛡️', desc:'Zero failures for 2+ weeks in a row',   rarity:'rare'     },
-  DEDICATED:   { name:'Dedicated',    icon:'⭐', desc:'Complete 25 quests lifetime',            rarity:'uncommon' },
-  LEGENDARY:   { name:'Legendary',    icon:'👑', desc:'Accumulate 1,000 XP',                   rarity:'epic'     },
-  TOP_DOG:     { name:'Top Dog',      icon:'🏆', desc:'Hold the #1 spot on the leaderboard',    rarity:'epic'     },
-  CENTURY:     { name:'Century',      icon:'💯', desc:'Complete 100 quests lifetime',           rarity:'epic'     },
+  INITIATE:    { name:'Initiate',     icon:'ð¯', desc:'Complete your first quest',              rarity:'common'   },
+  OVERACHIEVER:{ name:'Overachiever', icon:'â¡', desc:'Complete 5+ quests in one week',         rarity:'uncommon' },
+  GRINDER:     { name:'Grinder',      icon:'ðª', desc:'Complete 10+ quests in one week',        rarity:'rare'     },
+  FLAWLESS:    { name:'Flawless',     icon:'ð', desc:'Perfect week â all done, zero failures', rarity:'rare'     },
+  COMEBACK:    { name:'Comeback Kid', icon:'ð¥', desc:'Perfect week after a week with failures',rarity:'rare'     },
+  SPEEDSTER:   { name:'Speedster',    icon:'ð', desc:'Complete a quest within 4 hours',        rarity:'uncommon' },
+  QUEST_GIVER: { name:'Quest Giver',  icon:'ð', desc:'Assign to every member in a week',       rarity:'common'   },
+  UNTOUCHABLE: { name:'Untouchable',  icon:'ð¡ï¸', desc:'Zero failures for 2+ weeks in a row',   rarity:'rare'     },
+  DEDICATED:   { name:'Dedicated',    icon:'â­', desc:'Complete 25 quests lifetime',            rarity:'uncommon' },
+  LEGENDARY:   { name:'Legendary',    icon:'ð', desc:'Accumulate 1,000 XP',                   rarity:'epic'     },
+  TOP_DOG:     { name:'Top Dog',      icon:'ð', desc:'Hold the #1 spot on the leaderboard',    rarity:'epic'     },
+  CENTURY:     { name:'Century',      icon:'ð¯', desc:'Complete 100 quests lifetime',           rarity:'epic'     },
+  BOUNTY_HUNTER:{ name:'Bounty Hunter',icon:'ð¯', desc:'Complete a Legendary difficulty quest',  rarity:'rare'     },
+  WEEK_WARRIOR: { name:'Week Warrior', icon:'âï¸', desc:'Score a completion in 5 or more weeks', rarity:'uncommon' },
+  COMPLETIONIST:{ name:'Completionist',icon:'â¨', desc:'Complete 50 quests lifetime',            rarity:'rare'     },
+  PROOF_MASTER: { name:'Proof Master', icon:'ð¸', desc:'Get 10 proof submissions approved',      rarity:'uncommon' },
+  INSTA_HERO:   { name:'Insta Hero',   icon:'â¡', desc:'Complete an auto-assigned insta-quest',  rarity:'uncommon' },
+  CHAT_STAR:    { name:'Chat Star',    icon:'ð¬', desc:'Send 20+ messages in the group chat',    rarity:'common'   },
+  SOCIAL_ASSIGN:{ name:'Assignment Pro',icon:'ð',desc:'Assign quests to 3+ different people in one week', rarity:'common' },
 };
 const SECRET_DEFS = {
-  NIGHT_OWL:  { name:'Night Owl',     icon:'🦉', desc:'Complete a quest between midnight and 4 AM' },
-  CLUTCH:     { name:'Clutch',        icon:'⏱️', desc:'Complete a quest in the last hour of the deadline' },
-  EARLY_BIRD: { name:'Early Bird',    icon:'🐦', desc:'Complete a quest within 1 hour of the window opening' },
-  GHOST:      { name:'The Ghost',     icon:'👻', desc:'Fail every quest assigned in a full week' },
-  FIRST_BLOOD:{ name:'First Blood',   icon:'⚔️', desc:'Be the first to complete a quest in any week' },
-  CRITIQUER:  { name:'Harsh Critic',  icon:'🧐', desc:'Reject 3 proofs as a reviewer' },
-  REDEMPTION: { name:'Redemption Arc',icon:'🌅', desc:'Go from last to first place' },
-  MARATHON:   { name:'Marathon',      icon:'🏃', desc:'Complete 5 quests on the same day' },
+  NIGHT_OWL:  { name:'Night Owl',     icon:'ð¦', desc:'Complete a quest between midnight and 4 AM' },
+  CLUTCH:     { name:'Clutch',        icon:'â±ï¸', desc:'Complete a quest in the last hour of the deadline' },
+  EARLY_BIRD: { name:'Early Bird',    icon:'ð¦', desc:'Complete a quest within 1 hour of the window opening' },
+  GHOST:      { name:'The Ghost',     icon:'ð»', desc:'Fail every quest assigned in a full week' },
+  FIRST_BLOOD:{ name:'First Blood',   icon:'âï¸', desc:'Be the first to complete a quest in any week' },
+  CRITIQUER:  { name:'Harsh Critic',  icon:'ð§', desc:'Reject 3 proofs as a reviewer' },
+  REDEMPTION: { name:'Redemption Arc',icon:'ð', desc:'Go from last to first place' },
+  MARATHON:   { name:'Marathon',      icon:'ð', desc:'Complete 5 quests on the same day' },
+  LAST_SECOND:{ name:'Nail-Biter',   icon:'â°', desc:'Complete a quest in the final 30 minutes before the deadline' },
+  INSTA_FUMBLE:{ name:'Insta Fumble',icon:'ð¤¦', desc:'Fail an auto-assigned insta-quest â ouch' },
+  THE_REACTOR: { name:'The Reactor', icon:'ð¥', desc:'React to 10 different quest entries with emoji' },
 };
 const RARITY_COLOR = { common:'var(--text)', uncommon:'var(--green)', rare:'var(--p)', epic:'var(--yellow)' };
 
-// ═══ SPIN RESULTS ═══════════════════════════════════════════════════════════
+// âââ GUARDIAN PET SYSTEM ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const MONTHLY_PETS = {
+  1: {name:'Frost Fox',    emoji:'ð¦',color:'#7dd3fc',desc:'A silver-tipped fox from the frozen north'},
+  2: {name:'Heart Bunny',  emoji:'ð°',color:'#f9a8d4',desc:'Soft and warm â brings love wherever it hops'},
+  3: {name:'Moss Frog',    emoji:'ð¸',color:'#86efac',desc:'A little herald of spring, born from the first rain'},
+  4: {name:'Storm Raven',  emoji:'ð¦',color:'#818cf8',desc:'Dark and electric â carries lightning in its wings'},
+  5: {name:'Sun Moth',     emoji:'ð¦',color:'#fde68a',desc:'A radiant moth drawn to the growing warmth'},
+  6: {name:'Sea Turtle',   emoji:'ð¢',color:'#5eead4',desc:'Patient and ancient â carries wisdom on its shell'},
+  7: {name:'Blaze Cat',    emoji:'ð±',color:'#fb923c',desc:'Fierce and fast â born from the heart of summer'},
+  8: {name:'Tide Crab',    emoji:'ð¦',color:'#38bdf8',desc:'Tenacious and curious â rides the last waves of summer'},
+  9: {name:'Harvest Owl',  emoji:'ð¦',color:'#d97706',desc:'Wise and amber-eyed, watching over the harvest'},
+  10:{name:'Shadow Bat',   emoji:'ð¦',color:'#a78bfa',desc:'A mysterious creature from the veil of twilight'},
+  11:{name:'Ember Wolf',   emoji:'ðº',color:'#f87171',desc:'Haunted but fierce â runs through dying embers'},
+  12:{name:'Snow Bear',    emoji:'ð»',color:'#bae6fd',desc:'Ancient and patient â guardian of the long night'},
+};
+const PET_STATES = {
+  flourishing:{label:'FLOURISHING',icon:'â¨',color:'var(--green)',  healthPct:95, desc:'Your pet is thriving! Glowing with pure energy.'},
+  stable:     {label:'STABLE',     icon:'ð',color:'var(--p)',     healthPct:70, desc:'Content and healthy. Keep up the quests!'},
+  strained:   {label:'STRAINED',   icon:'ð',color:'var(--yellow)',healthPct:38, desc:'Starting to worry... Complete some quests soon.'},
+  critical:   {label:'CRITICAL',   icon:'ð°',color:'var(--red)',   healthPct:13, desc:'Fading fast. Your pet needs you RIGHT NOW.'},
+  lost:       {label:'LOST',       icon:'ð»',color:'var(--dim)',   healthPct:0,  desc:'Your pet became a spirit. Complete quests to restore it.'},
+};
+const PET_PERSONALITIES = {
+  loyal:   {name:'Loyal',   icon:'ð',desc:'Consistent and devoted â fåver wavers from your side'},
+  calm:    {name:'Calm',    icon:'ð',desc:'Steady and peaceful â takes everything in stride'},
+  moody:   {name:'Moody',   icon:'ð',desc:'Unpredictable â mirrors your inconsistent completion'},
+  unstable:{name:'Unstable',icon:'ð¤',desc:'Erratic swings â reflects a chaotic week pattern'},
+  shy:     {name:'Shy',     icon:'ð©¶',desc:'Withdrawn and distant â you\'ve been neglecting quests'},
+};
+const PET_ITEMS = [
+  {id:'hat_cap',    name:'Quest Cap',     icon:'ð©',type:'hat',   unlock:'complete_5',  unlockDesc:'Complete 5 quests'},
+  {id:'hat_crown',  name:'Gold Crown',    icon:'ð',type:'hat',   unlock:'top_dog',     unlockDesc:'Hold #1 on the leaderboard'},
+  {id:'hat_wizard', name:'Wizard Hat',    icon:'ð®',type:'hat',   unlock:'complete_25', unlockDesc:'Complete 25 quests'},
+  {id:'wings_fire', name:'Fire Wings',    icon:'ð¥',type:'wings', unlock:'streak_3',    unlockDesc:'Reach a 3-week streak'},
+  {id:'wings_angel',name:'Angel Wings',   icon:'ðï¸',type:'wings',unlock:'flawless',    unlockDesc:'Unlock the Flawless badge'},
+  {id:'collar_gold',name:'Gold Collar',   icon:'â¨',type:'collar',unlock:'complete_10', unlockDesc:'Complete 10 quests'},
+  {id:'collar_dark',name:'Shadow Collar', icon:'ð',type:'collar',unlock:'night_owl',   unlockDesc:'Unlock Night Owl secret badge'},
+  {id:'aura_nature',name:'Nature Aura',   icon:'ð',type:'aura',  unlock:'complete_15', unlockDesc:'Complete 15 quests'},
+  {id:'aura_flame', name:'Flame Aura',    icon:'ð',type:'aura',  unlock:'complete_50', unlockDesc:'Complete 50 quests lifetime'},
+  {id:'aura_shadow',name:'Shadow Aura',   icon:'ð«ï¸',type:'aura', unlock:'ghost',       unlockDesc:'Unlock The Ghost secret badge'},
+  {id:'aura_legend',name:'Legend Aura',   icon:'ð',type:'aura',  unlock:'legend',      unlockDesc:'Unlock the Legendary badge'},
+];
+const SEASONAL_ITEMS = [
+  {id:'aura_firework',name:'Firework Aura',icon:'ð',type:'aura',  month:1,  seasonName:"New Year's"},
+  {id:'wings_heart',  name:'Heart Wings',  icon:'ð',type:'wings', month:2,  seasonName:"Valentine's"},
+  {id:'hat_summer',   name:'Sun Visor',    icon:'âï¸',type:'hat',  month:7,  seasonName:'Summer'},
+  {id:'hat_pumpkin',  name:'Witch Hat',    icon:'ð',type:'hat',   month:10, seasonName:'Halloween'},
+  {id:'aura_spooky',  name:'Spooky Aura',  icon:'ð',type:'aura',  month:10, seasonName:'Halloween'},
+  {id:'hat_santa',    name:'Santa Hat',    icon:'ð',type:'hat',   month:12, seasonName:'Christmas'},
+  {id:'aura_snow',    name:'Snow Aura',    icon:'âï¸',type:'aura', month:12, seasonName:'Christmas'},
+];
+const ALL_PET_ITEMS = [...PET_ITEMS, ...SEASONAL_ITEMS];
+
+// âââ COINS & SHOP ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const COIN_REWARDS = { easy:10, medium:15, hard:25, legendary:45 };
+const SHOP_ITEMS = [
+  {id:'streak_freeze',   name:'Streak Freeze',  icon:'ð§', price:50,  type:'consumable', desc:'Skip a week without breaking your streak', qty:1},
+  {id:'xp_boost_1',      name:'XP Boost 1.5Ã',  icon:'â¡', price:75,  type:'consumable', desc:'Next quest earns 1.5Ã XP',                qty:1},
+  {id:'xp_boost_2',      name:'XP Boost 2Ã',    icon:'ð¥', price:150, type:'consumable', desc:'Next quest earns 2Ã XP',                  qty:1},
+  {id:'shop_box',        name:'Mystery Box',     icon:'ð¦', price:100, type:'consumable', desc:'Randomly awarded bonus XP (50â200)',      qty:1},
+  {id:'shop_hat_gem',    name:'Gem Crown',       icon:'ð', price:80,  type:'pet_hat',    desc:'A radiant gem crown for your guardian',   unlock:true},
+  {id:'shop_wings_star', name:'Star Wings',      icon:'â­', price:90,  type:'pet_wings',  desc:'Shimmering star-dust wings',              unlock:true},
+  {id:'shop_aura_rainbow',name:'Rainbow Aura',   icon:'ð', price:120, type:'pet_aura',   desc:'A prismatic aura of pure energy',         unlock:true},
+  {id:'shop_collar_gem', name:'Crystal Collar',  icon:'ð·', price:60,  type:'pet_collar', desc:'A glittering crystal collar',             unlock:true},
+];
+const SHOP_PET_ITEM_MAP = {
+  shop_hat_gem:    {id:'shop_hat_gem',    name:'Gem Crown',       icon:'ð',type:'hat'},
+  shop_wings_star: {id:'shop_wings_star', name:'Star Wings',      icon:'â­',type:'wings'},
+  shop_aura_rainbow:{id:'shop_aura_rainbow',name:'Rainbow Aura',  icon:'ð',type:'aura'},
+  shop_collar_gem: {id:'shop_collar_gem', name:'Crystal Collar',  icon:'ð·',type:'collar'},
+};
+
+// âââ AVATAR OPTIONS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+const AVATAR_EMOJIS = ['ð','ð','ð¦','ðº','ð¦','ð¸','ð¾','ð¤','ð­','ð§','ð¦','ð¼','ð¦','ð¯','ð¦','ð','ð','ð®','â¡','ð'];
+const AVATAR_BG_COLORS = ['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444','#1e5a8c','#0c4a6e','#64748b'];
+
+// âââ SPIN RESULTS âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const SPIN_POOL = [
-  { type:'xp',   val:25,  label:'+25 XP Bonus!',         icon:'⚡',  prob:28 },
-  { type:'xp',   val:50,  label:'+50 XP Bonus!',         icon:'⚡⚡', prob:22 },
-  { type:'xp',   val:100, label:'+100 XP!!',              icon:'💥',  prob:14 },
-  { type:'xp',   val:200, label:'JACKPOT! +200 XP 🎰',   icon:'💰',  prob:5  },
-  { type:'box',  val:0,   label:'Mystery Box! 📦',        icon:'📦',  prob:12 },
-  { type:'title',val:0,   label:'Lucky title for 24h 🍀', icon:'🍀',  prob:10 },
-  { type:'dud',  val:0,   label:'Better luck tomorrow 🌚',icon:'🌚',  prob:9  },
+  { type:'xp',   val:25,  label:'+25 XP Bonus!',         icon:'â¡',  prob:28 },
+  { type:'xp',   val:50,  label:'+50 XP Bonus!',         icon:'â¡â¡', prob:22 },
+  { type:'xp',   val:100, label:'+100 XP!!',              icon:'ð¥',  prob:14 },
+  { type:'xp',   val:200, label:'JACKPOT! +200 XP ð°',   icon:'ð°',  prob:5  },
+  { type:'box',  val:0,   label:'Mystery Box! ð¦',        icon:'ð¦',  prob:12 },
+  { type:'title',val:0,   label:'Lucky title for 24h ð', icon:'ð',  prob:10 },
+  { type:'dud',  val:0,   label:'Better luck tomorrow ð',icon:'ð',  prob:9  },
 ];
 
-// ═══ FUNNY MESSAGES ══════════════════════════════════════════════════════════
+// âââ FUNNY MESSAGES ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const FUNNY_COMPLETE = [
   "Look at you! A functional human being!","We genuinely didn't think you'd do it.",
-  "Achievement unlocked: not a complete failure 🏆","Your ancestors would be… cautiously proud.",
-  "The quest gods smile upon you ⚡","SPECTACULAR. Also mediocre. Somehow both.",
-  "Completed with the grace of a sleepy golden retriever 🐕","The crowd goes... mildly impressed!",
+  "Achievement unlocked: not a complete failure ð","Your ancestors would beâ¦ cautiously proud.",
+  "The quest gods smile upon you â¡","SPECTACULAR. Also mediocre. Somehow both.",
+  "Completed with the grace of a sleepy golden retriever ð","The crowd goes... mildly impressed!",
   "You did it! (We're as surprised as you are)","A winner is you. Allegedly.",
 ];
 const FUNNY_DEADLINE = [
-  { max:Infinity, msg:"Plenty of time, champ 😎 totally fine", col:'var(--green)' },
-  { max:72, msg:"Getting real now 👀 tick tock...", col:'var(--green)' },
+  { max:Infinity, msg:"Plenty of time, champ ð totally fine", col:'var(--green)' },
+  { max:72, msg:"Getting real now ð tick tock...", col:'var(--green)' },
   { max:48, msg:"Less than 2 days. No pressure. (pressure.)", col:'var(--yellow)' },
-  { max:24, msg:"Ok buddy it's time to MOVE 🏃", col:'var(--yellow)' },
-  { max:12, msg:"I'm not saying you're cooked but... 🔥", col:'var(--red)' },
-  { max:6,  msg:"ONE HOUR left. Do you even want XP?? 💀", col:'var(--red)' },
-  { max:1,  msg:"FINAL MINUTES. This is not a drill. 🚨🚨🚨", col:'var(--red)' },
+  { max:24, msg:"Ok buddy it's time to MOVE ð", col:'var(--yellow)' },
+  { max:12, msg:"I'm not saying you're cooked but... ð¥", col:'var(--red)' },
+  { max:6,  msg:"ONE HOUR left. Do you even want XP?? ð", col:'var(--red)' },
+  { max:1,  msg:"FINAL MINUTES. This is not a drill. ð¨ð¨ð¨", col:'var(--red)' },
 ].reverse();
 const BOX_REWARDS = [
   { val:50, label:'Mystery Bonus: +50 XP!' }, { val:75, label:'Mystery Bonus: +75 XP!' },
   { val:100, label:'Mystery Bonus: +100 XP!!' }, { val:150, label:'Mystery Bonus: +150 XP!!!' },
-  { val:200, label:'MEGA Mystery Bonus: +200 XP 🤯' },
+  { val:200, label:'MEGA Mystery Bonus: +200 XP ð¤¯' },
 ];
 
-// ═══ UTILS ══════════════════════════════════════════════════════════════════
+// âââ UTILS ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const mkid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
 const mkcode = () => { const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join(''); };
 const rnd   = arr => arr[Math.floor(Math.random()*arr.length)];
 const today = () => new Date().toISOString().slice(0,10);
 const avatarColor = name => { const h=['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444']; let s=0; for(let c of name||'')s+=c.charCodeAt(0); return h[s%h.length]; };
+function MemberAvatar({member,size=56,fontSize='1.4em'}){
+  const initials=(member?.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const bg=member?.avatarBg||avatarColor(member?.name||'');
+  if(member?.avatarEmoji){
+    return<div className="avatar" style={{background:bg,width:size,height:size,fontSize:fontSize}}>{member.avatarEmoji}</div>;
+  }
+  return<div className="avatar" style={{background:bg,width:size,height:size,fontSize:fontSize}}>{initials}</div>;
+}
 
 function getWeekInfo(settings={}, now=new Date()) {
   const s={...DEF,...settings};
@@ -375,6 +518,64 @@ function computeStreak(allQuests, uid) {
   return {current:cur,longest};
 }
 
+function getPetMonthKey(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+
+function computePetState(allQuests,userId){
+  const wids=Object.keys(allQuests||{}).sort();
+  const recent=wids.slice(-4);
+  const rates=recent.map(wid=>{
+    const mine=Object.values(allQuests[wid]||{}).filter(q=>q.assignedTo===userId);
+    if(!mine.length)return null;
+    return mine.filter(q=>q.completed).length/mine.length;
+  }).filter(r=>r!==null);
+  if(!rates.length)return'stable';
+  const avg=rates.reduce((a,b)=>a+b,0)/rates.length;
+  const last=rates[rates.length-1];
+  const streak=computeStreak(allQuests,userId).current;
+  if(rates.length>=3&&rates.every(r=>r<0.05))return'lost';
+  if(streak>=3&&avg>=0.75)return'flourishing';
+  if(avg>=0.55&&last>=0.4)return'stable';
+  if(avg>=0.2||last>=0.2)return'strained';
+  return'critical';
+}
+
+function computePetPersonality(allQuests,userId){
+  const wids=Object.keys(allQuests||{}).sort();
+  const rates=wids.map(wid=>{
+    const mine=Object.values(allQuests[wid]||{}).filter(q=>q.assignedTo===userId);
+    if(!mine.length)return null;
+    return mine.filter(q=>q.completed).length/mine.length;
+  }).filter(r=>r!==null);
+  if(!rates.length||rates.length<2)return rates.length===1&&rates[0]>0.5?'loyal':'shy';
+  const avg=rates.reduce((a,b)=>a+b,0)/rates.length;
+  const variance=rates.reduce((a,r)=>a+Math.pow(r-avg,2),0)/rates.length;
+  if(avg>=0.8&&variance<0.04)return'loyal';
+  if(avg>=0.5&&variance<0.08)return'calm';
+  if(variance>0.18)return'unstable';
+  if(avg<0.25)return'shy';
+  return'moody';
+}
+
+function isPetItemUnlocked(item,stats,badges){
+  const c=stats.completed||0,streak=stats.streak||0,b=badges||{};
+  const seasonal=!!item.month;
+  if(seasonal)return item.month===(new Date().getMonth()+1);
+  switch(item.unlock){
+    case'complete_5':  return c>=5;
+    case'complete_10': return c>=10;
+    case'complete_15': return c>=15;
+    case'complete_25': return c>=25;
+    case'complete_50': return c>=50;
+    case'top_dog':     return!!b.TOP_DOG;
+    case'streak_3':    return streak>=3;
+    case'flawless':    return!!b.FLAWLESS;
+    case'night_owl':   return!!(b.NIGHT_OWL||b.SECRET_NIGHT_OWL);
+    case'ghost':       return!!(b.GHOST||b.SECRET_GHOST);
+    case'legend':      return!!b.LEGENDARY;
+    default:           return false;
+  }
+}
+
 function getUnlockedTitles(stats, earnedBadges, streak) {
   return TITLES.filter(t=>{
     if(t.badge) return earnedBadges[t.badge];
@@ -414,6 +615,19 @@ function checkBadges(allQuests, uid, members) {
   if(stats.xp>=1000)earned.LEGENDARY=true;
   const myXP=stats.xp;
   if(myXP>0&&others.length>0&&others.every(id=>computeStats(allQuests,id).xp<=myXP))earned.TOP_DOG=true;
+  // New badges
+  const allQList=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq||{}));
+  if(allQList.some(q=>q.assignedTo===uid&&q.completed&&q.difficulty==='legendary'))earned.BOUNTY_HUNTER=true;
+  const weeksWithCompletion=wks.filter(wk=>Object.values(allQuests[wk]||{}).some(q=>q.assignedTo===uid&&q.completed)).length;
+  if(weeksWithCompletion>=5)earned.WEEK_WARRIOR=true;
+  if(stats.completed>=50)earned.COMPLETIONIST=true;
+  if(allQList.filter(q=>q.assignedTo===uid&&q.proofStatus==='approved').length>=10)earned.PROOF_MASTER=true;
+  if(allQList.some(q=>q.assignedTo===uid&&q.isInstaQuest&&q.completed))earned.INSTA_HERO=true;
+  // SOCIAL_ASSIGN: assigned to 3+ different people in one week
+  wks.forEach(wk=>{
+    const byMe=Object.values(allQuests[wk]||{}).filter(q=>q.assignedBy===uid);
+    if(new Set(byMe.map(q=>q.assignedTo)).size>=3)earned.SOCIAL_ASSIGN=true;
+  });
   return earned;
 }
 
@@ -448,6 +662,21 @@ function checkSecretBadges(allQuests, uid, members) {
   const totalRejections=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq||{}))
     .filter(q=>q.assignedBy===uid&&q.proofStatus==='rejected').length;
   if(totalRejections>=3)earned.CRITIQUER=true;
+  // LAST_SECOND: complete within 30 min of deadline (rough: within 30 min of end of 4-day window from week start)
+  allWks.forEach(wk=>{
+    const qlist=Object.values(allQuests[wk]||{}).filter(q=>q.assignedTo===uid&&q.completed&&q.completedAt);
+    qlist.forEach(q=>{
+      const startOfWeek=new Date(wk+'T00:00:00').getTime();
+      const endGuess=startOfWeek+4*24*3600000+(23*3600000+59*60000);
+      if(q.completedAt>=(endGuess-30*60*1000)&&q.completedAt<=endGuess)earned.LAST_SECOND=true;
+    });
+  });
+  // INSTA_FUMBLE: failed an insta-quest
+  const allQl2=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq||{}));
+  if(allQl2.some(q=>q.assignedTo===uid&&q.isInstaQuest&&q.penaltyApplied&&!q.completed))earned.INSTA_FUMBLE=true;
+  // THE_REACTOR: reacted to 10+ different quests
+  const reactedCount=allQl2.filter(q=>q.reactions&&q.reactions[uid]).length;
+  if(reactedCount>=10)earned.THE_REACTOR=true;
   return earned;
 }
 
@@ -459,7 +688,7 @@ function questXP(difficulty,bonusEvent){
   return base;
 }
 
-// ═══ FIREBASE API ════════════════════════════════════════════════════════════
+// âââ FIREBASE API ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function makeApi(url){
   const base=url.replace(/\/$/,'');
   const go=async(path,method='GET',body=null)=>{
@@ -472,7 +701,7 @@ function makeApi(url){
   return{get:p=>go(p),set:(p,d)=>go(p,'PUT',d),patch:(p,d)=>go(p,'PATCH',d),del:p=>go(p,'DELETE')};
 }
 
-// ═══ TOAST SYSTEM ════════════════════════════════════════════════════════════
+// âââ TOAST SYSTEM ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function Toasts({toasts}){
   return(
     <div className="toast-wrap">
@@ -486,23 +715,43 @@ function Toasts({toasts}){
   );
 }
 
-// ═══ LOADING ═════════════════════════════════════════════════════════════════
+// âââ LOADING âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function Loading(){return(<div style={{display:'flex',justifyContent:'center',alignItems:'center',height:'100vh'}}><div className="glow" style={{fontSize:'1.4em'}}>LOADING<span className="blink">_</span></div></div>);}
 
-// ═══ PARTY SCREEN ════════════════════════════════════════════════════════════
+// âââ PARTY SCREEN ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function Party({api,userId,onDone}){
   const [name,setName]=useState(localStorage.getItem(K.NAME)||'');
   const [mode,setMode]=useState('pick');
   const [code,setCode]=useState('');
   const [busy,setBusy]=useState(false);
   const [err,setErr]=useState('');
+  const [showAdv,setShowAdv]=useState(false);
+  const [customSettings,setCustomSettings]=useState({...DEF});
+  const [savedGroups,setSavedGroups]=useState(()=>{try{return JSON.parse(localStorage.getItem(K.GROUPS)||'[]');}catch{return[];}});
+
+  const saveGroup=(pc,n)=>{
+    const groups=savedGroups.filter(g=>g.code!==pc);
+    groups.unshift({code:pc,name:n});
+    const trimmed=groups.slice(0,10);
+    localStorage.setItem(K.GROUPS,JSON.stringify(trimmed));
+    setSavedGroups(trimmed);
+  };
+  const removeGroup=(pc)=>{
+    const groups=savedGroups.filter(g=>g.code!==pc);
+    localStorage.setItem(K.GROUPS,JSON.stringify(groups));
+    setSavedGroups(groups);
+  };
+  const updSetting=k=>e=>setCustomSettings(s=>({...s,[k]:Number(e.target.value)}));
+
   const create=async()=>{
     if(!name.trim())return setErr('Enter your name first');
     setBusy(true);setErr('');
     try{
       const pc=mkcode();
-      await api.set(`parties/${pc}`,{created:Date.now(),settings:{...DEF},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}}});
-      localStorage.setItem(K.NAME,name.trim());onDone(pc,name.trim());
+      await api.set(`parties/${pc}`,{created:Date.now(),settings:{...customSettings},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}}});
+      localStorage.setItem(K.NAME,name.trim());
+      saveGroup(pc,name.trim());
+      onDone(pc,name.trim());
     }catch(e){setErr(e.message);}setBusy(false);
   };
   const join=async()=>{
@@ -512,41 +761,148 @@ function Party({api,userId,onDone}){
     try{
       const pc=code.trim().toUpperCase();
       const party=await api.get(`parties/${pc}`);
-      if(!party)return setErr('Party not found — check the code!');
+      if(!party){setBusy(false);return setErr('Party not found â check the code!');}
       await api.patch(`parties/${pc}/members/${userId}`,{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'});
-      localStorage.setItem(K.NAME,name.trim());onDone(pc,name.trim());
+      localStorage.setItem(K.NAME,name.trim());
+      saveGroup(pc,name.trim());
+      onDone(pc,name.trim());
     }catch(e){setErr(e.message);}setBusy(false);
   };
+  const rejoin=async(gcode,gname)=>{
+    const n=name.trim()||gname;
+    if(!n)return setErr('Enter your name first');
+    setBusy(true);setErr('');
+    try{
+      const party=await api.get(`parties/${gcode}`);
+      if(!party){setBusy(false);return setErr('Party not found â it may have been deleted.');}
+      await api.patch(`parties/${gcode}/members/${userId}`,{name:n,joinedAt:Date.now()});
+      localStorage.setItem(K.NAME,n);
+      saveGroup(gcode,n);
+      onDone(gcode,n);
+    }catch(e){setErr(e.message);}setBusy(false);
+  };
+
   return(
     <div className="wrap">
       <div className="hdr"><h1>[ FRIEND QUEST ]</h1><div className="sub">PARTY SETUP</div></div>
+
+      {/* Saved groups */}
+      {savedGroups.length>0&&(
+        <div className="box">
+          <div className="box-title">ð YOUR GROUPS</div>
+          {savedGroups.map(g=>(
+            <div key={g.code} className="flexb mb6" style={{padding:'8px',background:'var(--card2)',borderRadius:2}}>
+              <div>
+                <span className="code" style={{fontSize:'.9em',cursor:'default'}}>{g.code}</span>
+                <span className="cdim xs" style={{marginLeft:8}}>{g.name}</span>
+              </div>
+              <div className="flexi gap6">
+                <button className="btn-ok" style={{padding:'4px 10px',fontSize:'.75em'}} onClick={()=>rejoin(g.code,g.name)} disabled={busy}>REJOIN â</button>
+                <button className="btn-danger" style={{padding:'4px 8px',fontSize:'.72em'}} onClick={()=>removeGroup(g.code)}>â</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="box">
         <div className="box-title">IDENTIFY YOURSELF</div>
         <label className="lbl">YOUR NAME</label>
         <input placeholder="Enter your name..." value={name} onChange={e=>setName(e.target.value)} maxLength={20}/>
       </div>
+      {err&&<div className="notif err">{err}</div>}
+
       {mode==='pick'&&(<div className="grid2" style={{marginTop:4}}>
-        <div className="picker" onClick={()=>setMode('create')}><div className="icon">⚔️</div><div className="plabel">CREATE PARTY</div><div className="pdesc">Start a new quest group</div></div>
-        <div className="picker" onClick={()=>setMode('join')}><div className="icon">🔗</div><div className="plabel">JOIN PARTY</div><div className="pdesc">Enter a party code</div></div>
+        <div className="picker" onClick={()=>setMode('create')}><div className="icon">âï¸</div><div className="plabel">CREATE PARTY</div><div className="pdesc">Start a new quest group</div></div>
+        <div className="picker" onClick={()=>setMode('join')}><div className="icon">ð</div><div className="plabel">JOIN PARTY</div><div className="pdesc">Enter a party code</div></div>
       </div>)}
+
       {mode==='create'&&(<div className="box"><div className="box-title">NEW PARTY</div>
-        <p className="cdim small mb6">A 6-character party code will be generated.</p>
-        {err&&<div className="notif err">{err}</div>}
+        <p className="cdim small mb6">A 6-character party code will be generated for your group.</p>
+        <button style={{fontSize:'.75em',marginBottom:8,borderColor:showAdv?'var(--p)':'var(--pd)'}} onClick={()=>setShowAdv(a=>!a)}>
+          âï¸ {showAdv?'â² HIDE':'â¼ SHOW'} DEADLINE SETTINGS
+        </button>
+        {showAdv&&(
+          <div style={{background:'var(--card2)',padding:'10px',borderRadius:3,marginBottom:10,border:'1px solid var(--border)'}}>
+            <div className="cdim xs mb6">QUEST SCHEDULE (can be changed in Settings later)</div>
+            <div className="srow"><label>Window opens on</label><select value={customSettings.windowDay} onChange={updSetting('windowDay')}>{DAYS.map((d,i)=><option key={i} value={i}>{h}</option>)}</select></div>
+            <div className="srow"><label>Opens at</label><select value={customSettings.windowHour} onChange={updSetting('windowHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
+            <div className="srow"><label>Duration (days)</label><select value={customSettings.durationDays} onChange={updSetting('durationDays')}>{[1,2,3,4,5,6,7].map(n=><option key={n} value={n}>{n} day{n>1?'s':''}</option>)}</select></div>
+            <div className="srow"><label>Deadline time</label><select value={customSettings.deadlineHour} onChange={updSetting('deadlineHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
+          </div>
+        )}
         <button className="btn-big primary" onClick={create} disabled={busy}>{busy?'CREATING...':'[ CREATE PARTY ]'}</button>
-        <button onClick={()=>{setMode('pick');setErr('');}}>[ ← BACK ]</button>
+        <button onClick={()=>{setMode('pick');setErr('');setShowAdv(false);}}>[ â BACK ]</button>
       </div>)}
+
       {mode==='join'&&(<div className="box"><div className="box-title">JOIN PARTY</div>
         <label className="lbl">PARTY CODE</label>
         <input placeholder="e.g. AB3X9Z" value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={6} onKeyDown={e=>e.key==='Enter'&&join()} style={{letterSpacing:'.22em',fontSize:'1.1em'}}/>
-        {err&&<div className="notif err">{err}</div>}
         <button className="btn-big primary" onClick={join} disabled={busy}>{busy?'JOINING...':'[ JOIN PARTY ]'}</button>
-        <button onClick={()=>{setMode('pick');setErr('');}}>[ ← BACK ]</button>
+        <button onClick={()=>{setMode('pick');setErr('');}}>[ â BACK ]</button>
       </div>)}
     </div>
   );
 }
 
-// ═══ PROOF MODAL ══════════════════════════════════════════════════════════════
+// âââ FEEDBACK MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function FeedbackModal({api,userName,partyCode,onClose}){
+  const [text,setText]=useState('');
+  const [category,setCategory]=useState('General');
+  const [busy,setBusy]=useState(false);
+  const [sent,setSent]=useState(false);
+  const [err,setErr]=useState('');
+
+  const submit=async()=>{
+    if(!text.trim())return setErr('Please write something first');
+    setBusy(true);setErr('');
+    try{
+      const id=mkid();
+      await api.set(`feedback/${id}`,{
+        name:userName||'Anonymous',
+        partyCode,
+        category,
+        message:text,
+        ts:Date.now(),
+      });
+      setSent(true);
+    }catch(e){setErr('Could not submit. Check your connection.');}
+    setBusy(false);
+  };
+
+  return(
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-title">ð SEND FEEDBACK</div>
+        {sent?(
+          <div style={{textAlign:'center',padding:'20px 0'}}>
+            <div style={{fontSize:'2.2em',marginBottom:8}}>â</div>
+            <div className="cgreen bold">Feedback submitted!</div>
+            <div className="cdim xs mt6">Thanks â it's been saved and Selah will see it.</div>
+            <button className="btn-big primary" style={{marginTop:14}} onClick={onClose}>[ CLOSE ]</button>
+          </div>
+        ):(
+          <>
+            <label className="lbl">CATEGORY</label>
+            <select value={category} onChange={e=>setCategory(e.target.value)}>
+              <option>General</option><option>Bug Report</option><option>Feature Request</option>
+              <option>Complaint</option><option>Compliment</option>
+            </select>
+            <label className="lbl">YOUR MESSAGE</label>
+            <textarea placeholder="What's on your mind? Be honest ð¤" value={text} onChange={e=>setText(e.target.value)} maxLength={1000} style={{minHeight:120}}/>
+            {err&&<div className="notif err">{err}</div>}
+            <div className="flexi gap6 mt6">
+              <button className="btn-ok btn-big" style={{flex:2}} onClick={submit} disabled={busy||!text.trim()}>{busy?'SUBMITTING...':'[ SEND FEEDBACK ]'}</button>
+              <button style={{flex:1}} onClick={onClose}>[ CANCEL ]</button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// âââ PROOF MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function ProofModal({quest,members,onSubmit,onClose}){
   const [text,setText]=useState('');
   const [imgUrl,setImgUrl]=useState('');
@@ -558,11 +914,11 @@ function ProofModal({quest,members,onSubmit,onClose}){
   return(
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
-        <div className="modal-title">📸 SUBMIT PROOF</div>
+        <div className="modal-title">ð¸ SUBMIT PROOF</div>
         <div className="cdim xs mb6">Quest: <span className="cpb">{quest.title}</span></div>
         <div className="flex-wrap mb6">
-          <button className={type==='text'?'primary':''} onClick={()=>setType('text')}>📝 Text Description</button>
-          <button className={type==='image'?'primary':''} onClick={()=>setType('image')}>🖼️ Image URL</button>
+          <button className={type==='text'?'primary':''} onClick={()=>setType('text')}>ð Text Description</button>
+          <button className={type==='image'?'primary':''} onClick={()=>setType('image')}>ð¼ï¸ Image URL</button>
         </div>
         {type==='text'?(
           <textarea placeholder="Describe what you did as proof..." value={text} onChange={e=>setText(e.target.value)} maxLength={500}/>
@@ -578,13 +934,13 @@ function ProofModal({quest,members,onSubmit,onClose}){
   );
 }
 
-// ═══ PROOF REVIEW MODAL ══════════════════════════════════════════════════════
+// âââ PROOF REVIEW MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function ProofReviewModal({quest,members,onApprove,onReject,onClose}){
   const [reason,setReason]=useState('');
   return(
     <div className="modal-bg" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
-        <div className="modal-title">⚖️ REVIEW PROOF</div>
+        <div className="modal-title">âï¸ REVIEW PROOF</div>
         <div className="cdim xs mb6">From: <span className="cp">{members[quest.assignedTo]?.name}</span></div>
         <div className="mb6 bold wrap-word">{quest.title}</div>
         <div className="box" style={{marginBottom:10}}>
@@ -598,8 +954,8 @@ function ProofReviewModal({quest,members,onApprove,onReject,onClose}){
         <label className="lbl">REJECTION REASON (optional if approving)</label>
         <input placeholder="e.g. That's not 20 push-ups, that's 3" value={reason} onChange={e=>setReason(e.target.value)} maxLength={200}/>
         <div className="flexi gap6 mt6" style={{flexWrap:'wrap'}}>
-          <button className="btn-ok" onClick={()=>onApprove(quest.id)} style={{flex:1}}>✓ APPROVE</button>
-          <button className="btn-danger" onClick={()=>onReject(quest.id,reason)} style={{flex:1}}>✗ REJECT</button>
+          <button className="btn-ok" onClick={()=>onApprove(quest.id)} style={{flex:1}}>â APPROVE</button>
+          <button className="btn-danger" onClick={()=>onReject(quest.id,reason)} style={{flex:1}}>â REJECT</button>
           <button onClick={onClose}>CLOSE</button>
         </div>
       </div>
@@ -607,7 +963,7 @@ function ProofReviewModal({quest,members,onApprove,onReject,onClose}){
   );
 }
 
-// ═══ PENALTY PICKER MODAL ═════════════════════════════════════════════════════
+// âââ PENALTY PICKER MODAL âââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function PenaltyPickerModal({quest,options,members,onPick,onClose}){
   const [hovered,setHovered]=useState(null);
   const choices=options||[];
@@ -615,10 +971,10 @@ function PenaltyPickerModal({quest,options,members,onPick,onClose}){
     <div className="modal-bg">
       <div className="modal" style={{maxWidth:500}} onClick={e=>e.stopPropagation()}>
         <div style={{textAlign:'center',marginBottom:14}}>
-          <div style={{fontSize:'2em',marginBottom:4}}>☠️</div>
+          <div style={{fontSize:'2em',marginBottom:4}}>â ï¸</div>
           <div className="modal-title cred glow-r" style={{border:'none',padding:0,marginBottom:4}}>PICK YOUR PUNISHMENT</div>
           <div className="cdim xs">You failed: <span className="cpb">"{quest.title}"</span></div>
-          <div className="cdim xs mt6">Choose wisely. The group will know. 😈</div>
+          <div className="cdim xs mt6">Choose wisely. The group will know. ð</div>
         </div>
 
         <div style={{display:'flex',flexDirection:'column',gap:10,margin:'14px 0'}}>
@@ -650,13 +1006,378 @@ function PenaltyPickerModal({quest,options,members,onPick,onClose}){
           ))}
         </div>
 
-        <div className="cdim xs center" style={{marginTop:8}}>No skipping — one will be auto-assigned in 24h if you stall 😈</div>
+        <div className="cdim xs center" style={{marginTop:8}}>No skipping â one will be auto-assigned in 24h if you stall ð</div>
       </div>
     </div>
   );
 }
 
-// ═══ WEEKLY SUMMARY MODAL ════════════════════════════════════════════════════
+// âââ WEEKLY SUMMARY MODAL ââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// âââ PET DISPLAY ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function PetDisplay({pet,state,equipped,big=true}){
+  const sz=big?'5em':'2.8em';
+  const hat=equipped?.hat?ALL_PET_ITEMS.find(i=>i.id===equipped.hat):null;
+  const wings=equipped?.wings?ALL_PET_ITEMS.find(i=>i.id===equipped.wings):null;
+  const collar=equipped?.collar?ALL_PET_ITEMS.find(i=>i.id===equipped.collar):null;
+  const aura=equipped?.aura?ALL_PET_ITEMS.find(i=>i.id===equipped.aura):null;
+  return(
+    <div style={{display:'inline-flex',flexDirection:'column',alignItems:'center',gap:big?4:2}}>
+      {hat&&<div style={{fontSize:big?'1.7em':'1em',lineHeight:1}}>{hat.icon}</div>}
+      <div style={{position:'relative',display:'inline-block'}}>
+        {aura&&<div style={{
+          position:'absolute',inset:big?'-10px':'-5px',borderRadius:'50%',display:'flex',
+          alignItems:'center',justifyContent:'center',pointerEvents:'none',
+          fontSize:big?'2.2em':'1.4em',opacity:.55,animation:'aura-pulse 2s ease-in-out infinite',
+        }}>{aura.icon}</div>}
+        <div className={`pet-emoji ${state}`} style={{fontSize:sz}}>{pet.emoji}</div>
+        {wings&&<div style={{
+          position:'absolute',right:big?-22:-12,top:'25%',
+          fontSize:big?'1.5em':'.9em',pointerEvents:'none',
+        }}>{wings.icon}</div>}
+      </div>
+      {collar&&<div style={{fontSize:big?'1em':'.65em',lineHeight:1}}>{collar.icon}</div>}
+    </div>
+  );
+}
+
+// âââ PET TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function PetTab({allQuests,userId,badges,stats}){
+  const [section,setSection]=useState('guardian');
+  const [itemFilter,setItemFilter]=useState('all');
+  const [equipped,setEquipped]=useState(()=>{try{return JSON.parse(localStorage.getItem('ql_pet_eq')||'{}');}catch{return{};}});
+  const [archive,setArchive]=useState(()=>{try{return JSON.parse(localStorage.getItem('ql_pet_arc')||'[]');}catch{return[];}});
+  // Pet naming
+  const petNameKey=`ql_pet_name_${getPetMonthKey()}`;
+  const [petNickname,setPetNickname]=useState(()=>localStorage.getItem(petNameKey)||'');
+  const [editingName,setEditingName]=useState(false);
+  const [nameInput,setNameInput]=useState(petNickname);
+  const savePetName=()=>{
+    const n=nameInput.trim().slice(0,20);
+    setPetNickname(n);
+    if(n)localStorage.setItem(petNameKey,n);
+    else localStorage.removeItem(petNameKey);
+    setEditingName(false);
+  };
+  // Shop-unlocked pet items from localStorage
+  const [shopItems]=useState(()=>{try{return JSON.parse(localStorage.getItem('ql_pet_shop')||'[]');}catch{return[];}});
+  const shopPetItems=shopItems.map(id=>SHOP_PET_ITEM_MAP[id]).filter(Boolean);
+  const allItemsExtended=[...ALL_PET_ITEMS,...shopPetItems.filter(si=>!ALL_PET_ITEMS.find(i=>i.id===si.id))];
+
+  const currentMonth=new Date().getMonth()+1;
+  const pet=MONTHLY_PETS[currentMonth];
+  const monthKey=getPetMonthKey();
+  const petState=computePetState(allQuests,userId);
+  const stateDef=PET_STATES[petState];
+  const personality=computePetPersonality(allQuests,userId);
+  const personalityDef=PET_PERSONALITIES[personality];
+  const petStats={...stats,streak:computeStreak(allQuests,userId).current};
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // Archive on first load of a new month
+  useEffect(()=>{
+    const lastKey=localStorage.getItem('ql_pet_month');
+    if(lastKey&&lastKey!==monthKey){
+      const prevM=parseInt(lastKey.split('-')[1]);
+      const prevPet=MONTHLY_PETS[prevM]||MONTHLY_PETS[1];
+      const prevNickname=localStorage.getItem(`ql_pet_name_${lastKey}`)||'';
+      const entry={monthKey:lastKey,petName:prevNickname||prevPet.name,defaultName:prevPet.name,emoji:prevPet.emoji,color:prevPet.color,finalState:petState};
+      const updated=[entry,...archive].slice(0,12);
+      setArchive(updated);
+      localStorage.setItem('ql_pet_arc',JSON.stringify(updated));
+    }
+    localStorage.setItem('ql_pet_month',monthKey);
+  },[]);
+
+  const equip=(type,id)=>{
+    const ne={...equipped,[type]:equipped[type]===id?null:id};
+    setEquipped(ne);
+    localStorage.setItem('ql_pet_eq',JSON.stringify(ne));
+  };
+
+  const seasonalNow=SEASONAL_ITEMS.filter(i=>i.month===currentMonth);
+  const filteredItems=allItemsExtended.filter(item=>{
+    if(itemFilter==='seasonal')return!!item.month;
+    if(itemFilter==='all')return true;
+    return item.type===itemFilter;
+  });
+
+  const barColor=petState==='flourishing'?'var(--green)':petState==='stable'?'var(--p)':petState==='strained'?'var(--yellow)':'var(--red)';
+
+  return(
+    <div>
+      {/* Section tabs */}
+      <div className="flex-wrap mb12" style={{gap:6}}>
+        {[['guardian','ð¾ Guardian'],['wardrobe','ð Wardrobe'],['archive','ð Archive']].map(([s,l])=>(
+          <button key={s} className={section===s?'active':''} onClick={()=>setSection(s)}>{l}</button>
+        ))}
+      </div>
+
+      {section==='guardian'&&(
+        <div>
+          {/* Pet display card */}
+          <div className="box" style={{textAlign:'center',borderColor:pet.color,background:`${pet.color}12`,paddingTop:22,paddingBottom:22}}>
+            <div className="cdim xs mb8" style={{letterSpacing:'.12em'}}>{MONTHS[currentMonth-1].toUpperCase()} GUARDIAN</div>
+            <PetDisplay pet={pet} state={petState} equipped={equipped} big={true}/>
+            <div style={{fontSize:'1.25em',marginTop:14,color:pet.color,letterSpacing:'.06em',fontWeight:'bold'}}>
+              {petNickname?petNickname:<span>{pet.name}</span>}
+            </div>
+            {petNickname&&<div className="cdim xs" style={{marginTop:2}}>({pet.name})</div>}
+            {!editingName?(
+              <button style={{marginTop:8,fontSize:'.7em',padding:'2px 10px'}} onClick={()=>{setNameInput(petNickname);setEditingName(true);}}>
+                {petNickname?'âï¸ RENAME PET':'+ NAME YOUR PET'}
+              </button>
+            ):(
+              <div style={{display:'flex',gap:6,marginTop:8,justifyContent:'center',alignItems:'center',flexWrap:'wrap'}}>
+                <input style={{width:160,margin:0,padding:'4px 8px',fontSize:'.8em',textAlign:'center'}} maxLength={20}
+                  placeholder={pet.name} value={nameInput} onChange={e=>setNameInput(e.target.value)}
+                  onKeyDown={e=>{if(e.key==='Enter')savePetName();if(e.key==='Escape')setEditingName(false);}}
+                  autoFocus/>
+                <button className="btn-ok" style={{fontSize:'.72em',padding:'4px 10px'}} onClick={savePetName}>SAVE</button>
+                <button style={{fontSize:'.72em',padding:'4px 10px'}} onClick={()=>setEditingName(false)}>â</button>
+              </div>
+            )}
+            <div className="cdim xs mt6" style={{maxWidth:260,margin:'6px auto 0'}}>{pet.desc}</div>
+          </div>
+          {/* Health + state */}
+          <div className="box mt6">
+            <div className="flexb mb6">
+              <span style={{color:stateDef.color,fontSize:'.88em',letterSpacing:'.07em'}}>{stateDef.icon} {stateDef.label}</span>
+              <span style={{fontSize:'.78em'}}>{personalityDef.icon} {personalityDef.name}</span>
+            </div>
+            <div className="cdim xs mb4" style={{fontSize:'.68em'}}>HEALTH</div>
+            <div className="pet-bar"><div className="fill" style={{width:`${stateDef.healthPct}%`,background:barColor}}/></div>
+            <div className="cdim xs mt6" style={{fontSize:'.78em'}}>{stateDef.desc}</div>
+            <div className="cdim xs mt4" style={{fontSize:'.72em',fontStyle:'italic',color:'var(--dim)'}}>"{personalityDef.desc}"</div>
+          </div>
+          {/* Stats row */}
+          <div className="grid3 mt6">
+            <div className="summary-stat"><div className="s-val">{petStats.completed}</div><div className="s-lbl">Quests Done</div></div>
+            <div className="summary-stat"><div className="s-val" style={{color:'var(--yellow)'}}>{petStats.streak}</div><div className="s-lbl">Week Streak</div></div>
+            <div className="summary-stat"><div className="s-val">{petStats.xp}</div><div className="s-lbl">Total XP</div></div>
+          </div>
+          {petState==='flourishing'&&<div className="notif ok mt10" style={{textAlign:'center'}}>â¨ Your guardian is FLOURISHING! On fire right now ð¥</div>}
+          {petState==='critical'&&<div className="notif warn mt10" style={{textAlign:'center'}}>â ï¸ Your guardian is barely holding on. Complete quests before it's too late!</div>}
+          {petState==='lost'&&<div className="notif err mt10" style={{textAlign:'center'}}>ð» Your guardian is a spirit now. Complete quests to bring it back to life.</div>}
+        </div>
+      )}
+
+      {section==='wardrobe'&&(
+        <div>
+          {seasonalNow.length>0&&(
+            <div className="notif purple mb10">
+              ð Limited-time {seasonalNow.map(i=>i.seasonName).filter((v,i,a)=>a.indexOf(v)===i).join(' / ')} items available this month!
+            </div>
+          )}
+          <div className="flex-wrap mb10" style={{gap:4}}>
+            {['all','hat','wings','collar','aura','seasonal'].map(f=>(
+              <button key={f} className={itemFilter===f?'active':''} style={{padding:'3px 9px',fontSize:'.73em'}} onClick={()=>setItemFilter(f)}>{f.toUpperCase()}</button>
+            ))}
+          </div>
+          <div className="item-grid">
+            {filteredItems.map(item=>{
+              const seasonal=!!item.month;
+              const isShopItem=shopItems.includes(item.id);
+              const unlocked=isShopItem||isPetItemUnlocked(item,petStats,badges);
+              const isEquipped=equipped[item.type]===item.id;
+              return(
+                <div key={item.id}
+                  className={`item-card ${unlocked?'unlocked':''} ${isEquipped?'equipped':''} ${seasonal?'seasonal':''} ${!unlocked?'locked':''}`}
+                  onClick={()=>unlocked&&equip(item.type,item.id)}
+                >
+                  <div style={{fontSize:'1.9em',marginBottom:4}}>{item.icon}</div>
+                  <div style={{fontSize:'.72em',letterSpacing:'.02em',marginBottom:3}}>{item.name}</div>
+                  {seasonal&&<div style={{fontSize:'.63em',color:'var(--purple)'}}>{item.seasonName}</div>}
+                  {isEquipped&&<div style={{fontSize:'.62em',color:'var(--yellow)',marginTop:2}}>â EQUIPPED</div>}
+                  {!unlocked&&!seasonal&&<div style={{fontSize:'.62em',color:'var(--dim)',marginTop:2}}>{item.unlockDesc}</div>}
+                  {!unlocked&&seasonal&&<div style={{fontSize:'.62em',color:'var(--dim)',marginTop:2}}>Available in {MONTHS[item.month-1]}</div>}
+                </div>
+              );
+            })}
+          </div>
+          {filteredItems.length===0&&<div className="empty mt12"><div className="ei">ð</div><div>No items here</div></div>}
+          <div className="notif mt12" style={{fontSize:'.75em'}}>ð¡ Items are unlocked by completing quests, earning badges, and maintaining streaks. Extra cosmetics can be purchased in the ðª Shop tab with your coins!</div>
+        </div>
+      )}
+
+      {section==='archive'&&(
+        <div>
+          {/* Current month always shown first */}
+          <div className="archive-card" style={{borderColor:pet.color,background:`${pet.color}0a`}}>
+            <div style={{fontSize:'2.5em'}}><PetDisplay pet={pet} state={petState} equipped={equipped} big={false}/></div>
+            <div style={{flex:1}}>
+              <div style={{color:pet.color,fontSize:'.9em',fontWeight:'bold'}}>{pet.name}</div>
+              <div className="cdim xs">{MONTHS[currentMonth-1]} {new Date().getFullYear()} â CURRENT</div>
+              <div style={{fontSize:'.76em',marginTop:3}}><span style={{color:stateDef.color}}>{stateDef.icon} {stateDef.label}</span></div>
+            </div>
+          </div>
+          {archive.length===0&&(
+            <div className="empty mt12"><div className="ei">ð</div><div>No past guardians yet</div><div className="cdim small mt6">Previous months' pets will appear here</div></div>
+          )}
+          {archive.map(entry=>{
+            const m=parseInt(entry.monthKey.split('-')[1]);
+            const y=entry.monthKey.split('-')[0];
+            const s=PET_STATES[entry.finalState]||PET_STATES.stable;
+            const isLost=entry.finalState==='lost';
+            return(
+              <div key={entry.monthKey} className={`archive-card ${isLost?'spirit':''}`}>
+                <div style={{fontSize:'2.4em',filter:isLost?'grayscale(1)':undefined}}>{entry.emoji}</div>
+                <div style={{flex:1}}>
+                  <div style={{color:entry.color||'var(--p)',fontSize:'.9em',fontWeight:'bold'}}>{entry.petName}</div>
+                  {entry.defaultName&&entry.petName!==entry.defaultName&&<div className="cdim xs" style={{fontSize:'.68em'}}>({entry.defaultName})</div>}
+                  <div className="cdim xs">{MONTHS[m-1]} {y}</div>
+                  <div style={{fontSize:'.76em',marginTop:3}}>
+                    <span style={{color:s.color}}>{s.icon} {s.label}</span>
+                    {isLost&&<span className="cdim xs" style={{marginLeft:8}}>ð» Became a spirit</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// âââ SHOP TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function ShopTab({api,partyCode,userId,members,addToast,partyData}){
+  const member=members[userId]||{};
+  const coins=member.coins||0;
+  const activeBoosts=member.activeBoosts||{};
+  const [buying,setBuying]=useState(null);
+  const [ownedPetItems,setOwnedPetItems]=useState(()=>{try{return JSON.parse(localStorage.getItem('ql_pet_shop')||'[]');}catch{return[];}});
+  const [buyConfirm,setBuyConfirm]=useState(null);
+
+  const handleBuy=async(item)=>{
+    if(buying||coins<item.price)return;
+    setBuying(item.id);
+    try{
+      const newCoins=coins-item.price;
+      if(item.type==='consumable'){
+        if(item.id==='shop_box'){
+          await api.patch(`parties/${partyCode}/members/${userId}`,{
+            coins:newCoins,
+            mysteryBoxes:(member.mysteryBoxes||0)+1
+          });
+          addToast('ð¦ MYSTERY BOX!','Box added â open it in Profile!','var(--purple)');
+        } else if(item.id==='xp_boost_1'||item.id==='xp_boost_2'){
+          const boostUpdate={coins:newCoins};
+          boostUpdate[`activeBoosts/${item.id}`]=true;
+          await api.patch(`parties/${partyCode}/members/${userId}`,boostUpdate);
+          addToast(`${item.icon} BOOST ACTIVE!`,`${item.name} is ready â complete a quest!`,'var(--p)');
+        } else if(item.id==='streak_freeze'){
+          const boostUpdate={coins:newCoins};
+          boostUpdate[`activeBoosts/streak_freeze`]=true;
+          await api.patch(`parties/${partyCode}/members/${userId}`,boostUpdate);
+          addToast('ð§ STREAK FROZEN!','Your streak is protected for the next week.','var(--p)');
+        }
+      } else if(item.type.startsWith('pet_')){
+        // Pet cosmetic â store in localStorage
+        const newOwned=[...ownedPetItems.filter(i=>i!==item.id),item.id];
+        setOwnedPetItems(newOwned);
+        localStorage.setItem('ql_pet_shop',JSON.stringify(newOwned));
+        await api.patch(`parties/${partyCode}/members/${userId}`,{coins:newCoins});
+        addToast(`${item.icon} UNLOCKED!`,`${item.name} added to your Wardrobe!`,'var(--yellow)');
+      }
+    }catch(e){console.error(e);addToast('ERROR','Purchase failed â try again','var(--red)');}
+    setBuying(null);setBuyConfirm(null);
+  };
+
+  const consumables=SHOP_ITEMS.filter(i=>i.type==='consumable');
+  const petCosmetics=SHOP_ITEMS.filter(i=>i.type.startsWith('pet_'));
+
+  const isOwned=(item)=>{
+    if(item.type.startsWith('pet_'))return ownedPetItems.includes(item.id);
+    if(item.id==='xp_boost_1')return!!activeBoosts.xp_boost_1;
+    if(item.id==='xp_boost_2')return!!activeBoosts.xp_boost_2;
+    if(item.id==='streak_freeze')return!!activeBoosts.streak_freeze;
+    return false;
+  };
+
+  return(
+    <div>
+      <div className="box" style={{borderColor:'var(--yellow)',background:'rgba(251,191,36,.03)',marginBottom:8}}>
+        <div className="flexb">
+          <span className="box-title cyellow" style={{margin:0,border:'none',padding:0}}>ðª THE QUEST SHOP</span>
+          <span className="coin-badge" style={{fontSize:'.9em',padding:'5px 12px'}}>ðª {coins} coins</span>
+        </div>
+        <div className="cdim xs mt6">Earn coins by completing quests. Spend them on boosts, boxes, and pet cosmetics!</div>
+        <div className="flex-wrap mt8" style={{gap:4}}>
+          {Object.entries(COIN_REWARDS).map(([diff,c])=>(
+            <span key={diff} className="ibadge" style={{background:'rgba(251,191,36,.08)',border:'1px solid rgba(251,191,36,.25)',color:'var(--yellow)'}}>{diff}: +{c}ðª</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="box mb8">
+        <div className="box-title">â¡ CONSUMABLES</div>
+        <div className="shop-grid">
+          {consumables.map(item=>{
+            const owned=isOwned(item);
+            const canAfford=coins>=item.price;
+            const isActive=item.id==='xp_boost_1'?!!activeBoosts.xp_boost_1:item.id==='xp_boost_2'?!!activeBoosts.xp_boost_2:item.id==='streak_freeze'?!!activeBoosts.streak_freeze:false;
+            return(
+              <div key={item.id}
+                className={`shop-card ${!canAfford&&!isActive?'cant-afford':''} ${isActive?'active-boost':''}`}
+                onClick={()=>{if(canAfford&&!isActive&&!buying)setBuyConfirm(item);}}
+              >
+                <div style={{fontSize:'2em',marginBottom:6}}>{item.icon}</div>
+                <div style={{fontSize:'.82em',fontWeight:'bold',marginBottom:4}}>{item.name}</div>
+                <div className="cdim xs" style={{marginBottom:8}}>{item.desc}</div>
+                {isActive?<div className="cgreen xs bold">â ACTIVE</div>
+                :<div className="coin-badge" style={{display:'inline-flex',justifyContent:'center'}}>{item.price}ðª</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="box">
+        <div className="box-title">ð¾ PET COSMETICS</div>
+        <div className="cdim xs mb10">Permanent unlocks added to your Wardrobe!</div>
+        <div className="shop-grid">
+          {petCosmetics.map(item=>{
+            const owned=isOwned(item);
+            const canAfford=coins>=item.price;
+            return(
+              <div key={item.id}
+                className={`shop-card ${owned?'owned':!canAfford?'cant-afford':''}`}
+                onClick={()=>{if(!owned&&canAfford&&!buying)setBuyConfirm(item);}}
+              >
+                <div style={{fontSize:'2em',marginBottom:6}}>{item.icon}</div>
+                <div style={{fontSize:'.82em',fontWeight:'bold',marginBottom:4}}>{item.name}</div>
+                <div className="cdim xs" style={{marginBottom:8}}>{item.desc}</div>
+                {owned?<div className="cgreen xs bold">â OWNED</div>
+                :<div className="coin-badge" style={{display:'inline-flex',justifyContent:'center'}}>{item.price}ðª</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {buyConfirm&&(
+        <div className="modal-bg" onClick={()=>setBuyConfirm(null)}>
+          <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:340,textAlign:'center'}}>
+            <div style={{fontSize:'2.5em',marginBottom:8}}>{buyConfirm.icon}</div>
+            <div className="modal-title" style={{textAlign:'center'}}>{buyConfirm.name}</div>
+            <div className="cdim small mb12">{buyConfirm.desc}</div>
+            <div className="mb12">
+              <span className="coin-badge" style={{fontSize:'1em',padding:'6px 14px'}}>Cost: {buyConfirm.price} ðª</span>
+              <span className="cdim xs" style={{marginLeft:8}}>You have: {coins}ðª</span>
+            </div>
+            <div className="flexi gap6">
+              <button className="btn-yellow" style={{flex:1}} onClick={()=>handleBuy(buyConfirm)} disabled={!!buying}>
+                {buying?'BUYING...':'â CONFIRM PURCHASE'}
+              </button>
+              <button style={{flex:1}} onClick={()=>setBuyConfirm(null)}>CANCEL</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function WeeklySummaryModal({summary,members,allQuests,userId,onClose}){
   const {weekId}=summary;
   const wq=allQuests[weekId]||{};
@@ -666,9 +1387,14 @@ function WeeklySummaryModal({summary,members,allQuests,userId,onClose}){
     fail:qlist.filter(q=>q.assignedTo===userId&&q.penaltyApplied&&!q.completed).length,
     xp:qlist.filter(q=>q.assignedTo===userId&&q.completed).reduce((a,q)=>a+(q.xpAwarded||XP_WIN),0),
   };
+  const wqBoard=allQuests[weekId]||{};
   const board=Object.entries(members).map(([id,m])=>{
-    const s=computeStats(allQuests,id);return{id,name:m.name,xp:s.xp};
-  }).sort((a,b)=>b.xp-a.xp);
+    const mine=Object.values(wqBoard).filter(q=>q.assignedTo===id);
+    const done=mine.filter(q=>q.completed).length;
+    const rate=mine.length>0?done/mine.length:0;
+    const s=computeStats(allQuests,id);
+    return{id,name:m.name,xp:s.xp,rate,done,total:mine.length};
+  }).filter(m=>m.total>0).sort((a,b)=>b.rate-a.rate||b.done-a.done||b.xp-a.xp);
   const winner=board[0];
   return(
     <div className="modal-bg">
@@ -683,19 +1409,19 @@ function WeeklySummaryModal({summary,members,allQuests,userId,onClose}){
           <div className="summary-stat"><div className="s-val">+{myStats.xp}</div><div className="s-lbl">XP Earned</div></div>
         </div>
         {winner&&<div className="box" style={{borderColor:'var(--yellow)',background:'rgba(251,191,36,.04)',textAlign:'center',marginBottom:10}}>
-          <div className="cyellow bold">👑 WEEKLY WINNER</div>
+          <div className="cyellow bold">ð WEEKLY WINNER</div>
           <div style={{fontSize:'1.3em',marginTop:6,color:'var(--pb)'}}>{winner.name}</div>
-          <div className="cdim xs">⚡ {winner.xp} total XP</div>
+          <div className="cdim xs">{Math.round(winner.rate*100)}% completion ({winner.done}/{winner.total} quests)</div>
         </div>}
-        {myStats.fail>0&&<div className="notif warn mb6">You failed {myStats.fail} quest{myStats.fail>1?'s':''} this week. The Hall of Shame remembers. 😈</div>}
-        {myStats.fail===0&&myStats.done>0&&<div className="notif ok mb6">Perfect week! Zero failures. You're built different. 💎</div>}
+        {myStats.fail>0&&<div className="notif warn mb6">You failed {myStats.fail} quest{myStats.fail>1?'s':''} this week. The Hall of Shame remembers. ð</div>}
+        {myStats.fail===0&&myStats.done>0&&<div className="notif ok mb6">Perfect week! Zero failures. You're built different. ð</div>}
         <button className="btn-big primary" onClick={onClose}>[ CONTINUE TO THIS WEEK ]</button>
       </div>
     </div>
   );
 }
 
-// ═══ MY QUESTS TAB ════════════════════════════════════════════════════════════
+// âââ MY QUESTS TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function PenaltyChoice({opt, index, onPick}){
   const [hov,setHov]=useState(false);
   return(
@@ -731,7 +1457,7 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
   const rejected=mine.filter(q=>q.proofStatus==='rejected'&&!q.completed);
   const needsPenaltyChoice=failed.filter(q=>!q.penaltyChosen);
 
-  if(mine.length===0)return(<div className="empty"><div className="ei">📋</div><div>NO QUESTS ASSIGNED YET</div><div className="cdim small mt6">Your party members need to assign you quests!</div></div>);
+  if(mine.length===0)return(<div className="empty"><div className="ei">ð</div><div>NO QUESTS ASSIGNED YET</div><div className="cdim small mt6">Your party members need to assign you quests!</div></div>);
 
   return(
     <div>
@@ -745,8 +1471,8 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
       {failed.length>0&&(
         <div className="shame-wrap">
           <div className="cred glow-r bold mb12" style={{fontSize:'1em'}}>
-            ☠ {failed.length} QUEST{failed.length>1?'S':''} FAILED
-            {needsPenaltyChoice.length>0&&<span className="cdim xs" style={{marginLeft:8,fontWeight:'normal'}}>— pick your punishment below</span>}
+            â  {failed.length} QUEST{failed.length>1?'S':''} FAILED
+            {needsPenaltyChoice.length>0&&<span className="cdim xs" style={{marginLeft:8,fontWeight:'normal'}}>â pick your punishment below</span>}
           </div>
           {failed.map(q=>(
             <div key={q.id} style={{marginBottom:14}}>
@@ -761,29 +1487,29 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
                   </div>
                   <div style={{textAlign:'right',flexShrink:0,marginLeft:10}}>
                     <span className="ibadge pen">-{XP_LOSE} XP</span>
-                    <div className="cred xs mt6 glow-r">**FAILED** ✗</div>
+                    <div className="cred xs mt6 glow-r">**FAILED** â</div>
                   </div>
                 </div>
               </div>
 
-              {/* Inline penalty choices — shown immediately, no button needed */}
+              {/* Inline penalty choices â shown immediately, no button needed */}
               {!q.penaltyChosen?(
                 <div style={{border:'2px solid var(--red)',borderTop:'none',padding:'12px 14px',borderRadius:'0 0 4px 4px',background:'rgba(10,2,8,.6)'}}>
                   <div style={{marginBottom:8}}>
-                    <span className="cred bold xs">☠ CHOOSE YOUR PUNISHMENT</span>
-                    <span className="cdim xs" style={{marginLeft:8}}>— kicks in Wednesday 😈</span>
+                    <span className="cred bold xs">â  CHOOSE YOUR PUNISHMENT</span>
+                    <span className="cdim xs" style={{marginLeft:8}}>â kicks in Wednesday ð</span>
                   </div>
                   {(q.penaltyOptions||[]).map((opt,i)=>(
                     <PenaltyChoice key={i} opt={opt} index={i} onPick={()=>onPickPenalty(q.id,opt)}/>
                   ))}
                   {(!q.penaltyOptions||q.penaltyOptions.length===0)&&(
-                    <div className="cdim xs">No penalty options stored — reassign quest to generate options.</div>
+                    <div className="cdim xs">No penalty options stored â reassign quest to generate options.</div>
                   )}
                 </div>
               ):(
                 <div style={{border:'1px solid rgba(244,63,94,.3)',borderTop:'none',padding:'9px 14px',borderRadius:'0 0 3px 3px',background:'rgba(244,63,94,.04)'}}>
-                  <div className="xs"><span className="cred">☠ YOUR PUNISHMENT: </span><span className="ctext">{q.penaltyChosen}</span></div>
-                  <div className="cdim xs mt6">Starts Wednesday — no backing out 😈</div>
+                  <div className="xs"><span className="cred">â  YOUR PUNISHMENT: </span><span className="ctext">{q.penaltyChosen}</span></div>
+                  <div className="cdim xs mt6">Starts Wednesday â no backing out ð</div>
                 </div>
               )}
             </div>
@@ -792,7 +1518,7 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
       )}
 
       {rejected.length>0&&(<div className="box" style={{borderColor:'var(--red)'}}>
-        <div className="box-title cred">❌ PROOF REJECTED — RESUBMIT</div>
+        <div className="box-title cred">â PROOF REJECTED â RESUBMIT</div>
         {rejected.map(q=>(
           <div key={q.id} className="qcard fail">
             <div className="flexb"><div>
@@ -805,19 +1531,19 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
       </div>)}
 
       {awaitingApproval.length>0&&(<div className="box" style={{borderColor:'var(--yellow)'}}>
-        <div className="box-title cyellow">⏳ AWAITING PROOF APPROVAL</div>
+        <div className="box-title cyellow">â³ AWAITING PROOF APPROVAL</div>
         {awaitingApproval.map(q=>(
           <div key={q.id} className="qcard pending-proof">
             <div className="flexb"><div>
               <div className="bold wrap-word">{q.title}</div>
-              <div className="cdim xs">{q.proof?.type==='image'?'📷 Image submitted':'📝 Text submitted'}</div>
+              <div className="cdim xs">{q.proof?.type==='image'?'ð· Image submitted':'ð Text submitted'}</div>
             </div><span className="cyellow xs">PENDING...</span></div>
           </div>
         ))}
       </div>)}
 
       {pending.length>0&&(<div className="box">
-        <div className="box-title">⚡ ACTIVE QUESTS ({pending.length})</div>
+        <div className="box-title">â¡ ACTIVE QUESTS ({pending.length})</div>
         {pending.map(q=>(
           <div key={q.id} className="qcard active">
             <div className="flexb">
@@ -825,12 +1551,12 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
                 <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.icon} {DIFF[q.difficulty]?.label||'MEDIUM'}</span><span className="ibadge xp">{questXP(q.difficulty,bonusEvent)} XP</span></div>
                 <div className="bold wrap-word">{q.title}</div>
                 <div className="cdim xs">by: <span className="cp">{members[q.assignedBy]?.name||'???'}</span></div>
-                {q.proofStatus==='rejected'&&<div className="cred xs">Proof rejected — resubmit!</div>}
+                {q.proofStatus==='rejected'&&<div className="cred xs">Proof rejected â resubmit!</div>}
               </div>
               <div style={{flexShrink:0,marginLeft:8}}>
                 {inWindow?(q.requireProof
-                  ?<button className="btn-yellow" onClick={()=>setProofQuest(q)}>📸 SUBMIT PROOF</button>
-                  :<button className="btn-ok" onClick={()=>onComplete(q.id,q.difficulty)} disabled={completing===q.id}>{completing===q.id?'...':'✓ COMPLETE'}</button>)
+                  ?<button className="btn-yellow" onClick={()=>setProofQuest(q)}>ð¸ SUBMIT PROOF</button>
+                  :<button className="btn-ok" onClick={()=>onComplete(q.id,q.difficulty)} disabled={completing===q.id}>{completing===q.id?'...':'â COMPLETE'}</button>)
                   :<span className="cdim xs">[CLOSED]</span>}
               </div>
             </div>
@@ -845,11 +1571,11 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
             <div className="flexb">
               <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label}</span>
                 <span className="wrap-word">{q.title}</span>
-                <div className="cdim xs">by <span className="cp">{members[q.assignedBy]?.name||'???'}</span>{q.completedAt&&` · ${dateFmt(q.completedAt)}`}</div>
+                <div className="cdim xs">by <span className="cp">{members[q.assignedBy]?.name||'???'}</span>{q.completedAt&&` Â· ${dateFmt(q.completedAt)}`}</div>
               </div>
               <div style={{textAlign:'right',flexShrink:0,marginLeft:8}}>
                 <span className="ibadge xp">+{q.xpAwarded||XP_WIN} XP</span>
-                <div className="cgreen xs mt6 glow-g">**COMPLETE** ✓</div>
+                <div className="cgreen xs mt6 glow-g">**COMPLETE** â</div>
               </div>
             </div>
           </div>
@@ -859,7 +1585,7 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
   );
 }
 
-// ═══ ASSIGN TAB ══════════════════════════════════════════════════════════════
+// âââ ASSIGN TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,pendingProofs,onApprove,onReject}){
   const [title,setTitle]=useState('');
   const [to,setTo]=useState('');
@@ -870,6 +1596,7 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   const [ok,setOk]=useState('');
   const [showSugg,setShowSugg]=useState(false);
   const [reviewQuest,setReviewQuest]=useState(null);
+  const [reviewedIds,setReviewedIds]=useState(new Set());
 
   const others=Object.entries(members).filter(([id])=>id!==userId);
   const myAssign=Object.values(quests).filter(q=>q.assignedBy===userId);
@@ -889,21 +1616,21 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
         completed:false,completedAt:null,penaltyApplied:false,penaltyOptions:penOpts,penaltyChosen:null,
         proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),xpAwarded:null,
       });
-      setTitle('');setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
+      setTitle('');setOk(`Quest assigned to ${members[to]?.name}! â`);setTimeout(()=>setOk(''),3000);
     }catch(e){setErr(e.message);}setBusy(false);
   };
 
-  const myPendingProofs=pendingProofs.filter(q=>q.assignedBy===userId);
+  const myPendingProofs=pendingProofs.filter(q=>q.assignedBy===userId&&!reviewedIds.has(q.id));
 
   return(
     <div>
       {reviewQuest&&(<ProofReviewModal quest={reviewQuest} members={members}
-        onApprove={id=>{onApprove(id);setReviewQuest(null);}}
-        onReject={(id,r)=>{onReject(id,r);setReviewQuest(null);}}
+        onApprove={id=>{setReviewedIds(s=>new Set([...s,id]));onApprove(id);setReviewQuest(null);}}
+        onReject={(id,r)=>{setReviewedIds(s=>new Set([...s,id]));onReject(id,r);setReviewQuest(null);}}
         onClose={()=>setReviewQuest(null)}/>)}
 
       {myPendingProofs.length>0&&(<div className="box" style={{borderColor:'var(--yellow)'}}>
-        <div className="box-title cyellow">⏳ PROOFS AWAITING YOUR REVIEW ({myPendingProofs.length})</div>
+        <div className="box-title cyellow">â³ PROOFS AWAITING YOUR REVIEW ({myPendingProofs.length})</div>
         {myPendingProofs.map(q=>(
           <div key={q.id} className="qcard pending-proof">
             <div className="flexb">
@@ -917,12 +1644,12 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
       </div>)}
 
       <div className="box">
-        <div className="box-title">✏️ ASSIGN A QUEST</div>
-        {!inWindow&&<div className="notif warn mb6">⚠ Quest window is closed but you can still assign for next window.</div>}
+        <div className="box-title">âï¸ ASSIGN A QUEST</div>
+        {!inWindow&&<div className="notif warn mb6">â  Quest window is closed but you can still assign for next window.</div>}
         <label className="lbl">QUEST CHALLENGE</label>
         <div style={{position:'relative'}}>
           <input placeholder="e.g. Do 20 push-ups before noon" value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/>
-          <button style={{position:'absolute',right:0,top:3,fontSize:'.72em'}} onClick={()=>setShowSugg(s=>!s)}>💡 SUGGEST</button>
+          <button style={{position:'absolute',right:0,top:3,fontSize:'.72em'}} onClick={()=>setShowSugg(s=>!s)}>ð¡ SUGGEST</button>
         </div>
         {showSugg&&(
           <div className="box" style={{marginTop:0,marginBottom:8}}>
@@ -949,11 +1676,11 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
         <label className="lbl">ASSIGN TO</label>
         <select value={to} onChange={e=>setTo(e.target.value)}>
           <option value="">-- SELECT MEMBER --</option>
-          {others.map(([id,m])=><option key={id} value={id} disabled={countFor(id)>=maxPer}>{m.name} ({countFor(id)}/{maxPer}{countFor(id)>=maxPer?' — FULL':''})</option>)}
+          {others.map(([id,m])=><option key={id} value={id} disabled={countFor(id)>=maxPer}>{m.name} ({countFor(id)}/{maxPer}{countFor(id)>=maxPer?' â FULL':''})</option>)}
         </select>
         <div className="flexi gap6 mb6" style={{cursor:'pointer'}} onClick={()=>setRequireProof(r=>!r)}>
           <div style={{width:16,height:16,border:`1px solid ${requireProof?'var(--p)':'var(--pd)'}`,borderRadius:2,background:requireProof?'var(--p)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            {requireProof&&<span style={{color:'var(--bg)',fontSize:'.7em'}}>✓</span>}
+            {requireProof&&<span style={{color:'var(--bg)',fontSize:'.7em'}}>â</span>}
           </div>
           <span className="small">Require photo/text proof to complete</span>
         </div>
@@ -964,14 +1691,14 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
 
       <div className="box">
         <div className="box-title cdim">ASSIGNMENT STATUS THIS WEEK</div>
-        {others.length===0&&<div className="cdim small">No other members — share your party code!</div>}
+        {others.length===0&&<div className="cdim small">No other members â share your party code!</div>}
         {others.map(([id,m])=>{const n=countFor(id),full=n>=maxPer;return(
           <div key={id} className="flexb mb6">
             <span className="cp">{m.name}</span>
             <div className="flexi gap6">
-              {Array.from({length:Math.min(maxPer,8)},(_,i)=><span key={i} className={i<n?'cp':'cdim'}>{i<n?'■':'□'}</span>)}
+              {Array.from({length:Math.min(maxPer,8)},(_,i)=><span key={i} className={i<n?'cp':'cdim'}>{i<n?'â ':'â¡'}</span>)}
               <span className="cdim xs">({n}/{maxPer})</span>
-              {full&&<span className="ibadge xp">✓</span>}
+              {full&&<span className="ibadge xp">â</span>}
             </div>
           </div>
         );})}
@@ -984,14 +1711,14 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
             <div className="flexb">
               <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label}</span>
                 <span className="wrap-word">{q.title}</span>
-                <div className="cdim xs">→ <span className="cp">{members[q.assignedTo]?.name||'???'}</span>
-                  {q.requireProof&&<span className="cdim"> · 📸 proof req'd</span>}
+                <div className="cdim xs">â <span className="cp">{members[q.assignedTo]?.name||'???'}</span>
+                  {q.requireProof&&<span className="cdim"> Â· ð¸ proof req'd</span>}
                 </div>
               </div>
               <div style={{flexShrink:0,marginLeft:8}}>
-                {q.proofStatus==='pending'?<span className="cyellow xs">REVIEW PROOF →</span>
-                :q.completed?<span className="cgreen xs glow-g">DONE ✓</span>
-                :q.penaltyApplied?<span className="cred xs glow-r">FAILED ✗</span>
+                {q.proofStatus==='pending'?<span className="cyellow xs">REVIEW PROOF â</span>
+                :q.completed?<span className="cgreen xs glow-g">DONE â</span>
+                :q.penaltyApplied?<span className="cred xs glow-r">FAILED â</span>
                 :<span className="cyellow xs">ACTIVE</span>}
               </div>
             </div>
@@ -1002,7 +1729,7 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   );
 }
 
-// ═══ QUEST LOG TAB (with reactions) ══════════════════════════════════════════
+// âââ QUEST LOG TAB (with reactions) ââââââââââââââââââââââââââââââââââââââââââ
 function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
   const list=Object.entries(quests).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
   const toggleReaction=async(questId,emoji)=>{
@@ -1014,7 +1741,7 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
   return(
     <div className="box">
       <div className="box-title glow">[ FRIEND QUEST ] // WEEK: {weekId}</div>
-      {list.length===0?(<div className="empty"><div className="ei">📜</div><div className="cdim">NO ENTRIES YET</div></div>)
+      {list.length===0?(<div className="empty"><div className="ei">ð</div><div className="cdim">NO ENTRIES YET</div></div>)
       :list.map((q,i)=>(
         <div key={q.id} className="log-e">
           <div className="ll"><span className="cdim">QUEST_ID: </span><span className="cyellow">#{String(i).padStart(3,'0')}</span>
@@ -1024,7 +1751,7 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
           <div className="ll"><span className="cdim">ASSIGNED_TO: </span><span className="cgreen">{members[q.assignedTo]?.name||'???'}</span></div>
           <div className="ll"><span className="cdim">ASSIGNED_BY: </span><span>{members[q.assignedBy]?.name||'???'}</span></div>
           <div className="ll"><span className="cdim">STATUS: </span>
-            {q.completed?<span className="cgreen glow-g bold">**COMPLETE** ✓</span>
+            {q.completed?<span className="cgreen glow-g bold">**COMPLETE** â</span>
             :q.proofStatus==='pending'?<span className="cyellow">AWAITING PROOF REVIEW...</span>
             :q.penaltyApplied?<span className="cred glow-r bold">**FAILED** // -{XP_LOSE} XP</span>
             :<span className="cyellow">IN_PROGRESS<span className="blink">_</span></span>}
@@ -1047,7 +1774,7 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
   );
 }
 
-// ═══ LEADERBOARD TAB ══════════════════════════════════════════════════════════
+// âââ LEADERBOARD TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
   const board=Object.entries(members).map(([id,m])=>{
     const s=computeStats(allQuests,id);
@@ -1055,10 +1782,10 @@ function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
     const badges=checkBadges(allQuests,id,members);
     const unlocked=getUnlockedTitles(s,badges,streak);
     const title=unlocked.sort((a,b)=>(b.xp||0)-(a.xp||0))[0];
-    return{id,name:m.name,...s,streak,badgeCount:Object.keys(badges).length,title,selectedTitle:m.selectedTitle};
+    return{id,member:m,name:m.name,...s,streak,badgeCount:Object.keys(badges).length,title,selectedTitle:m.selectedTitle};
   }).sort((a,b)=>b.xp-a.xp||a.penalties-b.penalties);
 
-  const medals=['👑','🥈','🥉'];
+  const medals=['ð','ð¥','ð¥'];
   const wq=allQuests[currentWeekId]||{};
   const wkTotal=Object.values(wq).filter(q=>q.completed).length;
   const wkTarget=Math.max(Object.values(wq).length,1);
@@ -1073,17 +1800,17 @@ function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
       )}
 
       <div className="box" style={{borderColor:'rgba(251,191,36,.3)',background:'rgba(251,191,36,.03)'}}>
-        <div className="box-title cyellow">🎯 GROUP GOAL THIS WEEK</div>
+        <div className="box-title cyellow">ð¯ GROUP GOAL THIS WEEK</div>
         <div className="flexb mb6">
           <span className="cdim small">{wkTotal} / {wkTarget} quests completed</span>
           <span className="cyellow small">{groupPct}%</span>
         </div>
         <div className="pbar"><div className="fill yellow" style={{width:`${groupPct}%`}}></div></div>
-        {groupPct>=100&&<div className="cgreen small mt6 glow-g">🎉 GROUP GOAL ACHIEVED! Everyone gets bragging rights!</div>}
+        {groupPct>=100&&<div className="cgreen small mt6 glow-g">ð GROUP GOAL ACHIEVED! Everyone gets bragging rights!</div>}
       </div>
 
       <div className="box">
-        <div className="box-title cyellow">🏆 LEADERBOARD</div>
+        <div className="box-title cyellow">ð LEADERBOARD</div>
         {board.map((m,i)=>{
           const pct=m.total>0?Math.round((m.completed/m.total)*100):0;
           const isMe=m.id===userId;
@@ -1093,17 +1820,18 @@ function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
               <div className="flexb">
                 <div className="flexi gap10">
                   <span style={{fontSize:'1.2em',width:26,textAlign:'center'}}>{medals[i]||`#${i+1}`}</span>
+                  <MemberAvatar member={m.member} size={34} fontSize="1em"/>
                   <div>
                     <span className={isMe?'cgreen bold':'cp'}>{m.name}{isMe?' (YOU)':''}</span>
-                    {m.streak?.current>=2&&<span className="ibadge purple">🔥 {m.streak.current}wk</span>}
-                    {m.badgeCount>0&&<span className="ibadge" style={{background:'rgba(56,189,248,.1)',color:'var(--pb)',border:'1px solid var(--pd)'}}>🏅 {m.badgeCount}</span>}
+                    {m.streak?.current>=2&&<span className="ibadge purple">ð¥ {m.streak.current}wk</span>}
+                    {m.badgeCount>0&&<span className="ibadge" style={{background:'rgba(56,189,248,.1)',color:'var(--pb)',border:'1px solid var(--pd)'}}>ð {m.badgeCount}</span>}
                     <div className="xs mt6" style={{color:titleDef.color}}>[ {titleDef.name} ]</div>
-                    <div className="cdim xs">{m.completed}/{m.total} quests{m.penalties>0?` · 💀 ${m.penalties} failed`:''}</div>
+                    <div className="cdim xs">{m.completed}/{m.total} quests{m.penalties>0?` Â· ð ${m.penalties} failed`:''}</div>
                     <div className="pbar" style={{width:100}}><div className={`fill ${m.penalties>0?'red':''}`} style={{width:`${pct}%`}}></div></div>
                   </div>
                 </div>
                 <div style={{textAlign:'right',flexShrink:0}}>
-                  <div className="cyellow bold">⚡ {m.xp} XP</div>
+                  <div className="cyellow bold">â¡ {m.xp} XP</div>
                   {m.penalties>0&&<div className="cred xs">-{m.penalties*XP_LOSE} lost</div>}
                 </div>
               </div>
@@ -1113,20 +1841,20 @@ function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
       </div>
 
       {shamed.length>0&&(<div className="shame-wrap">
-        <div className="cred glow-r bold mb6">☠ HALL OF SHAME</div>
+        <div className="cred glow-r bold mb6">â  HALL OF SHAME</div>
         {weekWorst&&<div className="notif err mb6" style={{fontWeight:'bold'}}>
-          💀 WEEKLY WORST PERFORMER: {weekWorst.name} — {weekWorst.penalties} failed quest{weekWorst.penalties>1?'s':''}. The guild weeps.
+          ð WEEKLY WORST PERFORMER: {weekWorst.name} â {weekWorst.penalties} failed quest{weekWorst.penalties>1?'s':''}. The guild weeps.
         </div>}
         {shamed.map(m=>(
           <div key={m.id} className="flexb mb6" style={{padding:'8px',border:'1px solid #3a0015',borderRadius:2}}>
             <div>
               <span className="cred">{m.name}</span>
-              <div className="cdim xs">{m.penalties} failed · -{m.penalties*XP_LOSE} XP total</div>
+              <div className="cdim xs">{m.penalties} failed Â· -{m.penalties*XP_LOSE} XP total</div>
               {Object.values(allQuests).flatMap(wq=>Object.values(wq)).filter(q=>q.assignedTo===m.id&&q.penaltyChosen).slice(-1).map((q,i)=>(
                 <div key={i} className="cred xs">Latest penalty: {q.penaltyChosen}</div>
               ))}
             </div>
-            <div>💀</div>
+            <div>ð</div>
           </div>
         ))}
       </div>)}
@@ -1134,7 +1862,7 @@ function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent}){
   );
 }
 
-// ═══ BADGES TAB ═══════════════════════════════════════════════════════════════
+// âââ BADGES TAB âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
   const earned=checkBadges(allQuests,userId,members);
   const secretEarned=checkSecretBadges(allQuests,userId,members);
@@ -1151,7 +1879,7 @@ function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
   return(
     <div>
       <div className="box">
-        <div className="box-title">🏅 ACHIEVEMENTS ({unlocked}/{total})</div>
+        <div className="box-title">ð ACHIEVEMENTS ({unlocked}/{total})</div>
         <div className="pbar mb12"><div className="fill green" style={{width:`${Math.round((unlocked/total)*100)}%`}}></div></div>
         <div className="badge-grid">
           {Object.entries(BADGE_DEFS).map(([id,def])=>{
@@ -1162,7 +1890,7 @@ function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
                 <div className="b-icon">{def.icon}</div>
                 <div className="b-name" style={{color:isUnlocked?RARITY_COLOR[def.rarity]:'var(--dim)'}}>{def.name}</div>
                 <div className="b-desc">{def.desc}</div>
-                {isUnlocked&&ts&&<div className="b-date">✓ {new Date(ts).toLocaleDateString()}</div>}
+                {isUnlocked&&ts&&<div className="b-date">â {new Date(ts).toLocaleDateString()}</div>}
                 <div className="xs mt6" style={{color:isUnlocked?RARITY_COLOR[def.rarity]:'var(--dim)',textTransform:'uppercase'}}>{def.rarity}</div>
               </div>
             );
@@ -1170,7 +1898,7 @@ function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
         </div>
       </div>
       <div className="box" style={{borderColor:'rgba(168,85,247,.3)',background:'rgba(168,85,247,.03)'}}>
-        <div className="box-title cpurple">🔮 SECRET ACHIEVEMENTS</div>
+        <div className="box-title cpurple">ð® SECRET ACHIEVEMENTS</div>
         <div className="badge-grid">
           {Object.entries(SECRET_DEFS).map(([id,def])=>{
             const isUnlocked=!!secretEarned[id];
@@ -1180,7 +1908,7 @@ function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
                 <div className="b-icon">{isUnlocked?def.icon:'???'}</div>
                 <div className="b-name" style={{color:isUnlocked?'var(--purple)':'var(--dim)'}}>{isUnlocked?def.name:'??? Secret'}</div>
                 <div className="b-desc">{isUnlocked?def.desc:'Complete hidden conditions to unlock'}</div>
-                {isUnlocked&&ts&&<div className="b-date">✓ {new Date(ts).toLocaleDateString()}</div>}
+                {isUnlocked&&ts&&<div className="b-date">â {new Date(ts).toLocaleDateString()}</div>}
               </div>
             );
           })}
@@ -1190,7 +1918,7 @@ function BadgesTab({allQuests,userId,members,savedBadges,onAward}){
   );
 }
 
-// ═══ PROFILE TAB ══════════════════════════════════════════════════════════════
+// âââ PROFILE TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
   const member=members[userId]||{};
   const stats=computeStats(allQuests,userId);
@@ -1200,8 +1928,13 @@ function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
   const currentTitle=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
   const completionRate=stats.total>0?Math.round((stats.completed/stats.total)*100):0;
   const boxes=member.mysteryBoxes||0;
+  const coins=member.coins||0;
   const [openingBox,setOpeningBox]=useState(false);
   const [boxResult,setBoxResult]=useState(null);
+  const [editingAvatar,setEditingAvatar]=useState(false);
+  const [selEmoji,setSelEmoji]=useState(member.avatarEmoji||'');
+  const [selBg,setSelBg]=useState(member.avatarBg||avatarColor(member.name));
+  const [savingAvatar,setSavingAvatar]=useState(false);
 
   const openBox=async()=>{
     if(boxes<1||openingBox)return;
@@ -1219,53 +1952,90 @@ function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
     onTitleChange(tid);
   };
 
+  const saveAvatar=async()=>{
+    setSavingAvatar(true);
+    await api.patch(`parties/${partyCode}/members/${userId}`,{avatarEmoji:selEmoji||null,avatarBg:selBg});
+    setSavingAvatar(false);
+    setEditingAvatar(false);
+  };
+
   const weeklyData=Object.entries(allQuests).map(([wk,wq])=>{
     const mine=Object.values(wq||{}).filter(q=>q.assignedTo===userId);
     return{wk,done:mine.filter(q=>q.completed).length,fail:mine.filter(q=>q.penaltyApplied&&!q.completed).length,total:mine.length};
   }).filter(w=>w.total>0).sort((a,b)=>b.wk.localeCompare(a.wk)).slice(0,6);
 
-  const initials=(member.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-
   return(
     <div>
       <div className="box">
         <div className="flexi gap10 mb12">
-          <div className="avatar" style={{background:avatarColor(member.name)}}>{initials}</div>
-          <div>
+          <div style={{position:'relative'}}>
+            <MemberAvatar member={member} size={56} fontSize="1.5em"/>
+            <div style={{position:'absolute',bottom:-3,right:-3,background:'var(--card2)',border:'1px solid var(--border2)',borderRadius:'50%',width:20,height:20,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',fontSize:'.6em'}}
+              onClick={()=>setEditingAvatar(v=>!v)}>âï¸</div>
+          </div>
+          <div style={{flex:1}}>
             <div className="bold" style={{fontSize:'1.1em'}}>{member.name||'???'}</div>
             <div style={{color:currentTitle.color,fontSize:'.85em'}}>[ {currentTitle.name} ]</div>
             <div className="cdim xs">Member since {member.joinedAt?new Date(member.joinedAt).toLocaleDateString():'???'}</div>
           </div>
+          <div style={{textAlign:'right',flexShrink:0}}>
+            <div className="coin-badge" style={{fontSize:'.85em',padding:'4px 10px'}}>ðª {coins}</div>
+            <div className="cdim xs mt6">coins</div>
+          </div>
         </div>
+
+        {editingAvatar&&(
+          <div className="box mt6" style={{background:'var(--card2)',borderColor:'var(--border2)',marginBottom:10}}>
+            <div className="box-title" style={{marginBottom:8}}>ð¨ CUSTOMIZE AVATAR</div>
+            <div className="cdim xs mb4">Choose an emoji:</div>
+            <div className="av-emoji-grid">
+              {AVATAR_EMOJIS.map(em=>(
+                <div key={em} className={`av-opt ${selEmoji===em?'sel':''}`} onClick={()=>setSelEmoji(selEmoji===em?'':em)}>{em}</div>
+              ))}
+              <div className={`av-opt ${!selEmoji?'sel':''}`} style={{fontSize:'.7em',color:'var(--dim)'}} onClick={()=>setSelEmoji('')}>ABC</div>
+            </div>
+            <div className="cdim xs mb4 mt8">Choose a background:</div>
+            <div className="av-color-grid">
+              {AVATAR_BG_COLORS.map(c=>(
+                <div key={c} className={`av-color ${selBg===c?'sel':''}`} style={{background:c}} onClick={()=>setSelBg(c)}/>
+              ))}
+            </div>
+            <div className="flexi gap6 mt10">
+              <div style={{marginRight:12}}>Preview: <MemberAvatar member={{...member,avatarEmoji:selEmoji,avatarBg:selBg}} size={40} fontSize="1.2em"/></div>
+              <button className="btn-ok" onClick={saveAvatar} disabled={savingAvatar}>{savingAvatar?'SAVING...':'SAVE AVATAR'}</button>
+              <button onClick={()=>setEditingAvatar(false)}>CANCEL</button>
+            </div>
+          </div>
+        )}
         <div className="grid3 mb12">
           <div className="summary-stat"><div className="s-val">{stats.xp}</div><div className="s-lbl">Total XP</div></div>
-          <div className="summary-stat"><div className="s-val" style={{color:'var(--green)'}}>{streak.current}🔥</div><div className="s-lbl">Current Streak</div></div>
+          <div className="summary-stat"><div className="s-val" style={{color:'var(--green)'}}>{streak.current}ð¥</div><div className="s-lbl">Current Streak</div></div>
           <div className="summary-stat"><div className="s-val" style={{color:'var(--red)'}}>{stats.penalties}</div><div className="s-lbl">Failures</div></div>
         </div>
         <div className="flexb mb6"><span className="cdim xs">QUEST COMPLETION RATE</span><span className="xs">{completionRate}%</span></div>
         <div className="pbar mb12"><div className={`fill ${completionRate<50?'red':completionRate<80?'yellow':'green'}`} style={{width:`${completionRate}%`}}></div></div>
         <div className="grid2 xs cdim">
-          <div>✅ Completed: <span className="cgreen">{stats.completed}</span></div>
-          <div>❌ Failed: <span className="cred">{stats.penalties}</span></div>
-          <div>🔥 Best streak: <span className="cyellow">{streak.longest} weeks</span></div>
-          <div>🏅 Badges: <span className="cp">{Object.keys(badges).length}</span></div>
+          <div>â Completed: <span className="cgreen">{stats.completed}</span></div>
+          <div>â Failed: <span className="cred">{stats.penalties}</span></div>
+          <div>ð¥ Best streak: <span className="cyellow">{streak.longest} weeks</span></div>
+          <div>ð Badges: <span className="cp">{Object.keys(badges).length}</span></div>
         </div>
       </div>
 
       {boxes>0&&(<div className="box" style={{borderColor:'var(--purple)',background:'rgba(168,85,247,.05)'}}>
-        <div className="box-title cpurple">📦 MYSTERY BOXES ({boxes})</div>
-        {boxResult?(<div className="notif purple">{boxResult.label} — already added to your XP!</div>)
+        <div className="box-title cpurple">ð¦ MYSTERY BOXES ({boxes})</div>
+        {boxResult?(<div className="notif purple">{boxResult.label} â already added to your XP!</div>)
         :(<div><p className="cdim small mb6">You have {boxes} mystery box{boxes>1?'es':''}! Open to reveal a random XP reward.</p>
-          <button className="btn-purple btn-big" onClick={openBox} disabled={openingBox}>{openingBox?'OPENING...':'📦 OPEN MYSTERY BOX'}</button>
+          <button className="btn-purple btn-big" onClick={openBox} disabled={openingBox}>{openingBox?'OPENING...':'ð¦ OPEN MYSTERY BOX'}</button>
         </div>)}
       </div>)}
 
       <div className="box">
-        <div className="box-title">🎭 YOUR TITLES</div>
+        <div className="box-title">ð­ YOUR TITLES</div>
         <div className="flex-wrap">
           {unlocked.map(t=>(
             <div key={t.id} className="title-chip" style={{borderColor:t.color,color:t.color,cursor:'pointer',background:member.selectedTitle===t.id?`${t.color}22`:'transparent'}}
-              onClick={()=>setTitle(t.id)}>{t.name}{member.selectedTitle===t.id&&' ✓'}</div>
+              onClick={()=>setTitle(t.id)}>{t.name}{member.selectedTitle===t.id&&' â'}</div>
           ))}
         </div>
         {unlocked.length===0&&<div className="cdim small">Complete quests to unlock titles!</div>}
@@ -1277,10 +2047,10 @@ function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
         {weeklyData.map(w=>(
           <div key={w.wk} className="flexb mb6" style={{padding:'7px',background:'var(--card2)',borderRadius:2}}>
             <div><div className="xs cdim">{w.wk}</div>
-              <div className="xs">{w.done}/{w.total} complete{w.fail>0?` · ${w.fail} failed`:''}</div>
+              <div className="xs">{w.done}/{w.total} complete{w.fail>0?` Â· ${w.fail} failed`:''}</div>
             </div>
             <div style={{textAlign:'right'}}>
-              {w.fail===0&&w.done>0?<span className="cgreen xs">💎 PERFECT</span>:w.done===0?<span className="cred xs">👻 SKIPPED</span>:<span className="cyellow xs">+{w.done*XP_WIN} XP</span>}
+              {w.fail===0&&w.done>0?<span className="cgreen xs">ð PERFECT</span>:w.done===0?<span className="cred xs">ð» SKIPPED</span>:<span className="cyellow xs">+{w.done*XP_WIN} XP</span>}
             </div>
           </div>
         ))}
@@ -1289,7 +2059,7 @@ function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
   );
 }
 
-// ═══ DAILY SPIN TAB ═══════════════════════════════════════════════════════════
+// âââ DAILY SPIN TAB âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
   const [spinning,setSpinning]=useState(false);
   const [display,setDisplay]=useState(null);
@@ -1316,7 +2086,7 @@ function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
         clearInterval(iv);setDisplay(finalResult);setResult(finalResult);setSpinning(false);setAlreadySpun(true);
         // Save
         api.set(`parties/${partyCode}/dailySpin/${todayKey}/${userId}`,{...finalResult,ts:Date.now()});
-        // Apply reward
+  2     // Apply reward
         onSpin(finalResult);
       }
     },90);
@@ -1328,14 +2098,14 @@ function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
   return(
     <div>
       <div className="box" style={{borderColor:'var(--yellow)'}}>
-        <div className="box-title cyellow">🎰 DAILY SPIN</div>
+        <div className="box-title cyellow">ð° DAILY SPIN</div>
         <p className="cdim small mb12">Once per day, spin for a bonus reward! Resets at midnight.</p>
         <div className="spin-box">
           <div className="cdim xs mb6">TODAY'S SPIN</div>
           <div className={`spin-result ${spinning?'spinning':''}`}>
-            {cur?<div style={{textAlign:'center'}}><div style={{fontSize:'2em'}}>{cur.icon}</div><div className="cyellow small">{cur.label}</div></div>:'🎰'}
+            {cur?<div style={{textAlign:'center'}}><div style={{fontSize:'2em'}}>{cur.icon}</div><div className="cyellow small">{cur.label}</div></div>:'ð°'}
           </div>
-          {!alreadySpun&&(<button className="btn-big btn-yellow" onClick={spin} disabled={spinning}>{spinning?'SPINNING...':'[ 🎰 SPIN! ]'}</button>)}
+          {!alreadySpun&&(<button className="btn-big btn-yellow" onClick={spin} disabled={spinning}>{spinning?'SPINNING...':'[ ð° SPIN! ]'}</button>)}
           {alreadySpun&&result&&(
             <div>
               <div className="notif ok mt6" style={{textAlign:'center'}}>
@@ -1362,61 +2132,132 @@ function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
   );
 }
 
-// ═══ RULES & TUTORIAL TAB ════════════════════════════════════════════════════
+// âââ CHAT TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function ChatTab({api,partyCode,userId,members,chatMessages,onSend,enabled}){
+  const [text,setText]=useState('');
+  const [busy,setBusy]=useState(false);
+  const bottomRef=useRef(null);
+  const memberColorMap=['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444'];
+  const getMemberColor=uid=>{const ids=Object.keys(members);return memberColorMap[ids.indexOf(uid)%memberColorMap.length];};
+
+  useEffect(()=>{
+    bottomRef.current?.scrollIntoView({behavior:'smooth'});
+  },[chatMessages.length]);
+
+  const send=async()=>{
+    if(!text.trim()||busy)return;
+    setBusy(true);
+    try{await onSend(text.trim());setText('');}catch(e){console.error(e);}
+    setBusy(false);
+  };
+
+  if(!enabled){
+    return(
+      <div className="empty" style={{padding:50}}>
+        <div className="ei">ð¬</div>
+        <div>Group Chat is turned off</div>
+        <div className="cdim small mt6">A party member can enable it in Settings.</div>
+      </div>
+    );
+  }
+
+  return(
+    <div>
+      <div className="box" style={{padding:0,overflow:'hidden'}}>
+        <div style={{padding:'10px 12px 6px',borderBottom:'1px solid var(--border)'}}>
+          <span className="box-title" style={{border:'none',padding:0,margin:0}}>ð¬ GROUP CHAT</span>
+          <span className="cdim xs" style={{marginLeft:8}}>Real-time Â· {Object.keys(members).length} members</span>
+        </div>
+        <div className="chat-area">
+          {chatMessages.length===0&&(
+            <div className="empty" style={{padding:24}}>
+              <div className="ei">ð¬</div>
+              <div className="cdim small">No messages yet â start the conversation!</div>
+            </div>
+          )}
+          {chatMessages.map((msg,i)=>{
+            const isMe=msg.uid===userId;
+            const memberName=members[msg.uid]?.name||msg.name||'???';
+            const showName=!isMe&&(i===0||chatMessages[i-1]?.uid!==msg.uid);
+            return(
+              <div key={msg.id||i} style={{display:'flex',flexDirection:'column',alignItems:isMe?'flex-end':'flex-start',marginBottom:8}}>
+                {showName&&<div style={{fontSize:'.7em',color:getMemberColor(msg.uid),marginBottom:2,marginLeft:4}}>{memberName}</div>}
+                <div className={`chat-bubble ${isMe?'mine':'theirs'}`}>{msg.text}</div>
+                <div style={{fontSize:'.62em',color:'var(--dim)',marginTop:2,marginLeft:4,marginRight:4}}>{dateFmt(msg.ts)}</div>
+              </div>
+            );
+          })}
+          <div ref={bottomRef}/>
+        </div>
+        <div className="chat-input-row">
+          <input style={{flex:1,margin:0}} placeholder="Type a message..." value={text}
+            onChange={e=>setText(e.target.value)}
+            onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}
+            maxLength={500}/>
+          <button className="btn-ok" onClick={send} disabled={busy||!text.trim()} style={{flexShrink:0,margin:0,padding:'7px 14px'}}>
+            {busy?'...':'SEND â'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// âââ RULES & TUTORIAL TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââ
 const RULES = [
-  { icon:'🤞', title:'No Dishonesty',              text:'Be honest when marking tasks as completed and when submitting proof. Your word is your bond.' },
-  { icon:'🚫', title:'No Dangerous or Impossible Tasks', text:'Only assign safe, realistic, everyday tasks. Nothing that could hurt someone or genuinely can\'t be done.' },
-  { icon:'😤', title:'No Sore Losers',              text:'Keep things friendly and respectful — this is a game, not a competition to argue over. Laugh it off!' },
-  { icon:'🤝', title:'Respect All Players',         text:'No bullying, insults, or mean-spirited behaviour. Everyone is here to have fun.' },
-  { icon:'📸', title:'Follow the Proof System',     text:'Only mark a task complete if proper proof is provided and genuinely matches the quest. No cutting corners.' },
-  { icon:'⚖️', title:'Fair Quest Creation',          text:'Don\'t assign tasks that are way too easy, impossible, or unfair compared to what others are getting.' },
-  { icon:'📵', title:'No Spam Assigning',            text:'Don\'t overload players with unnecessary or repetitive quests. Keep it fun, not overwhelming.' },
-  { icon:'⏰', title:'Stay Within the Deadline',    text:'All quests must be completed within the set window — Wednesday night to Sunday night. No exceptions.' },
-  { icon:'🎭', title:'No Cheating',                 text:'Don\'t fake proof, reuse old proof, or try to bypass the system. Everyone can see through it.' },
-  { icon:'✅', title:'Respect Approvals',            text:'If your proof is rejected, accept the decision gracefully and resubmit with better proof if you can.' },
-  { icon:'🌐', title:'Keep Content Appropriate',    text:'All tasks, messages, and interactions must stay respectful and suitable for everyone in the group.' },
-  { icon:'🎯', title:'Participate in Good Faith',   text:'The goal is to have fun and stay engaged — not to exploit the system or ruin it for others.' },
+  { icon:'ð¤', title:'No Dishonesty',              text:'Be honest when marking tasks as completed and when submitting proof. Your word is your bond.' },
+  { icon:'ð«', title:'No Dangerous or Impossible Tasks', text:'Only assign safe, realistic, everyday tasks. Nothing that could hurt someone or genuinely can\'t be done.' },
+  { icon:'ð¤', title:'No Sore Losers',              text:'Keep things friendly and respectful â this is a game, not a competition to argue over. Laugh it off!' },
+  { icon:'ð¤', title:'Respect All Players',         text:'No bullying, insults, or mean-spirited behaviour. Everyone is here to have fun.' },
+  { icon:'ð¸', title:'Follow the Proof System',     text:'Only mark a task complete if proper proof is provided and genuinely matches the quest. No cutting corners.' },
+  { icon:'âï¸', title:'Fair Quest Creation',          text:'Don\'t assign tasks that are way too easy, impossible, or onfair compared to what others are getting.' },
+  { icon:'ðµ', title:'No Spam Assigning',            text:'Don\'t overload players with unnecessary or repetitive quests. Keep it fun, not overwhelming.' },
+  { icon:'â°', title:'Stay Within the Deadline',    text:'All quests must be completed within the set window â Wednesday night to Sunday night. No exceptions.' },
+  { icon:'ð­', title:'No Cheating',                 text:'Don\'t fake proof, reuse old proof, or try to bypass the system. Everyone can see through it.' },
+  { icon:'â', title:'Respect Approvals',            text:'If your proof is rejected, accept the decision gracefully and resubmit with better proof if you can.' },
+  { icon:'ð', title:'Keep Content Appropriate',    text:'All tasks, messages, and interactions must stay respectful and suitable for everyone in the group.' },
+  { icon:'ð¯', title:'Participate in Good Faith',   text:'The goal is to have fun and stay engaged â not to exploit the system or ruin it for others.' },
 ];
 
 const TUTORIAL_STEPS = [
   {
-    step:'01', icon:'🔗', title:'Join or Create a Party',
+    step:'01', icon:'ð', title:'Join or Create a Party',
     text:'One person creates a party and shares the 6-character code with everyone else. Each person opens Friend Quest, enters the code, and you\'re all connected in real time.',
   },
   {
-    step:'02', icon:'✏️', title:'Assign Quests on Wednesday',
-    text:'The quest window opens every Wednesday at 8 PM. Go to the Assign tab and give each party member up to the allowed number of quests. Pick a difficulty (Easy → Legendary) and decide whether proof is required.',
+    step:'02', icon:'âï¸', title:'Assign Quests on Wednesday',
+    text:'The quest window opens every Wednesday at 8 PM. Go to the Assign tab and give each party member up to the allowed number of quests. Pick a difficulty (Easy â Legendary) and decide whether proof is required.',
   },
   {
-    step:'03', icon:'💡', title:'Need ideas? Use Suggestions',
-    text:'Hit the 💡 Suggest button in the Assign tab to browse 40+ quest ideas across Fitness, Social, Creative, Productive, and Wild categories. Click any suggestion to instantly fill it in.',
+    step:'03', icon:'ð¡', title:'Need ideas? Use Suggestions',
+    text:'Hit the ð¡ Suggest button in the Assign tab to browse 40+ quest ideas across Fitness, Social, Creative, Productive, and Wild categories. Click any suggestion to instantly fill it in.',
   },
   {
-    step:'04', icon:'📋', title:'Complete Your Quests by Sunday',
+    step:'04', icon:'ð', title:'Complete Your Quests by Sunday',
     text:'Check the My Quests tab to see everything assigned to you. Complete them before Sunday at 11:59 PM. If a quest requires proof, hit "Submit Proof" and upload a description or image link.',
   },
   {
-    step:'05', icon:'📸', title:'Proof & Approval',
+    step:'05', icon:'ð¸', title:'Proof & Approval',
     text:'If a quest has proof required, the assigner reviews it in the Assign tab. They can approve (quest counts as complete + XP awarded) or reject it with a reason so you can resubmit.',
   },
   {
-    step:'06', icon:'☠️', title:'Penalties for Failures',
-    text:'Miss the Sunday deadline? Your quest is marked FAILED, you lose XP, and three social penalties appear immediately. Pick one — it kicks in Wednesday. Choose wisely 😈',
+    step:'06', icon:'â ï¸', title:'Penalties for Failures',
+    text:'Miss the Sunday deadline? Your quest is marked FAILED, you lose XP, and three social penalties appear immediately. Pick one â it kicks in Wednesday. Choose wisely ð',
   },
   {
-    step:'07', icon:'⚡', title:'Earn XP & Climb the Leaderboard',
+    step:'07', icon:'â¡', title:'Earn XP & Climb the Leaderboard',
     text:'Every completed quest earns XP based on difficulty. Complete 3+ quests in one day for a combo bonus. Check the Board tab to see the rankings and the Hall of Shame.',
   },
   {
-    step:'08', icon:'🎰', title:'Daily Spin',
-    text:'Once per day, hit the Spin tab for a chance at bonus XP, a Mystery Box, or a lucky title. Resets at midnight — don\'t waste it.',
+    step:'08', icon:'ð°', title:'Daily Spin',
+    text:'Once per day, hit the Spin tab for a chance at bonus XP, a Mystery Box, or a lucky title. Resets at midnight â don\'t waste it.',
   },
   {
-    step:'09', icon:'🏅', title:'Badges & Titles',
+    step:'09', icon:'ð', title:'Badges & Titles',
     text:'Complete challenges to unlock badges (including 8 secret ones nobody knows about). Earn enough XP and streaks to unlock titles like Warrior, Champion, and Legend. Pick your favourite in the Profile tab.',
   },
   {
-    step:'10', icon:'🔄', title:'Weekly Reset',
+    step:'10', icon:'ð', title:'Weekly Reset',
     text:'A new quest window opens every Wednesday at 8 PM. When you open the app at the start of a new week, a Weekly Summary pops up showing last week\'s winner, your stats, and any shame. Then it all starts again.',
   },
 ];
@@ -1426,8 +2267,8 @@ function RulesTab(){
   return(
     <div>
       <div className="flexi gap6 mb12">
-        <button className={section==='tutorial'?'primary':''} onClick={()=>setSection('tutorial')}>📖 HOW TO PLAY</button>
-        <button className={section==='rules'?'primary':''} onClick={()=>setSection('rules')}>⚖️ RULES</button>
+        <button className={section==='tutorial'?'primary':''} onClick={()=>setSection('tutorial')}>ð HOW TO PLAY</button>
+        <button className={section==='rules'?'primary':''} onClick={()=>setSection('rules')}>âï¸ RULES</button>
       </div>
 
       {section==='tutorial'&&(
@@ -1444,12 +2285,12 @@ function RulesTab(){
               </div>
               <div>
                 <div className="bold cp" style={{marginBottom:4,fontSize:'.92em'}}>{s.title}</div>
-                <div className="small" style={{color:'var(--text)',lineHeight:1.6}}>{s.text}</div>
+      2         <div className="small" style={{color:'var(--text)',lineHeight:1.6}}>{s.text}</div>
               </div>
             </div>
           ))}
           <div className="box" style={{borderColor:'var(--yellow)',background:'rgba(251,191,36,.04)',textAlign:'center',marginTop:4}}>
-            <div className="cyellow bold mb6">⚡ XP QUICK REFERENCE</div>
+            <div className="cyellow bold mb6">â¡ XP QUICK REFERENCE</div>
             <div className="grid2 xs" style={{gap:6}}>
               {Object.entries(DIFF).map(([k,v])=>(
                 <div key={k} className="flexb" style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:2}}>
@@ -1471,7 +2312,7 @@ function RulesTab(){
       {section==='rules'&&(
         <div>
           <div className="box" style={{borderColor:'var(--red)',background:'rgba(244,63,94,.04)',textAlign:'center',marginBottom:10}}>
-            <div className="cred bold" style={{fontSize:'.95em',letterSpacing:'.08em'}}>⚖️ FRIEND QUEST COMMUNITY RULES</div>
+            <div className="cred bold" style={{fontSize:'.95em',letterSpacing:'.08em'}}>âï¸ FRIEND QUEST COMMUNITY RULES</div>
             <div className="cdim xs mt6">Breaking these ruins the game for everyone. Don't be that person.</div>
           </div>
           {RULES.map((r,i)=>(
@@ -1484,8 +2325,8 @@ function RulesTab(){
             </div>
           ))}
           <div className="box" style={{borderColor:'var(--green)',background:'rgba(52,211,153,.04)',textAlign:'center',marginTop:4}}>
-            <div className="cgreen bold mb6">💎 THE GOLDEN RULE</div>
-            <div className="small" style={{lineHeight:1.7}}>If it feels like cheating, it probably is.<br/>If it would upset someone, don't do it.<br/>This is Friend Quest — keep it fun. 🎯</div>
+            <div className="cgreen bold mb6">ð THE GOLDEN RULE</div>
+            <div className="small" style={{lineHeight:1.7}}>If it feels like cheating, it probably is.<br/>If it would upset someone, don't do it.<br/>This is Friend Quest â keep it fun. ð¯</div>
           </div>
         </div>
       )}
@@ -1493,7 +2334,7 @@ function RulesTab(){
   );
 }
 
-// ═══ SETTINGS TAB ════════════════════════════════════════════════════════════
+// âââ SETTINGS TAB ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function SettingsTab({api,partyCode,settings,onSaved}){
   const [local,setLocal]=useState({...DEF,...settings});
   const [busy,setBusy]=useState(false);
@@ -1508,7 +2349,7 @@ function SettingsTab({api,partyCode,settings,onSaved}){
   return(
     <div>
       <div className="box">
-        <div className="box-title">⚙️ PARTY SETTINGS</div>
+        <div className="box-title">âï¸ PARTY SETTINGS</div>
         <div className="notif mb12 small">Settings are shared across all party members and saved to Firebase.</div>
         <div className="box-title cdim xs mb6">QUEST WINDOW</div>
         <div className="srow"><label>Window opens on</label><select value={local.windowDay} onChange={upd('windowDay')}>{DAYS.map((d,i)=><option key={i} value={i}>{d}</option>)}</select></div>
@@ -1517,7 +2358,16 @@ function SettingsTab({api,partyCode,settings,onSaved}){
         <div className="srow"><label>Deadline time</label><select value={local.deadlineHour} onChange={upd('deadlineHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
         <div className="box-title cdim xs mt12 mb6">QUEST LIMITS</div>
         <div className="srow"><label>Max quests per person</label><select value={local.maxPerPerson} onChange={upd('maxPerPerson')}>{Array.from({length:20},(_,i)=><option key={i+1} value={i+1}>{i+1} quest{i>0?'s':''}</option>)}</select></div>
-        <div className="cdim xs mt6">With {local.maxPerPerson}/person and 3 friends → up to <span className="cp">{local.maxPerPerson*3} quests</span>/week.</div>
+        <div className="cdim xs mt6">With {local.maxPerPerson}/person and 3 friends â up to <span className="cp">{local.maxPerPerson*3} quests</span>/week.</div>
+        <div className="box-title cdim xs mt12 mb6">GROUP CHAT</div>
+        <div className="srow"><label>Enable group chat</label>
+          <div className="flexi gap6" style={{cursor:'pointer'}} onClick={()=>setLocal(s=>({...s,chatEnabled:!s.chatEnabled}))}>
+            <div style={{width:16,height:16,border:`1px solid ${local.chatEnabled!==false?'var(--p)':'var(--pd)'}`,borderRadius:2,background:local.chatEnabled!==false?'var(--p)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              {local.chatEnabled!==false&&<span style={{color:'var(--bg)',fontSize:'.7em'}}>â</span>}
+            </div>
+            <span className="small">{local.chatEnabled!==false?'ON â members can message each other':'OFF â chat tab hidden from everyone'}</span>
+          </div>
+        </div>
         <div className="box" style={{marginTop:12,background:'rgba(56,189,248,.04)',padding:'10px',fontSize:'.82em'}}>
           <div className="cdim xs mb6">SCHEDULE PREVIEW</div>
           <div>Window: <span className="cp">{DAYS[local.windowDay]} at {hourLabel(local.windowHour)}</span></div>
@@ -1534,8 +2384,8 @@ function SettingsTab({api,partyCode,settings,onSaved}){
   );
 }
 
-// ═══ GAME ════════════════════════════════════════════════════════════════════
-function Game({api,userId,partyCode,userName,onLeave}){
+// âââ GAME ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const [tab,setTab]=useState('quests');
   const [partyData,setPartyData]=useState(null);
   const [allQuests,setAllQuests]=useState({});
@@ -1547,6 +2397,13 @@ function Game({api,userId,partyCode,userName,onLeave}){
   const [toasts,setToasts]=useState([]);
   const [showSummary,setShowSummary]=useState(false);
   const [summaryWeek,setSummaryWeek]=useState(null);
+  const [chatMessages,setChatMessages]=useState([]);
+  const [chatUnread,setChatUnread]=useState(0);
+  const [showFeedback,setShowFeedback]=useState(false);
+  const [showSwitcher,setShowSwitcher]=useState(false);
+  const [savedGroups]=useState(()=>{try{return JSON.parse(localStorage.getItem(K.GROUPS)||'[]');}catch{return[];}});
+  const chatLastSeenRef=useRef(parseInt(localStorage.getItem(K.CHAT_TS)||'0'));
+  const instaFiredRef=useRef(false);
 
   useEffect(()=>{const t=setInterval(()=>setTick(n=>n+1),1000);return()=>clearInterval(t);},[]);
 
@@ -1574,6 +2431,35 @@ function Game({api,userId,partyCode,userName,onLeave}){
         setSummaryWeek(mostRecentPrevWeek);setShowSummary(true);
         localStorage.setItem(K.WEEK,mostRecentPrevWeek);
       }
+      // ââ INSTA-QUEST: auto-assign when 2 hours or less left ââ
+      if(wi.inWindow&&wi.hoursLeft<=2&&wi.hoursLeft>0&&!instaFiredRef.current){
+        const alreadyDone=party?.instaQuests?.[wi.id]?.[userId];
+        if(!alreadyDone){
+          instaFiredRef.current=true;
+          const cats=Object.keys(SUGGESTIONS);
+          const cat=rnd(cats);
+          const title=rnd(SUGGESTIONS[cat]);
+          const qid=mkid();
+          const penOpts=[];
+          while(penOpts.length<3){const p=rnd(PENALTIES);if(!penOpts.includes(p))penOpts.push(p);}
+          await api.set(`parties/${partyCode}/quests/${wi.id}/${qid}`,{
+            title,assignedBy:'SYSTEM',assignedTo:userId,difficulty:'medium',requireProof:false,
+            completed:false,completedAt:null,penaltyApplied:false,penaltyOptions:penOpts,penaltyChosen:null,
+            proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),xpAwarded:null,
+            isInstaQuest:true,
+          });
+          await api.patch(`parties/${partyCode}/instaQuests/${wi.id}`,{[userId]:true});
+          addToast('â¡ INSTA-QUEST!',`"${title}" â auto-assigned! ${Math.floor(wi.hoursLeft*60)} min left ð¥`,'var(--yellow)',8000);
+        }
+      }
+      // ââ CHAT: fetch messages ââ
+      try{
+        const chatData=await api.get(`parties/${partyCode}/chat`);
+        const msgs=Object.entries(chatData||{}).map(([id,m])=>({id,...m})).sort((a,b)=>a.ts-b.ts);
+        setChatMessages(msgs);
+        const lastSeen2=chatLastSeenRef.current;
+        setChatUnread(msgs.filter(m=>m.ts>lastSeen2&&m.uid!==userId).length);
+      }catch(_){}
     }catch(e){console.warn(e);}
   },[partyCode]);
 
@@ -1583,18 +2469,32 @@ function Game({api,userId,partyCode,userName,onLeave}){
     setCompleting(qid);
     const wi=getWeekInfo(settings);
     const bonusEvent=getBonusEvent(wi.id);
-    const xp=questXP(difficulty,bonusEvent);
+    let xp=questXP(difficulty,bonusEvent);
     // Combo check
     const todayDone=Object.values(allQuests[wi.id]||{}).filter(q=>q.assignedTo===userId&&q.completed&&q.completedAt&&new Date(q.completedAt).toDateString()===new Date().toDateString()).length;
     const comboBonus=todayDone>=2?25:0;
+    // XP boost check
+    const myMember=partyData?.members?.[userId]||{};
+    const activeBoosts=myMember.activeBoosts||{};
+    let boostUsed=null;
+    if(activeBoosts.xp_boost_2){xp=Math.round(xp*2);boostUsed='xp_boost_2';}
+    else if(activeBoosts.xp_boost_1){xp=Math.round(xp*1.5);boostUsed='xp_boost_1';}
+    // Coins to award
+    const coinsEarned=COIN_REWARDS[difficulty]||10;
+    const currentCoins=myMember.coins||0;
     try{
       await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{completed:true,completedAt:Date.now(),xpAwarded:xp+comboBonus});
-      addToast('✓ QUEST COMPLETE!',`${rnd(FUNNY_COMPLETE)} +${xp+comboBonus} XP`,'var(--green)');
-      if(comboBonus>0)addToast('🔥 COMBO BONUS!',`${todayDone+1} quests today! +${comboBonus} XP bonus`,'var(--purple)');
+      // Update coins & clear boost if used
+      const memberUpdate={coins:currentCoins+coinsEarned};
+      if(boostUsed){memberUpdate[`activeBoosts/${boostUsed}`]=null;}
+      await api.patch(`parties/${partyCode}/members/${userId}`,memberUpdate);
+      addToast('â QUEST COMPLETE!',`${rnd(FUNNY_COMPLETE)} +${xp+comboBonus} XP Â· +${coinsEarned}ðª`,'var(--green)');
+      if(comboBonus>0)addToast('ð¥ COMBO BONUS!',`${todayDone+1} quests today! +${comboBonus} XP bonus`,'var(--purple)');
+      if(boostUsed)addToast(`${boostUsed==='xp_boost_2'?'ð¥':'â¡'} BOOST ACTIVATED!`,`${boostUsed==='xp_boost_2'?'2Ã':'1.5Ã'} XP boost used!`,'var(--p)');
       // Mystery box for hard/legendary
       if(difficulty==='legendary'||(difficulty==='hard'&&Math.random()<0.3)){
-        await api.patch(`parties/${partyCode}/members/${userId}`,{mysteryBoxes:(partyData?.members?.[userId]?.mysteryBoxes||0)+1});
-        addToast('📦 MYSTERY BOX!','Check your Profile to open it!','var(--purple)');
+        await api.patch(`parties/${partyCode}/members/${userId}`,{mysteryBoxes:(myMember.mysteryBoxes||0)+1});
+        addToast('ð¦ MYSTERY BOX!','Check your Profile to open it!','var(--purple)');
       }
     }catch(e){console.error(e);}setCompleting(null);
   };
@@ -1602,7 +2502,7 @@ function Game({api,userId,partyCode,userName,onLeave}){
   const submitProof=async(qid,proof)=>{
     const wi=getWeekInfo(settings);
     await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{proof,proofStatus:'pending'});
-    addToast('📸 PROOF SUBMITTED','Waiting for the assigner to review...','var(--yellow)');
+    addToast('ð¸ PROOF SUBMITTED','Waiting for the assigner to review...','var(--yellow)');
   };
 
   const approveProof=async(qid)=>{
@@ -1610,19 +2510,19 @@ function Game({api,userId,partyCode,userName,onLeave}){
     const q=(allQuests[wi.id]||{})[qid];
     const xp=questXP(q?.difficulty,getBonusEvent(wi.id));
     await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{completed:true,completedAt:Date.now(),proofStatus:'approved',xpAwarded:xp});
-    addToast('✓ PROOF APPROVED',`Quest complete! +${xp} XP awarded`,'var(--green)');
+    addToast('â PROOF APPROVED',`Quest complete! +${xp} XP awarded`,'var(--green)');
   };
 
   const rejectProof=async(qid,reason)=>{
     const wi=getWeekInfo(settings);
     await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{proofStatus:'rejected',proofRejectedReason:reason||'Not good enough!'});
-    addToast('✗ PROOF REJECTED','The assigner wants better evidence 😤','var(--red)');
+    addToast('â PROOF REJECTED','The assigner wants better evidence ð¤','var(--red)');
   };
 
   const pickPenalty=async(qid,choice)=>{
     const wi=getWeekInfo(settings);
     await api.patch(`parties/${partyCode}/quests/${wi.id}/${qid}`,{penaltyChosen:choice});
-    addToast('☠ PENALTY CHOSEN','May your punishment be swift 😈','var(--red)');
+    addToast('â  PENALTY CHOSEN','May your punishment be swift ð','var(--red)');
   };
 
   const handleAwardBadges=async(ids,badgeMap)=>{
@@ -1631,22 +2531,39 @@ function Game({api,userId,partyCode,userName,onLeave}){
     if(Object.keys(updates).length>0){
       await api.patch(`parties/${partyCode}/members/${userId}/badges`,updates);
       ids.slice(0,2).forEach(b=>{
-        const def=BADGE_DEFS[b]||SECRET_DEFS[b.replace('SECRET_','')]||{name:b,icon:'🏅'};
-        addToast(`🏅 BADGE UNLOCKED!`,`${def.icon} ${def.name}`,'var(--yellow)',5000);
+        const def=BADGE_DEFS[b]||SECRET_DEFS[b.replace('SECRET_','')]||{name:b,icon:'ð'};
+        addToast(`ð BADGE UNLOCKED!`,`${def.icon} ${def.name}`,'var(--yellow)',5000);
       });
     }
   };
 
   const handleSpin=async(result)=>{
     if(result.type==='xp'&&result.val){
-      // Award XP via a phantom completed quest marker — simplest approach
-      addToast('🎰 SPIN REWARD!',`${result.label}`,'var(--yellow)');
+      addToast('ð° SPIN REWARD!',`${result.label}`,'var(--yellow)');
     }else if(result.type==='box'){
       await api.patch(`parties/${partyCode}/members/${userId}`,{mysteryBoxes:(partyData?.members?.[userId]?.mysteryBoxes||0)+1});
-      addToast('📦 MYSTERY BOX!','Check your Profile tab!','var(--purple)');
+      addToast('ð¦ MYSTERY BOX!','Check your Profile tab!','var(--purple)');
     }else if(result.type==='dud'){
-      addToast('🌚 NOTHING TODAY','The wheel has spoken. Touch grass.','var(--dim)');
+      addToast('ð NOTHING TODAY','The wheel has spoken. Touch grass.','var(--dim)');
     }
+  };
+
+  const sendChat=async(text)=>{
+    const id=mkid();
+    const memberName=partyData?.members?.[userId]?.name||userName;
+    await api.set(`parties/${partyCode}/chat/${id}`,{uid:userId,name:memberName,text,ts:Date.now()});
+    // CHAT_STAR badge check
+    const myMsgCount=chatMessages.filter(m=>m.uid===userId).length+1;
+    if(myMsgCount>=20)handleAwardBadges(['CHAT_STAR'],{CHAT_STAR:true});
+  };
+
+  const handleTabChange=(t)=>{
+    if(t==='chat'){
+      chatLastSeenRef.current=Date.now();
+      localStorage.setItem(K.CHAT_TS,String(Date.now()));
+      setChatUnread(0);
+    }
+    setTab(t);
   };
 
   if(loading)return<Loading/>;
@@ -1667,15 +2584,47 @@ function Game({api,userId,partyCode,userName,onLeave}){
   const member=members[userId]||{};
   const titleDef=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
 
+  const chatEnabled=settings.chatEnabled!==false;
   const TABS=[
-    ['quests','📋 QUESTS',0],['assign','✏️ ASSIGN',pendingProofCount],['log','📜 LOG',0],
-    ['board','🏆 BOARD',0],['badges','🏅 BADGES',0],['profile','👤 PROFILE',0],
-    ['spin','🎰 SPIN',0],['rules','📖 RULES',0],['settings','⚙️ SETTINGS',0],
+    ['quests','ð QUESTS',0],['assign','âï¸ ASSIGN',pendingProofCount],['log','ð LOG',0],
+    ['board','ð BOARD',0],['badges','ð BADGES',0],['pet','ð¾ PET',0],['shop','ðª SHOP',0],
+    ['profile','ð¤ PROFILE',0],
+    ['spin','ð° SPIN',0],
+    ...(chatEnabled?[['chat','ð¬ CHAT',chatUnread]]:[]),
+    ['rules','ð RULES',0],['settings','âï¸ SETTINGS',0],
   ];
 
   return(
     <div className="wrap">
       <Toasts toasts={toasts}/>
+      {showFeedback&&<FeedbackModal api={api} userName={member.name||userName} partyCode={partyCode} onClose={()=>setShowFeedback(false)}/>}
+
+      {showSwitcher&&(
+        <div className="modal-bg" onClick={()=>setShowSwitcher(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className="modal-title">â SWITCH GROUP</div>
+            <div className="cdim xs mb12">Current group: <span className="code" style={{cursor:'default'}}>{partyCode}</span></div>
+            {savedGroups.filter(g=>g.code!==partyCode).length===0?(
+              <div className="notif mb12">No other saved groups. Use the Groups screen to join or create one.</div>
+            ):(
+              savedGroups.filter(g=>g.code!==partyCode).map(g=>(
+                <div key={g.code} className="flexb mb6" style={{padding:'10px 12px',background:'var(--card2)',borderRadius:3,border:'1px solid var(--border)'}}>
+                  <div>
+                    <span className="code" style={{cursor:'default',fontSize:'.88em'}}>{g.code}</span>
+                    <span className="cdim xs" style={{marginLeft:8}}>{g.name}</span>
+                  </div>
+                  <button className="btn-ok" style={{fontSize:'.8em',padding:'5px 14px'}} onClick={()=>{setShowSwitcher(false);onSwitchParty(g.code,g.name);}}>â SWITCH</button>
+                </div>
+              ))
+            )}
+            <div className="flexi gap6 mt12">
+              <button style={{flex:1}} onClick={()=>{setShowSwitcher(false);onLeave();}}>+ JOIN / CREATE NEW</button>
+              <button style={{flex:1}} onClick={()=>setShowSwitcher(false)}>[ CANCEL ]</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSummary&&summaryWeek&&(
         <WeeklySummaryModal summary={{weekId:summaryWeek}} members={members} allQuests={allQuests} userId={userId}
           onClose={()=>{setShowSummary(false);setSummaryWeek(null);}}/>
@@ -1687,13 +2636,15 @@ function Game({api,userId,partyCode,userName,onLeave}){
           <div>
             <h1 style={{fontSize:'clamp(1.1rem,3.5vw,1.7rem)'}}>[ FRIEND QUEST ]</h1>
             <div className="sub">PARTY: <span className="code" onClick={()=>{navigator.clipboard.writeText(partyCode);setCopied(true);setTimeout(()=>setCopied(false),2000);}}>{partyCode}</span>
-              {copied&&<span className="cgreen xs"> ✓</span>}
+              {copied&&<span className="cgreen xs"> â</span>}
             </div>
           </div>
           <div style={{textAlign:'right'}}>
             <div className="cp small">{member.name||userName}</div>
             <div style={{color:titleDef.color,fontSize:'.75em'}}>[ {titleDef.name} ]</div>
-            <div className="cyellow small">⚡ {myStats.xp} XP {myStreak.current>=2&&`🔥 ${myStreak.current}wk`}</div>
+            <div className="cyellow small">â¡ {myStats.xp} XP {myStreak.current>=2&&`ð¥ ${myStreak.current}wk`}</div>
+            <div style={{marginTop:2}}><span className="coin-badge">ðª {member.coins||0}</span></div>
+            <button style={{fontSize:'.7em',padding:'2px 7px',marginTop:3}} onClick={()=>setShowFeedback(true)}>ð FEEDBACK</button>
           </div>
         </div>
       </div>
@@ -1711,18 +2662,18 @@ function Game({api,userId,partyCode,userName,onLeave}){
           {wi.urgentMsg&&<div className="small mt6" style={{color:wi.urgentMsg.col}}>{wi.urgentMsg.msg}</div>}
         </div>
       ):(
-        <div className="timer-box closed">WINDOW CLOSED — Next window: <span className="cyellow">{DAYS[settings.windowDay]} at {hourLabel(settings.windowHour)}</span></div>
+        <div className="timer-box closed">WINDOW CLOSED â Next window: <span className="cyellow">{DAYS[settings.windowDay]} at {hourLabel(settings.windowHour)}</span></div>
       )}
 
       {/* Tabs */}
       <div className="tabs">
         {TABS.map(([id,label,notif])=>(
-          <button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)}>
+          <button key={id} className={tab===id?'active':''} onClick={()=>handleTabChange(id)}>
             {label}{notif>0&&<span className="notif-dot"/>}
           </button>
         ))}
-        {pendingPenaltyCount>0&&<div className="notif err xs flexi gap6" style={{padding:'4px 8px',margin:'2px'}}>☠ {pendingPenaltyCount} penalty to pick!</div>}
-        <button className="btn-danger" style={{marginLeft:'auto'}} onClick={onLeave}>← LEAVE</button>
+        {pendingPenaltyCount>0&&<div className="notif err xs flexi gap6" style={{padding:'4px 8px',margin:'2px'}}>â  {pendingPenaltyCount} penalty to pick!</div>}
+        <button className="btn-danger" style={{marginLeft:'auto'}} onClick={()=>setShowSwitcher(true)}>â GROUPS</button>
       </div>
 
       {tab==='quests'&&<MyQuestsTab quests={currentQuests} members={members} userId={userId} inWindow={wi.inWindow}
@@ -1735,14 +2686,17 @@ function Game({api,userId,partyCode,userName,onLeave}){
       {tab==='board'&&<LeaderboardTab members={members} allQuests={allQuests} userId={userId} currentWeekId={wi.id} bonusEvent={bonusEvent}/>}
       {tab==='badges'&&<BadgesTab allQuests={allQuests} userId={userId} members={members} savedBadges={savedBadges} onAward={handleAwardBadges}/>}
       {tab==='profile'&&<ProfileTab allQuests={allQuests} userId={userId} members={members} api={api} partyCode={partyCode} onTitleChange={t=>setPartyData(p=>({...p,members:{...p.members,[userId]:{...p.members[userId],selectedTitle:t}}}))}/>}
+      {tab==='pet'&&<PetTab allQuests={allQuests} userId={userId} badges={savedBadges} stats={myStats}/>}
+      {tab==='shop'&&<ShopTab api={api} partyCode={partyCode} userId={userId} members={members} addToast={addToast} partyData={partyData}/>}
       {tab==='spin'&&<DailySpinTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} onSpin={handleSpin}/>}
+      {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled}/>}
       {tab==='rules'&&<RulesTab/>}
       {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})}/>}
     </div>
   );
 }
 
-// ═══ APP ═════════════════════════════════════════════════════════════════════
+// âââ APP âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 function App(){
   const [screen,setScreen]=useState('init');
   const [api]=useState(()=>makeApi(DB));
@@ -1754,9 +2708,16 @@ function App(){
     const party=localStorage.getItem(K.PARTY),name=localStorage.getItem(K.NAME);
     if(party&&name){setPartyCode(party);setUserName(name);setScreen('game');}else setScreen('party');
   },[]);
+  const switchParty=(code,name)=>{
+    localStorage.setItem(K.PARTY,code);
+    localStorage.setItem(K.NAME,name);
+    setPartyCode(code);
+    setUserName(name);
+    setScreen('game');
+  };
   if(screen==='init')return<Loading/>;
   if(screen==='party')return<Party api={api} userId={userId} onDone={(c,n)=>{localStorage.setItem(K.PARTY,c);localStorage.setItem(K.NAME,n);setPartyCode(c);setUserName(n);setScreen('game');}}/>;
-  if(screen==='game')return<Game api={api} userId={userId} partyCode={partyCode} userName={userName} onLeave={()=>{localStorage.removeItem(K.PARTY);localStorage.removeItem(K.NAME);setScreen('party');}}/>;
+  if(screen==='game')return<Game key={partyCode} api={api} userId={userId} partyCode={partyCode} userName={userName} onLeave={()=>{localStorage.removeItem(K.PARTY);setPartyCode('');setScreen('party');}} onSwitchParty={switchParty}/>;
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 </script>
