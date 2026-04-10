@@ -14,7 +14,7 @@
   --p:#38bdf8;--pb:#7dd3fc;--pd:#0c4a6e;
   --bg:#020b18;--card:#04111f;--card2:#061928;
   --border:#0d2844;--border2:#1a4060;
-  --red:#f43f5e;--yellow:#fbbf24;--green:#34d399;--purple:#a855f7;
+  --red:#f43f5e;--yellow:#fbbf24;--green:#34d399;--p}rnle:#a815f7;
   --text:#bae6fd;--dim:#1e5a8c;--glow:rgba(56,189,248,.2);
 }
 body{background:var(--bg);font-family:'Share Tech Mono','Courier New',monospace;color:var(--text);min-height:100vh;line-height:1.5}
@@ -47,14 +47,14 @@ button.btn-ok{border-color:var(--green);color:var(--green)}
 button.btn-ok:hover:not(:disabled){background:var(--green);color:var(--bg)}
 button.btn-danger{border-color:var(--red);color:var(--red)}
 button.btn-danger:hover{background:var(--red);color:#fff}
-button.btn-purple{border-color:var(--purple);color:var(--purple)}
-button.btn-purple:hover:not(:disabled){background:var(--purple);color:#fff}
+button.btn-p}rnle{border-color:var(--p}rnle);color:var(--p}rnle)}
+button.btn-p}rnle:hover:not(:disabled){background:var(--p}rnle);color:#fff}
 button.btn-yellow{border-color:var(--yellow);color:var(--yellow)}
 button.btn-yellow:hover:not(:disabled){background:var(--yellow);color:var(--bg)}
 button:disabled{opacity:.32;cursor:not-allowed}
 /* COLORS */
 .cp{color:var(--p)}.cpb{color:var(--pb)}.cdim{color:var(--dim)}.cred{color:var(--red)}
-.cyellow{color:var(--yellow)}.cgreen{color:var(--green)}.ctext{color:var(--text)}.cpurple{color:var(--purple)}
+.cyellow{color:var(--yellow)}.cgreen{color:var(--green)}.ctext{color:var(--text)}.cp}rnle{color:var(--p}rnle)}
 .glow{text-shadow:0 0 9px var(--p)}.glow-r{text-shadow:0 0 9px var(--red)}.glow-g{text-shadow:0 0 7px var(--green)}.glow-y{text-shadow:0 0 7px var(--yellow)}
 /* LAYOUT */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -80,13 +80,13 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .diff-easy{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.3)}
 .diff-medium{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.3)}
 .diff-hard{background:rgba(244,63,94,.12);color:var(--red);border:1px solid rgba(244,63,94,.3)}
-.diff-legendary{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.4)}
+.diff-legendary{background:rgba(168,85,247,.15);color:var(--p}rnle);border:1px solid rgba(168,85,247,.4)}
 /* BADGES */
 .badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:7px}
 .b-card{border:1px solid var(--border);background:var(--card);padding:10px;text-align:center;border-radius:3px;transition:border-color .2s}
 .b-card.unlocked{border-color:var(--yellow);background:rgba(251,191,36,.04);box-shadow:0 0 10px rgba(251,191,36,.1)}
 .b-card.secret{border-color:var(--pd);background:rgba(168,85,247,.05)}
-.b-card.secret.unlocked{border-color:var(--purple);box-shadow:0 0 12px rgba(168,85,247,.2)}
+.b-card.secret.unlocked{border-color:var(--p}rnle);box-shadow:0 0 12px rgba(168,85,247,.2)}
 .b-card.locked{opacity:.4}
 .b-card .b-icon{font-size:1.7em;margin-bottom:3px}
 .b-card .b-name{font-size:.77em;letter-spacing:.04em;margin-bottom:2px}
@@ -96,7 +96,7 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .ibadge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:2px;font-size:.68em;margin:1px}
 .ibadge.xp{background:var(--yellow);color:#000}
 .ibadge.pen{background:var(--red);color:#fff}
-.ibadge.purple{background:rgba(168,85,247,.2);color:var(--purple);border:1px solid rgba(168,85,247,.4)}
+.ibadge.p}rnle{background:rgba(168,85,247,.2);color:var(--p}rnle);border:1px solid rgba(168,85,247,.4)}
 /* MEMBER CARDS */
 .mcard{border:1px solid var(--border);background:var(--card);padding:9px 12px;margin:5px 0;border-radius:2px}
 .mcard.gold{border-color:var(--yellow);box-shadow:0 0 12px rgba(251,191,36,.12)}
@@ -112,7 +112,7 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .notif.err{border-color:var(--red);color:var(--red);background:rgba(244,63,94,.05)}
 .notif.warn{border-color:var(--yellow);color:var(--yellow);background:rgba(251,191,36,.05)}
 .notif.ok{border-color:var(--green);color:var(--green);background:rgba(52,211,153,.05)}
-.notif.purple{border-color:var(--purple);color:var(--purple);background:rgba(168,85,247,.05)}
+.notif.p}rnle{border-color:var(--p}rnle);color:var(--p}rnle);background:rgba(168,85,247,.05)}
 /* TIMER */
 .timer-box{text-align:center;padding:12px;border:1px solid var(--yellow);color:var(--yellow);margin:9px 0;border-radius:3px}
 .timer-box .t-num{font-size:1.7em;letter-spacing:.1em;text-shadow:0 0 12px rgba(251,191,36,.4)}
@@ -141,7 +141,7 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .pbar .fill{height:100%;background:var(--p);transition:width .5s}
 .pbar .fill.red{background:var(--red)}.pbar .fill.green{background:var(--green)}.pbar .fill.yellow{background:var(--yellow)}
 /* EVENT BANNER */
-.event-banner{padding:10px 14px;border:1px solid var(--purple);background:rgba(168,85,247,.08);border-radius:3px;margin:8px 0;text-align:center;animation:glow-pulse 3s infinite}
+.event-banner{padding:10px 14px;border:1px solid var(--p}rnle);background:rgba(168,85,247,.08);border-radius:3px;margin:8px 0;text-align:center;animation:glow-pulse 3s infinite}
 @keyframes glow-pulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 18px rgba(168,85,247,.3)}}
 /* PROFILE */
 .avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:bold;flex-shrink:0}
@@ -208,7 +208,7 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .item-card.equipped{border-color:var(--yellow);background:rgba(251,191,36,.07);box-shadow:0 0 10px rgba(251,191,36,.12)}
 .item-card.locked{opacity:.38;cursor:not-allowed}
 .item-card.seasonal{border-color:rgba(168,85,247,.6);background:rgba(168,85,247,.05)}
-.item-card.seasonal.unlocked:hover{border-color:var(--purple);box-shadow:0 0 10px rgba(168,85,247,.3)}
+.item-card.seasonal.unlocked:hover{border-color:var(--p}rnle);box-shadow:0 0 10px rgba(168,85,247,.3)}
 .archive-card{border:1px solid var(--border);background:var(--card2);padding:12px;border-radius:3px;margin:6px 0;display:flex;align-items:center;gap:12px}
 .archive-card.spirit{opacity:.55;filter:grayscale(.5)}
 /* COINS */
@@ -287,7 +287,7 @@ const EVENTS = [
   { id:'double',    name:'⚡ DOUBLE XP WEEK!',      desc:'All quests worth 2× XP this week!',        multi:2, color:'var(--yellow)' },
   { id:'mercy',     name:'🕊️ MERCY WEEK',             desc:'No XP penalties for failures this week.',  multi:1, color:'var(--green)'  },
   { id:'speed',     name:'🚀 SPEEDRUN CHALLENGE',    desc:'Quests completed in <2hrs worth +50 XP!',  multi:1, color:'var(--p)'      },
-  { id:'legendary', name:'💀 LEGENDARY MODE',        desc:'All quests treated as Legendary XP!',      multi:2.5,color:'var(--purple)'},
+  { id:'legendary', name:'💀 LEGENDARY MODE',        desc:'All quests treated as Legendary XP!',      multi:2.5,color:'var(--p}rnle)'},
   { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
   { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
   { id:'normal',    name:'',                          desc:'',                                          multi:1, color:'' },
@@ -301,7 +301,7 @@ const TITLES = [
   { id:'WARRIOR',    name:'Warrior',        xp:600,  streak:2, color:'var(--green)'   },
   { id:'CHAMPION',   name:'Champion',       xp:1000, streak:3, color:'var(--yellow)'  },
   { id:'LEGEND',     name:'Legend',         xp:2000, streak:5, color:'var(--red)'     },
-  { id:'GRANDMASTER',name:'Grandmaster',    xp:5000, streak:8, color:'var(--purple)'  },
+  { id:'GRANDMASTER',name:'Grandmaster',    xp:5000, streak:8, color:'var(--p}rnle)'  },
   { id:'SPEEDSTER',  name:'Flash',          badge:'SPEEDSTER', color:'var(--p)'       },
   { id:'FLAWLESS',   name:'The Flawless',   badge:'FLAWLESS',  color:'var(--green)'   },
   { id:'UNDYING',    name:'Undying',        streak:5,          color:'var(--yellow)'  },
@@ -1586,7 +1586,7 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
 }
 
 // ═══ ASSIGN TAB ══════════════════════════════════════════════════════════════
-function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,pendingProofs,onApprove,onReject}){
+function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,pendingProofs,onApprove,onReject,reviewedIds,onReviewed}){
   const [title,setTitle]=useState('');
   const [to,setTo]=useState('');
   const [diff,setDiff]=useState('medium');
@@ -1596,7 +1596,6 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   const [ok,setOk]=useState('');
   const [showSugg,setShowSugg]=useState(false);
   const [reviewQuest,setReviewQuest]=useState(null);
-  const [reviewedIds,setReviewedIds]=useState(new Set());
 
   const others=Object.entries(members).filter(([id])=>id!==userId);
   const myAssign=Object.values(quests).filter(q=>q.assignedBy===userId);
@@ -1625,8 +1624,8 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   return(
     <div>
       {reviewQuest&&(<ProofReviewModal quest={reviewQuest} members={members}
-        onApprove={id=>{setReviewedIds(s=>new Set([...s,id]));onApprove(id);setReviewQuest(null);}}
-        onReject={(id,r)=>{setReviewedIds(s=>new Set([...s,id]));onReject(id,r);setReviewQuest(null);}}
+        onApprove={id=>{onReviewed(id);onApprove(id);setReviewQuest(null);}}
+        onReject={(id,r)=>{onReviewed(id);onReject(id,r);setReviewQuest(null);}}
         onClose={()=>setReviewQuest(null)}/>)}
 
       {myPendingProofs.length>0&&(<div className="box" style={{borderColor:'var(--yellow)'}}>
@@ -2401,6 +2400,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const [chatUnread,setChatUnread]=useState(0);
   const [showFeedback,setShowFeedback]=useState(false);
   const [showSwitcher,setShowSwitcher]=useState(false);
+  const [reviewedIds,setReviewedIds]=useState(new Set());
   const [savedGroups]=useState(()=>{try{return JSON.parse(localStorage.getItem(K.GROUPS)||'[]');}catch{return[];}});
   const chatLastSeenRef=useRef(parseInt(localStorage.getItem(K.CHAT_TS)||'0'));
   const instaFiredRef=useRef(false);
@@ -2681,7 +2681,8 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         onProofSubmit={submitProof} onPickPenalty={pickPenalty}/>}
       {tab==='assign'&&<AssignTab api={api} partyCode={partyCode} userId={userId} members={members}
         quests={currentQuests} weekId={wi.id} inWindow={wi.inWindow} maxPer={maxPer}
-        pendingProofs={pendingProofs} onApprove={approveProof} onReject={rejectProof}/>}
+        pendingProofs={pendingProofs} onApprove={approveProof} onReject={rejectProof}
+        reviewedIds={reviewedIds} onReviewed={id=>setReviewedIds(s=>new Set([...s,id]))}/>}
       {tab==='log'&&<QuestLogTab quests={currentQuests} members={members} userId={userId} weekId={wi.id} api={api} partyCode={partyCode}/>}
       {tab==='board'&&<LeaderboardTab members={members} allQuests={allQuests} userId={userId} currentWeekId={wi.id} bonusEvent={bonusEvent}/>}
       {tab==='badges'&&<BadgesTab allQuests={allQuests} userId={userId} members={members} savedBadges={savedBadges} onAward={handleAwardBadges}/>}
