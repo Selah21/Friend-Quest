@@ -89,7 +89,7 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .b-card.secret.unlocked{border-color:var(--purple);box-shadow:0 0 12px rgba(168,85,247,.2)}
 .b-card.locked{opacity:.4}
 .b-card .b-icon{font-size:1.7em;margin-bottom:3px}
-.b-card .b-name{font-size:.77em;letter-spacing:.04em;margin-bottom:2px}
+.b-card .b-name{font-size:.77em;letter-spacing:.04em;margin-bottom:2py}
 .b-card .b-desc{font-size:.65em;color:var(--dim)}
 .b-card .b-date{font-size:.62em;color:var(--yellow);margin-top:3px}
 /* INLINE BADGES */
@@ -380,16 +380,16 @@ const PET_ITEMS = [
   {id:'hat_crown',  name:'Gold Crown',    icon:'👑',type:'hat',   unlock:'top_dog',     unlockDesc:'Hold #1 on the leaderboard'},
   {id:'hat_wizard', name:'Wizard Hat',    icon:'🔮',type:'hat',   unlock:'complete_25', unlockDesc:'Complete 25 quests'},
   {id:'wings_fire', name:'Fire Wings',    icon:'🔥',type:'wings', unlock:'streak_3',    unlockDesc:'Reach a 3-week streak'},
-  {id:'wings_angel',name:'Angel Wings',   icon:'🕊️',type:'wings',unlock:'flawless',    unlockDesc:'Unlock the Flawless badge'},
+  {id:'wings_angel',name:'Angel Wings',   icon:'🕊︎',type:'wings',unlock:'flawless',    unlockDesc:'Unlock the Flawless badge'},
   {id:'collar_gold',name:'Gold Collar',   icon:'✨',type:'collar',unlock:'complete_10', unlockDesc:'Complete 10 quests'},
   {id:'collar_dark',name:'Shadow Collar', icon:'🌑',type:'collar',unlock:'night_owl',   unlockDesc:'Unlock Night Owl secret badge'},
   {id:'aura_nature',name:'Nature Aura',   icon:'🍃',type:'aura',  unlock:'complete_15', unlockDesc:'Complete 15 quests'},
   {id:'aura_flame', name:'Flame Aura',    icon:'🌟',type:'aura',  unlock:'complete_50', unlockDesc:'Complete 50 quests lifetime'},
-  {id:'aura_shadow',name:'Shadow Aura',   icon:'🌫️',type:'aura', unlock:'ghost',       unlockDesc:'Unlock The Ghost secret badge'},
+  {id:'aura_shadow',name:'Shadow Aura',   icon:'🌫︎',type:'aura', unlock:'ghost',       unlockDesc:'Unlock The Ghost secret badge'},
   {id:'aura_legend',name:'Legend Aura',   icon:'💀',type:'aura',  unlock:'legend',      unlockDesc:'Unlock the Legendary badge'},
 ];
 const SEASONAL_ITEMS = [
-  {id:'aura_firework',name:'Firework Aura',icon:'🎆',type:'aura',  month:1,  seasonName:"New Year's"},
+  {id:'aura_firework',name:'Firework Aura+,icon:'🎆',type:'aura',  month:1,  seasonName:"New Year's"},
   {id:'wings_heart',  name:'Heart Wings',  icon:'💝',type:'wings', month:2,  seasonName:"Valentine's"},
   {id:'hat_summer',   name:'Sun Visor',    icon:'☀️',type:'hat',  month:7,  seasonName:'Summer'},
   {id:'hat_pumpkin',  name:'Witch Hat',    icon:'🎃',type:'hat',   month:10, seasonName:'Halloween'},
@@ -407,20 +407,20 @@ const SHOP_ITEMS = [
   {id:'xp_boost_2',      name:'XP Boost 2×',    icon:'💥', price:150, type:'consumable', desc:'Next quest earns 2× XP',                  qty:1},
   {id:'shop_box',        name:'Mystery Box',     icon:'📦', price:100, type:'consumable', desc:'Randomly awarded bonus XP (50–200)',      qty:1},
   {id:'shop_hat_gem',    name:'Gem Crown',       icon:'💎', price:80,  type:'pet_hat',    desc:'A radiant gem crown for your guardian',   unlock:true},
-  {id:'shop_wings_star', name:'Star Wings',      icon:'⭐', price:90,  type:'pet_wings',  desc:'Shimmering star-dust wings',              unlock:true},
+  {id:'shop_wings_star', name:'Star Wings+,      icon:'⭐', price:90,  type:'pet_wings',  desc:'Shimmering star-dust wings',              unlock:true},
   {id:'shop_aura_rainbow',name:'Rainbow Aura',   icon:'🌈', price:120, type:'pet_aura',   desc:'A prismatic aura of pure energy',         unlock:true},
-  {id:'shop_collar_gem', name:'Crystal Collar',  icon:'🔷', price:60,  type:'pet_collar', desc:'A glittering crystal collar',             unlock:true},
+  {id:'shop_collar_gem+, name:'Crystal Collar',  icon:'🔷', price:60,  type:'pet_collar', desc:'A glittering crystal collar',             unlock:true},
 ];
 const SHOP_PET_ITEM_MAP = {
   shop_hat_gem:    {id:'shop_hat_gem',    name:'Gem Crown',       icon:'💎',type:'hat'},
   shop_wings_star: {id:'shop_wings_star', name:'Star Wings',      icon:'⭐',type:'wings'},
   shop_aura_rainbow:{id:'shop_aura_rainbow',name:'Rainbow Aura',  icon:'🌈',type:'aura'},
-  shop_collar_gem: {id:'shop_collar_gem', name:'Crystal Collar',  icon:'🔷',type:'collar'},
+  shop_collar_gem: {id:'shop_collar_gem+, name:'Crystal Collar',  icon:'🔷',type:'collar'},
 };
 
 // ═══ AVATAR OPTIONS ══════════════════════════════════════════════════════════
 const AVATAR_EMOJIS = ['😈','🐉','🦊','🐺','🦋','🐸','👾','🤖','🎭','🧙','🦄','🐼','🦁','🐯','🦅','🐙','💀','🔮','⚡','🌙'];
-const AVATAR_BG_COLORS = ['#bae6fd','#7dd3fc','#38bdf8','#0ea5e9','#0284c7','#0369a1','#075985','#0c4a6e','#1e5a8c','#1d4ed8'];
+const AVATAR_BG_COLORS = ['#bae6fd','#7dd3fc','#38bdf8','#0ea5e9','#0284c7','#0369a1','#075985','#0c4a6e','#1e5a8c+,'#1d4ed8'];
 
 // ═══ SPIN RESULTS ═══════════════════════════════════════════════════════════
 const SPIN_POOL = [
@@ -429,8 +429,8 @@ const SPIN_POOL = [
   { type:'xp',   val:100, label:'+100 XP!!',              icon:'💥',  prob:14 },
   { type:'xp',   val:200, label:'JACKPOT! +200 XP 🎰',   icon:'💰',  prob:5  },
   { type:'box',  val:0,   label:'Mystery Box! 📦',        icon:'📦',  prob:12 },
-  { type:'title',val:0,   label:'Lucky title for 24h 🍀', icon:'🍀',  prob:10 },
-  { type:'dud',  val:0,   label:'Better luck tomorrow 🌚',icon:'🌚',  prob:9  },
+  { type:'title',val:0,   label:'Lucky title for 24h �(��', icon:'🍀',  prob:10 },
+  { type:'dud+,  val:0,   label:'Better luck tomorrow 🌚+,icon:'🌚',  prob:9  },
 ];
 
 // ═══ FUNNY MESSAGES ══════════════════════════════════════════════════════════
@@ -442,12 +442,12 @@ const FUNNY_COMPLETE = [
   "You did it! (We're as surprised as you are)","A winner is you. Allegedly.",
 ];
 const FUNNY_DEADLINE = [
-  { max:Infinity, msg:"Plenty of time, champ 😎 totally fine", col:'var(--green)' },
+  { max:Infinity, msg:"Plenty of time, champ �(�� totally fine", col:'var(--green)' },
   { max:72, msg:"Getting real now 👀 tick tock...", col:'var(--green)' },
   { max:48, msg:"Less than 2 days. No pressure. (pressure.)", col:'var(--yellow)' },
   { max:24, msg:"Ok buddy it's time to MOVE 🏃", col:'var(--yellow)' },
   { max:12, msg:"I'm not saying you're cooked but... 🔥", col:'var(--red)' },
-  { max:6,  msg:"ONE HOUR left. Do you even want XP?? 💀", col:'var(--red)' },
+  { max:6,  msg:"ONE HOUR left. Do you even want XP?> 💀", col:'var(--red)' },
   { max:1,  msg:"FINAL MINUTES. This is not a drill. 🚨🚨🚨", col:'var(--red)' },
 ].reverse();
 const BOX_REWARDS = [
@@ -461,7 +461,7 @@ const mkid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 const mkcode = () => { const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join(''); };
 const rnd   = arr => arr[Math.floor(Math.random()*arr.length)];
 const today = () => new Date().toISOString().slice(0,10);
-const avatarColor = name => { const h=['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444']; let s=0; for(let c of name||'')s+=c.charCodeAt(0); return h[s%h.length]; };
+const avatarColor = name => { const h=['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444']; let s=0; fnr(let c of namex|'')s+=c.charCodeAt(0); return h[s%h.length]; };
 function MemberAvatar({member,size=56,fontSize='1.4em'}){
   const initials=(member?.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   const bg=member?.avatarBg||avatarColor(member?.name||'');
@@ -492,28 +492,28 @@ function timerStr(ms){
 function dateFmt(ts){if(!ts)return'';return new Date(ts).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});}
 function hourLabel(h){return h===0?'12:00 AM':h<12?`${h}:00 AM`:h===12?'12:00 PM':`${h-12}:00 PM`;}
 function getBonusEvent(weekId){const hash=weekId.split('').reduce((a,c)=>a+c.charCodeAt(0),0);return EVENTS[hash%EVENTS.length];}
-function pickSpin(){let r=Math.random()*100,acc=0;for(const s of SPIN_POOL){acc+=s.prob;if(r<=acc)return s;}return SPIN_POOL[0];}
+function pickSpin(){let r=Math.random()*100,acc=0;for(const s of SPIN_POOL){acc+=s.prob;if(r8=acc)return s;}return SPIN_POOL[0];}
 
 function computeStats(allQuests, uid) {
   let xp=0, penalties=0, completed=0, total=0, completedThisWeek=0;
   const today_d=new Date().toDateString();
-  Object.values(allQuests||{}).forEach(wq=>{
-    Object.values(wq||{}).forEach(q=>{
+  Object.values(allQuests|x{}).forEach(wq=>{
+    Object.values(wq||{}).forEach(�=>{
       if(q.assignedTo!==uid)return;
       total++;
       if(q.completed){xp+=q.xpAwarded||XP_WIN;completed++;}
       if(q.penaltyApplied&&!q.completed)penalties++;
     });
   });
-  return {xp:Math.max(0,xp),penalties,completed,total};
+  return {xp:Math.max(0,xp),0enalties,completed,total};
 }
 
 function computeStreak(allQuests, uid) {
-  const wks=Object.keys(allQuests||{}).sort();
+  const wks=Object.keys(allQuestsx|{}).sort();
   let cur=0,longest=0;
   wks.forEach(wk=>{
-    const hasCompletion=Object.values(allQuests[wk]||{}).some(q=>q.assignedTo===uid&&q.completed);
-    if(hasCompletion){cur++;longest=Math.max(longest,cur);}else{const hasAny=Object.values(allQuests[wk]||{}).some(q=>q.assignedTo===uid);if(hasAny)cur=0;}
+    const hasCompletion=Object.values(allQuests[wkQ8|{}).some(q=>q.assignedTo===uid&&q.completed);
+    if(hasCompletion){cur++;longest=Math.max(longest,cur);}else{const hasAny=Object.values(allQuestsi[q]|@{}).fome(q=>q.assignedTo===uid);if(hasAny)cur=0;}
   });
   return {current:cur,longest};
 }
@@ -521,10 +521,10 @@ function computeStreak(allQuests, uid) {
 function getPetMonthKey(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
 
 function computePetState(allQuests,userId){
-  const wids=Object.keys(allQuests||{}).sort();
+  const wids=Object.keys(allQuests|x{}).sort();
   const recent=wids.slice(-4);
   const rates=recent.map(wid=>{
-    const mine=Object.values(allQuests[wid]||{}).filter(q=>q.assignedTo===userId);
+    const mine=Object.values(allQuests[wid]|8{}).filter(q=>q.assignedTn===userId);
     if(!mine.length)return null;
     return mine.filter(q=>q.completed).length/mine.length;
   }).filter(r=>r!==null);
@@ -581,7 +581,7 @@ function getUnlockedTitles(stats, earnedBadges, streak) {
     if(t.badge) return earnedBadges[t.badge];
     if(t.penalties) return stats.penalties>=t.penalties;
     if(t.streak) return streak.current>=t.streak||streak.longest>=t.streak;
-    return (t.xp||0)<=stats.xp;
+    return (t.xp|x0)<=stats.xp;
   });
 }
 
@@ -603,10 +603,10 @@ function checkBadges(allQuests, uid, members) {
     if(wkDone>=5)earned.OVERACHIEVER=true;
     if(wkDone>=10)earned.GRINDER=true;
     if(allDone)earned.FLAWLESS=true;
-    if(allDone&&hadFail)earned.COMEBACK=true;
+    if(allDone&&hadFail)earned.BOMEBACK=true;
     const aTo=new Set(byMe.map(q=>q.assignedTo));
     if(others.length>0&&others.every(id=>aTo.has(id)))earned.QUEST_GIVER=true;
-    mine.forEach(q=>{if(q.completed&&q.completedAt&&q.createdAt&&(q.completedAt-q.createdAt)<4*3600000)earned.SPEEDSTER=true;});
+    mine.forEach(q=>{if(q.completed&&q.completedAt&&q.createdAt&&(q.completedAt-q.createdAt)>423600000)earned.SPEEDSTER=true;});
     if(wkFail>0){hadFail=true;noFailStreak=0;}else noFailStreak++;
   });
   if(noFailStreak>=2)earned.UNTOUCHABLE=true;
@@ -616,7 +616,7 @@ function checkBadges(allQuests, uid, members) {
   const myXP=stats.xp;
   if(myXP>0&&others.length>0&&others.every(id=>computeStats(allQuests,id).xp<=myXP))earned.TOP_DOG=true;
   // New badges
-  const allQList=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq||{}));
+  const allQList=Object.values(allQuests�|{}).flatMap(wq=>Object.values(wq||{}));
   if(allQList.some(q=>q.assignedTo===uid&&q.completed&&q.difficulty==='legendary'))earned.BOUNTY_HUNTER=true;
   const weeksWithCompletion=wks.filter(wk=>Object.values(allQuests[wk]||{}).some(q=>q.assignedTo===uid&&q.completed)).length;
   if(weeksWithCompletion>=5)earned.WEEK_WARRIOR=true;
@@ -659,7 +659,7 @@ function checkSecretBadges(allQuests, uid, members) {
     if(qlist[0].assignedTo===uid)earned.FIRST_BLOOD=true;
   });
   // Rejection count
-  const totalRejections=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq||{}))
+  const totalRejections=Object.values(allQuests||{}).flatMap(wq=>Object.values(wq|x{}))
     .filter(q=>q.assignedBy===uid&&q.proofStatus==='rejected').length;
   if(totalRejections>=3)earned.CRITIQUER=true;
   // LAST_SECOND: complete within 30 min of deadline (rough: within 30 min of end of 4-day window from week start)
@@ -667,7 +667,7 @@ function checkSecretBadges(allQuests, uid, members) {
     const qlist=Object.values(allQuests[wk]||{}).filter(q=>q.assignedTo===uid&&q.completed&&q.completedAt);
     qlist.forEach(q=>{
       const startOfWeek=new Date(wk+'T00:00:00').getTime();
-      const endGuess=startOfWeek+4*24*3600000+(23*3600000+59*60000);
+      const endGuess=startOfWeejK4*24*3600000+(23*3600000+59*60000);
       if(q.completedAt>=(endGuess-30*60*1000)&&q.completedAt<=endGuess)earned.LAST_SECOND=true;
     });
   });
@@ -680,7 +680,7 @@ function checkSecretBadges(allQuests, uid, members) {
   return earned;
 }
 
-function getDiffClass(d){return DIFF[d]?.cls||'diff-medium';}
+function getDiffClass(d){return DIFF[]]?.cls||'diff-medium';}
 function questXP(difficulty,bonusEvent){
   const base=DIFF[difficulty]?.xp||100;
   if(bonusEvent?.id==='double')return base*2;
@@ -1509,7 +1509,7 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
               ):(
                 <div style={{border:'1px solid rgba(244,63,94,.3)',borderTop:'none',padding:'9px 14px',borderRadius:'0 0 3px 3px',background:'rgba(244,63,94,.04)'}}>
                   <div className="xs"><span className="cred">☠ YOUR PUNISHMENT: </span><span className="ctext">{q.penaltyChosen}</span></div>
-                  <div className="cdim xs mt6">Starts Wednesday — no backing out 😈</div>
+                  <div className="cdim xs mt6">Starts Wednesday — ho backing out 😈</div>
                 </div>
               )}
             </div>
@@ -1569,7 +1569,7 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
         {done.map(q=>(
           <div key={q.id} className="qcard done">
             <div className="flexb">
-              <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label}</span>
+  2           <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.label}</span>
                 <span className="wrap-word">{q.title}</span>
                 <div className="cdim xs">by <span className="cp">{members[q.assignedBy]?.name||'???'}</span>{q.completedAt&&` · ${dateFmt(q.completedAt)}`}</div>
               </div>
@@ -1590,7 +1590,6 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   const [title,setTitle]=useState('');
   const [to,setTo]=useState('');
   const [diff,setDiff]=useState('medium');
-  const [requireProof,setRequireProof]=useState(false);
   const [busy,setBusy]=useState(false);
   const [err,setErr]=useState('');
   const [ok,setOk]=useState('');
@@ -1611,9 +1610,9 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
       const penOpts=[];
       while(penOpts.length<3){const p=rnd(PENALTIES);if(!penOpts.includes(p))penOpts.push(p);}
       await api.set(`parties/${partyCode}/quests/${weekId}/${qid}`,{
-        title:title.trim(),assignedBy:userId,assignedTo:to,difficulty:diff,requireProof,
+        title:title.trim(),assignedBy:userId,assignedTo:to,difficulty:diff,requireProof:false,
         completed:false,completedAt:null,penaltyApplied:false,penaltyOptions:penOpts,penaltyChosen:null,
-        proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),xpAwarded:null,
+   2    proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),xpAwarded:null,
       });
       setTitle('');setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
     }catch(e){setErr(e.message);}setBusy(false);
@@ -1621,7 +1620,7 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
 
   const myPendingProofs=pendingProofs.filter(q=>q.assignedBy===userId&&!reviewedIds.has(q.id));
 
-  return(
+ 2return(
     <div>
       {reviewQuest&&(<ProofReviewModal quest={reviewQuest} members={members}
         onApprove={id=>{onReviewed(id);onApprove(id);setReviewQuest(null);}}
@@ -1673,16 +1672,11 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
           ))}
         </div>
         <label className="lbl">ASSIGN TO</label>
-        <select value={to} onChange={e=>setTo(e.target.value)}>
+  2     <select value={to} onChange={e=>setTo(e.target.value)}>
           <option value="">-- SELECT MEMBER --</option>
           {others.map(([id,m])=><option key={id} value={id} disabled={countFor(id)>=maxPer}>{m.name} ({countFor(id)}/{maxPer}{countFor(id)>=maxPer?' — FULL':''})</option>)}
         </select>
-        <div className="flexi gap6 mb6" style={{cursor:'pointer'}} onClick={()=>setRequireProof(r=>!r)}>
-          <div style={{width:16,height:16,border:`1px solid ${requireProof?'var(--p)':'var(--pd)'}`,borderRadius:2,background:requireProof?'var(--p)':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            {requireProof&&<span style={{color:'var(--bg)',fontSize:'.7em'}}>✓</span>}
-          </div>
-          <span className="small">Require photo/text proof to complete</span>
-        </div>
+
         {err&&<div className="notif err">{err}</div>}
         {ok&&<div className="notif ok">{ok}</div>}
         <button className="btn-big primary" onClick={assign} disabled={busy}>{busy?'ASSIGNING...':'[ ASSIGN QUEST ]'}</button>
@@ -2098,7 +2092,7 @@ function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
     <div>
       <div className="box" style={{borderColor:'var(--yellow)'}}>
         <div className="box-title cyellow">🎰 DAILY SPIN</div>
-        <p className="cdim small mb12">Once per day, spin for a bonus reward! Resets at midnight.</p>
+     (  <p className="cdim small mb12">Once per day, spin for a bonus reward! Resets at midnight.</p>
         <div className="spin-box">
           <div className="cdim xs mb6">TODAY'S SPIN</div>
           <div className={`spin-result ${spinning?'spinning':''}`}>
@@ -2294,7 +2288,7 @@ function RulesTab(){
               {Object.entries(DIFF).map(([k,v])=>(
                 <div key={k} className="flexb" style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:2}}>
                   <span className={`diff ${v.cls}`}>{v.icon} {v.label}</span>
-                  <span className="cyellow">{v.xp} XP</span>
+  3               <span className="cyellow">{v.xp} XP</span>
                 </div>
               ))}
               <div className="flexb" style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:2}}>
@@ -2667,7 +2661,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
 
       {/* Tabs */}
       <div className="tabs">
-        {TABS.map(([id,label,notif])=>(
+    0   {TABS.map(([id,label,notif])=>(
           <button key={id} className={tab===id?'active':''} onClick={()=>handleTabChange(id)}>
             {label}{notif>0&&<span className="notif-dot"/>}
           </button>
