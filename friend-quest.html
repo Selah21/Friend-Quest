@@ -188,7 +188,7 @@ button:disabled{opacity:.32;cursor:not-allowed}
 .gchip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border2);border-radius:3px;background:var(--card2);cursor:pointer;transition:border-color .15s}
 .gchip:hover{border-color:var(--p)}
 /* PET SYSTEM */
-.pet-emojh{display:inline-block;line-height:1;transition:all .3s;position:relative;z-index:1}
+.pet-emoji{display:inline-block;line-height:1;transition:all .3s;position:relative;z-index:1}
 .pet-emoji.flourishing{animation:pet-bounce .65s ease-in-out infinite alternate}
 .pet-emoji.stable{animation:pet-float 2.8s ease-in-out infinite}
 .pet-emoji.strained{animation:pet-droop 2.2s ease-in-out infinite}
@@ -303,7 +303,7 @@ const TITLES = [
   { id:'LEGEND',     name:'Legend',         xp:2000, streak:5, color:'var(--red)'     },
   { id:'GRANDMASTER',name:'Grandmaster',    xp:5000, streak:8, color:'var(--purple)'  },
   { id:'SPEEDSTER',  name:'Flash',          badge:'SPEEDSTER', color:'var(--p)'       },
-  { id:'FLAWLESS',   name:'The Flawless',   badge:'FLAWLESS',  color:'var(--green)$   },
+  { id:'FLAWLESS',   name:'The Flawless',   badge:'FLAWLESS',  color:'var(--green)'   },
   { id:'UNDYING',    name:'Undying',        streak:5,          color:'var(--yellow)'  },
   { id:'THE_SHAMED', name:'The Shamed',     penalties:5,       color:'var(--red)'     },
   { id:'TOP_DOG',    name:'Top Dog',        badge:'TOP_DOG',   color:'var(--yellow)'  },
@@ -376,14 +376,14 @@ const PET_PERSONALITIES = {
   shy:     {name:'Shy',     icon:'🩶',desc:'Withdrawn and distant — you\'ve been neglecting quests'},
 };
 const PET_ITEMS = [
-  {id:'hat_cap',    name:'Quest Cap',     icon:'🎩',type:'hat',   unlock:'womplete_5',  unlockDesc:'Complete 5 quests'},
-  {id:'hat_crown',  name:'Gold Crown',    icon:'👑',type:'hat',   unlock:'wop_dog',     unlockDesc:'Hold #1 on the leaderboard'},
-  {id:'hat_wizard', name:'Wizard Hat',    icon:'🔮',type:'hat',   unlock:'womplete_25', unlockDesc:'Complete 25 quests'},
+  {id:'hat_cap',    name:'Quest Cap',     icon:'🎩',type:'hat',   unlock:'complete_5',  unlockDesc:'Complete 5 quests'},
+  {id:'hat_crown',  name:'Gold Crown',    icon:'👑',type:'hat',   unlock:'top_dog',     unlockDesc:'Hold #1 on the leaderboard'},
+  {id:'hat_wizard', name:'Wizard Hat',    icon:'🔮',type:'hat',   unlock:'complete_25', unlockDesc:'Complete 25 quests'},
   {id:'wings_fire', name:'Fire Wings',    icon:'🔥',type:'wings', unlock:'streak_3',    unlockDesc:'Reach a 3-week streak'},
   {id:'wings_angel',name:'Angel Wings',   icon:'🕊️',type:'wings',unlock:'flawless',    unlockDesc:'Unlock the Flawless badge'},
   {id:'collar_gold',name:'Gold Collar',   icon:'✨',type:'collar',unlock:'complete_10', unlockDesc:'Complete 10 quests'},
   {id:'collar_dark',name:'Shadow Collar', icon:'🌑',type:'collar',unlock:'night_owl',   unlockDesc:'Unlock Night Owl secret badge'},
-  {id:'aura_nature',name:'Nature Aura',   icon:'🍃',type:'aura',  unlock:'womplete_15', unlockDesc:'Complete 15 quests'},
+  {id:'aura_nature',name:'Nature Aura',   icon:'🍃',type:'aura',  unlock:'complete_15', unlockDesc:'Complete 15 quests'},
   {id:'aura_flame', name:'Flame Aura',    icon:'🌟',type:'aura',  unlock:'complete_50', unlockDesc:'Complete 50 quests lifetime'},
   {id:'aura_shadow',name:'Shadow Aura',   icon:'🌫️',type:'aura', unlock:'ghost',       unlockDesc:'Unlock The Ghost secret badge'},
   {id:'aura_legend',name:'Legend Aura',   icon:'💀',type:'aura',  unlock:'legend',      unlockDesc:'Unlock the Legendary badge'},
@@ -1400,7 +1400,7 @@ function WeeklySummaryModal({summary,members,allQuests,userId,onClose}){
     <div className="modal-bg">
       <div className="modal" style={{maxWidth:520}}>
         <div style={{textAlign:'center',marginBottom:16}}>
-          <div style={{fontSize:'1.8em',letterSpacing:'.2em',color:'var(--yellow)',lextShadow:'0 0 20px rgba(251,191,36,.5)'}}>[ WEEK COMPLETE ]</div>
+          <div style={{fontSize:'1.8em',letterSpacing:'.2em',color:'var(--yellow)',textShadow:'0 0 20px rgba(251,191,36,.5)'}}>[ WEEK COMPLETE ]</div>
           <div className="cdim xs">Week of {weekId}</div>
         </div>
         <div className="grid3 mb12">
@@ -1647,7 +1647,7 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
         <label className="lbl">QUEST CHALLENGE</label>
         <div style={{position:'relative'}}>
           <input placeholder="e.g. Do 20 push-ups before noon" value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/>
-          <button style={{position:'qbsolute',right:0,top:3,fontSize:'.72em'}} onClick={()=>setShowSugg(s=>!s)}>💡 SUGGEST</button>
+          <button style={{position:'absolute',right:0,top:3,fontSize:'.72em'}} onClick={()=>setShowSugg(s=>!s)}>💡 SUGGEST</button>
         </div>
         {showSugg&&(
           <div className="box" style={{marginTop:0,marginBottom:8}}>
@@ -2636,7 +2636,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
           <div style={{textAlign:'right'}}>
             <div className="cp small">{member.name||userName}</div>
             <div style={{color:titleDef.color,fontSize:'.75em'}}>[ {titleDef.name} ]</div>
-            <div className="cy�llow small">⚡ {myStats.xp} XP {myStreak.current>=2&& 🔥 ${myStreak.current}wk`}</div>
+            <div className="cyellow small">⚡ {myStats.xp} XP {myStreak.current>=2&&`🔥 ${myStreak.current}wk`}</div>
             <div style={{marginTop:2}}><span className="coin-badge">🪙 {member.coins||0}</span></div>
             <button style={{fontSize:'.7em',padding:'2px 7px',marginTop:3}} onClick={()=>setShowFeedback(true)}>💌 FEEDBACK</button>
           </div>
