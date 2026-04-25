@@ -199,6 +199,10 @@ button:disabled{opacity:.32;cursor:not-allowed}
 @keyframes pet-droop{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(6px) rotate(3deg)}}
 @keyframes pet-weak{0%,100%{transform:scale(1) rotate(-2deg);opacity:.65}50%{transform:scale(.9) rotate(2deg);opacity:.35}}
 @keyframes pet-spirit{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-14px);opacity:.85}}
+@keyframes confetti-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes victory-pop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.victory-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:10000;display:flex;align-items:center;justify-content:center;animation:victory-pop .4s ease-out}
+.confetti-piece{position:fixed;width:10px;height:10px;animation:confetti-fall 3s ease-in forwards;pointer-events:none;z-index:10001}
 @keyframes akane-glow{0%,100%{filter:drop-shadow(0 0 8px #f97316) drop-shadow(0 0 4px #fcd34d)}50%{filter:drop-shadow(0 0 22px #fbbf24) drop-shadow(0 0 12px #fcd34d)}}
 @keyframes akane-hover{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.04)}}
 @keyframes akane-ember{0%,100%{opacity:.9;transform:translateY(0) scale(1)}50%{opacity:.2;transform:translateY(-4px) scale(.7)}}
@@ -294,6 +298,18 @@ const PENALTIES = [
   "Write a haiku about your failure and perform it dramatically",
 ];
 
+// ═══ SABOTAGE CONDITIONS ═════════════════════════════════════════════════════
+const SABOTAGE_CONDITIONS=[
+  "Must complete this while standing on one foot 🦩",
+  "Must narrate every step out loud like a nature documentary 🎙️",
+  "Must do this wearing sunglasses indoors 😎",
+  "Must complete this before breakfast 🌅",
+  "Must send a live update every 10 minutes 📱",
+  "Must complete this with dramatic background music playing 🎵",
+  "Must do this in formal attire 👔",
+  "Must complete this faster than last time ⚡",
+];
+
 // ═══ QUEST SUGGESTIONS ══════════════════════════════════════════════════════
 const SUGGESTIONS = {
   "Fitness":   ["Do 20 push-ups before noon","Run or walk for 20 minutes outside","Drink 8 glasses of water today","Do a 10-minute stretch session","No junk food for the day","Take 10,000 steps","Do 50 squats throughout the day","Hold a plank for 60 seconds"],
@@ -351,6 +367,7 @@ const BADGE_DEFS = {
   INSTA_HERO:   { name:'Insta Hero',   icon:'⚡', desc:'Complete an auto-assigned insta-quest',  rarity:'uncommon' },
   CHAT_STAR:    { name:'Chat Star',    icon:'💬', desc:'Send 20+ messages in the group chat',    rarity:'common'   },
   SOCIAL_ASSIGN:{ name:'Assignment Pro',icon:'📋',desc:'Assign quests to 3+ different people in one week', rarity:'common' },
+  NEMESIS:      { name:'Nemesis',      icon:'😈', desc:'Someone who keeps failing your quests becomes your nemesis', rarity:'uncommon' },
 };
 const SECRET_DEFS = {
   NIGHT_OWL:  { name:'Night Owl',     icon:'🦉', desc:'Complete a quest between midnight and 4 AM' },
@@ -1606,6 +1623,10 @@ function PenaltyChoice({opt, index, onPick}){
 
 function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonusEvent,onProofSubmit,onPickPenalty}){
   const [proofQuest,setProofQuest]=useState(null);
+  // FEATURE 3: Double or Nothing
+  const [doubledQuests,setDoubledQuests]=useState(new Set());
+  const getWeekInfo2=()=>{const w=new Date();const day=w.getDay();const diff=w.getDate()-day+(day===0?-6:1);const start=new Date(w.setDate(diff));const id=`${start.getFullYear()}-W${String(Math.ceil(((start-new Date(start.getFullYear(),0,1))/86400000+1)/7)).padStart(2,'0')}`;return{id};};
+  const wi2=getWeekInfo2();
   const mine=Object.entries(quests).filter(([,q])=>q.assignedTo===userId).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
   const pending=mine.filter(q=>!q.completed&&!q.penaltyApplied&&q.proofStatus!=='pending');
   const awaitingApproval=mine.filter(q=>q.proofStatus==='pending');
@@ -1706,14 +1727,27 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
             <div className="flexb">
               <div style={{flex:1,minWidth:0}}>
                 <div><span className={`diff ${getDiffClass(q.difficulty)}`}>{DIFF[q.difficulty]?.icon} {DIFF[q.difficulty]?.label||'MEDIUM'}</span><span className="ibadge xp">{questXP(q.difficulty,bonusEvent)} XP</span></div>
-                <div className="bold wrap-word">{q.title}</div>
+                <div className="bold wrap-word">
+                  {/* FEATURE 4: Mystery Quests */}
+                  {q.mystery&&!q.completed?(()=>{
+                    const revealed=(new Date().getTime()+2*24*60*60*1000)>=(new Date().getTime()+2*24*60*60*1000);
+                    return revealed?<span>{q.title} <span className="cdim xs">(revealed!)</span></span>:<span className="cyellow">🎭 MYSTERY QUEST <span className="cdim xs">(revealed 1hr before deadline)</span></span>;
+                  })():q.title}
+                </div>
                 <div className="cdim xs">by: <span className="cp">{members[q.assignedBy]?.name||'???'}</span></div>
                 {q.proofStatus==='rejected'&&<div className="cred xs">Proof rejected — resubmit!</div>}
+                {q.sabotageCondition&&<div className="notif" style={{borderColor:'var(--purple)',color:'var(--purple)',fontSize:'.72em',marginTop:4}}>💣 CONDITION: {q.sabotageCondition}</div>}
               </div>
               <div style={{flexShrink:0,marginLeft:8}}>
                 {inWindow?(q.requireProof
                   ?<button className="btn-yellow" onClick={()=>setProofQuest(q)}>📸 SUBMIT PROOF</button>
-                  :<button className="btn-ok" onClick={()=>onComplete(q.id,q.difficulty)} disabled={completing===q.id}>{completing===q.id?'...':'✓ COMPLETE'}</button>)
+                  :<div style={{display:'flex',flexDirection:'column',gap:'4px'}}>
+                    {/* FEATURE 3: Double or Nothing */}
+                    <button style={{fontSize:'.7em',padding:'3px 8px',borderColor:'var(--yellow)',color:'var(--yellow)'}} className={doubledQuests.has(q.id)?'btn-yellow':''} onClick={()=>setDoubledQuests(s=>{const n=new Set(s);n.has(q.id)?n.delete(q.id):n.add(q.id);return n;})}>
+                      {doubledQuests.has(q.id)?'💰 DOUBLED!':'💰 DOUBLE?'}
+                    </button>
+                    <button className="btn-ok" onClick={()=>onComplete(q.id,q.difficulty,doubledQuests.has(q.id))} disabled={completing===q.id}>{completing===q.id?'...':'✓ COMPLETE'}</button>
+                  </div>)
                   :<span className="cdim xs">[CLOSED]</span>}
               </div>
             </div>
@@ -1759,6 +1793,8 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   const [chainTitle,setChainTitle]=useState('');
   const [chainDiff,setChainDiff]=useState('medium');
   const [showChain,setShowChain]=useState(false);
+  // FEATURE 4: Mystery Quests
+  const [mystery,setMystery]=useState(false);
   const saveTemplate=()=>{
     if(!title.trim()||templates.includes(title.trim()))return;
     const t=[title.trim(),...templates].slice(0,15);
@@ -1787,8 +1823,9 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
         completed:false,completedAt:null,penaltyApplied:false,penaltyOptions:penOpts,penaltyChosen:null,
         proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),wager:wager||0,xpAwarded:null,
         recurring:recurring||false,chain:chainTitle.trim()?{title:chainTitle.trim(),difficulty:chainDiff}:null,
+        mystery:mystery||false,
       });
-      setTitle('');setWager(0);setRecurring(false);setChainTitle('');setShowChain(false);setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
+      setTitle('');setWager(0);setRecurring(false);setChainTitle('');setShowChain(false);setMystery(false);setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
     }catch(e){setErr(e.message);}setBusy(false);
   };
 
@@ -1872,6 +1909,12 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
           ))}
         </div>
         {wager>0&&<div className="cdim xs mb6" style={{fontSize:'.72em'}}>🎯 If they complete it, they earn an extra {wager} XP bonus!</div>}
+        {/* FEATURE 4: Mystery Quests */}
+        <div className="flexb mb6">
+          <label className="lbl" style={{margin:0}}>🎭 MYSTERY QUEST</label>
+          <button style={{fontSize:'.72em',padding:'3px 10px'}} className={mystery?'btn-yellow':''} onClick={()=>setMystery(m=>!m)}>{mystery?'🎭 MYSTERY ON':'OFF'}</button>
+        </div>
+        {mystery&&<div className="cdim xs mb6" style={{fontSize:'.72em'}}>Quest title hidden from assignee until 1 hour before deadline! 👀</div>}
         <div className="flexb mb4">
           <label className="lbl" style={{margin:0}}>🔁 REPEAT WEEKLY</label>
           <button style={{fontSize:'.72em',padding:'3px 10px'}} className={recurring?'btn-ok':''} onClick={()=>setRecurring(r=>!r)}>
@@ -1946,7 +1989,7 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
 }
 
 // ═══ QUEST LOG TAB (with reactions) ══════════════════════════════════════════
-function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
+function QuestLogTab({quests,members,userId,weekId,api,partyCode,onSabotage,sabotageUsed}){
   const list=Object.entries(quests).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
   const toggleReaction=async(questId,emoji)=>{
     const q=quests[questId];
@@ -2006,6 +2049,10 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
               })}
             </div>
           )}
+          {q.assignedTo!==userId&&!q.completed&&onSabotage&&!sabotageUsed&&!q.sabotageCondition&&(
+            <button style={{fontSize:'.65em',padding:'2px 8px',borderColor:'var(--purple)',color:'var(--purple)',marginTop:4}} onClick={()=>onSabotage(q.id,q.assignedTo)}>💣 SABOTAGE</button>
+          )}
+          {q.sabotageCondition&&<div className="notif" style={{borderColor:'var(--purple)',color:'var(--purple)',fontSize:'.72em',marginTop:4}}>💣 CONDITION: {q.sabotageCondition}</div>}
         </div>
       ))}
     </div>
@@ -3236,6 +3283,182 @@ function DuelTab({api,partyCode,userId,members,allQuests,wi}){
   );
 }
 
+// ═══ ALLIANCE SYSTEM ════════════════════════════════════════════════════════
+function AllianceTab({api,partyCode,userId,members,allQuests,wi}){
+  const [alliance,setAlliance]=useState(null);
+  const [busy,setBusy]=useState(false);
+
+  useEffect(()=>{
+    api.get(`parties/${partyCode}/alliances/${wi.id}/${userId}`).then(d=>{if(d)setAlliance(d);}).catch(()=>{});
+  },[partyCode,wi.id,userId]);
+
+  const form=async(partnerId)=>{
+    if(alliance||busy)return;
+    setBusy(true);
+    await Promise.all([
+      api.set(`parties/${partyCode}/alliances/${wi.id}/${userId}`,{partner:partnerId,formed:Date.now()}),
+      api.set(`parties/${partyCode}/alliances/${wi.id}/${partnerId}`,{partner:userId,formed:Date.now()}),
+    ]).catch(()=>{});
+    setAlliance({partner:partnerId});
+    setBusy(false);
+  };
+
+  const dissolve=async()=>{
+    if(!alliance||busy)return;
+    setBusy(true);
+    await Promise.all([
+      api.del(`parties/${partyCode}/alliances/${wi.id}/${userId}`),
+      api.del(`parties/${partyCode}/alliances/${wi.id}/${alliance.partner}`),
+    ]).catch(()=>{});
+    setAlliance(null);
+    setBusy(false);
+  };
+
+  const others=Object.entries(members).filter(([id])=>id!==userId);
+
+  return(
+    <div>
+      <div className="box">
+        <div className="box-title">⚡ ALLIANCE SYSTEM</div>
+        <div className="cdim xs mb10" style={{fontSize:'.8em'}}>Team up with one person this week. You both get +15 bonus XP each time either of you completes a quest! Dissolve and reform once per week.</div>
+        {alliance?(
+          <div>
+            <div className="notif ok mb8">⚡ Allied with <strong>{members[alliance.partner]?.name||'???'}</strong> this week!</div>
+            <div className="cdim xs mb8" style={{fontSize:'.75em'}}>You each earn +15 bonus XP whenever the other completes a quest.</div>
+            <button className="btn-danger" style={{width:'100%'}} onClick={dissolve} disabled={busy}>💔 DISSOLVE ALLIANCE</button>
+          </div>
+        ):(
+          <div>
+            <div className="cdim xs mb8">Choose your ally for this week:</div>
+            {others.map(([id,m])=>(
+              <div key={id} className="flexb mb6">
+                <span className="cp">{m.name}</span>
+                <button className="btn-ok" style={{fontSize:'.75em',padding:'4px 12px'}} disabled={busy} onClick={()=>form(id)}>⚡ ALLY UP</button>
+              </div>
+            ))}
+            {others.length===0&&<div className="cdim small">No other members to ally with.</div>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══ BOSS BATTLE ════════════════════════════════════════════════════════════
+function BossTab({api,partyCode,userId,members,wi}){
+  const [boss,setBoss]=useState(null);
+  const [loading,setBossLoading]=useState(true);
+
+  useEffect(()=>{
+    api.get(`parties/${partyCode}/boss/${wi.id}`).then(d=>{setBoss(d||null);setBossLoading(false);}).catch(()=>setBossLoading(false));
+  },[partyCode,wi.id,userId]);
+
+  const BOSS_QUESTS=[
+    {title:'The Iron Gauntlet: Complete 3 quests in one day',difficulty:'legendary',reward:200},
+    {title:'The Marathon: Walk or run 5km before deadline',difficulty:'hard',reward:150},
+    {title:'The Scholar: Read for 2 hours total this week',difficulty:'medium',reward:100},
+    {title:'The Socialite: Have 3 genuine conversations with people outside your home',difficulty:'medium',reward:100},
+    {title:'The Spartan: No junk food for the entire quest window',difficulty:'hard',reward:150},
+    {title:'The Early Bird: Wake up before 7am every day of the window',difficulty:'legendary',reward:200},
+  ];
+
+  const generateBoss=async()=>{
+    const bq=rnd(BOSS_QUESTS);
+    const d={...bq,createdAt:Date.now(),completions:{},totalMembers:Object.keys(members).length};
+    await api.set(`parties/${partyCode}/boss/${wi.id}`,d).catch(()=>{});
+    setBoss(d);
+  };
+
+  const markComplete=async()=>{
+    if(!boss||boss.completions?.[userId])return;
+    const newCompletions={...boss.completions,[userId]:Date.now()};
+    await api.patch(`parties/${partyCode}/boss/${wi.id}`,{completions:{[userId]:Date.now()}}).catch(()=>{});
+    const newBoss={...boss,completions:newCompletions};
+    setBoss(newBoss);
+    const doneCount=Object.keys(newCompletions).length;
+    if(doneCount>=boss.totalMembers){
+      api.patch(`parties/${partyCode}/members/${userId}`,{coins:(members[userId]?.coins||0)+50}).catch(()=>{});
+    }
+  };
+
+  if(loading)return<div className="empty"><div className="cdim">Loading...</div></div>;
+
+  const doneCount=boss?Object.keys(boss.completions||{}).length:0;
+  const totalCount=boss?.totalMembers||Object.keys(members).length;
+  const myDone=boss?.completions?.[userId];
+  const allDone=doneCount>=totalCount;
+
+  return(
+    <div>
+      {!boss&&wi.inWindow&&(
+        <div className="box" style={{textAlign:'center',padding:24}}>
+          <div style={{fontSize:'3em',marginBottom:12}}>👹</div>
+          <div className="box-title">BOSS BATTLE</div>
+          <div className="cdim xs mb12">Generate this week's party boss challenge. Everyone must complete it together!</div>
+          <button className="btn-big primary" onClick={generateBoss}>[ SUMMON THE BOSS ]</button>
+        </div>
+      )}
+      {!boss&&!wi.inWindow&&<div className="empty mt10"><div className="ei">👹</div><div>No boss this week</div><div className="cdim small mt6">Boss battles open when the quest window opens</div></div>}
+      {boss&&(
+        <div>
+          <div className="box" style={{borderColor:allDone?'var(--green)':'var(--red)',background:allDone?'rgba(52,211,153,.05)':'rgba(244,63,94,.04)'}}>
+            <div style={{textAlign:'center',marginBottom:12}}>
+              <div style={{fontSize:'2.5em'}}>{allDone?'🏆':'👹'}</div>
+              <div className="bold" style={{fontSize:'1.1em',color:allDone?'var(--green)':'var(--red)',marginTop:8}}>
+                {allDone?'BOSS DEFEATED! 🎉':'BOSS BATTLE IN PROGRESS'}
+              </div>
+            </div>
+            <div className="bold wrap-word mb8">{boss.title}</div>
+            <div className="flexb mb8">
+              <span className={`diff diff-${boss.difficulty}`}>{DIFF[boss.difficulty]?.icon} {boss.difficulty}</span>
+              <span className="cyellow">🏆 {boss.reward} XP + 50🪙 party reward</span>
+            </div>
+            <div className="cdim xs mb4">PARTY PROGRESS</div>
+            <div className="pet-bar mb8"><div className="fill" style={{width:`${(doneCount/totalCount)*100}%`,background:allDone?'var(--green)':'var(--p)'}}/></div>
+            <div className="cdim xs mb12">{doneCount}/{totalCount} members completed</div>
+            {Object.entries(members).map(([id,m])=>(
+              <div key={id} className="flexb mb4" style={{fontSize:'.82em'}}>
+                <span className={id===userId?'cp':''}>{m.name}</span>
+                <span style={{color:boss.completions?.[id]?'var(--green)':'var(--dim)'}}>{boss.completions?.[id]?'✓ DONE':'○ pending'}</span>
+              </div>
+            ))}
+            {!myDone&&wi.inWindow&&<button className="btn-big primary mt10" onClick={markComplete}>[ ✓ MARK MY PART DONE ]</button>}
+            {myDone&&!allDone&&<div className="notif ok mt10">You're done! Waiting for the others...</div>}
+            {allDone&&<div className="notif ok mt10">🎉 Party cleared the boss! Everyone gets the reward!</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══ VICTORY LAP ═════════════════════════════════════════════════════════════
+function VictoryLap({quest,memberName,xp,onClose}){
+  const colors=['#f43f5e','#fbbf24','#34d399','#38bdf8','#a855f7','#f97316'];
+  const pieces=Array.from({length:40},(_,i)=>({
+    id:i,color:colors[i%colors.length],
+    left:Math.random()*100,
+    delay:Math.random()*1.5,
+    size:6+Math.random()*10,
+  }));
+  useEffect(()=>{const t=setTimeout(onClose,5000);return()=>clearTimeout(t);},[]);
+  return(
+    <div className="victory-overlay" onClick={onClose}>
+      {pieces.map(p=>(
+        <div key={p.id} className="confetti-piece" style={{left:`${p.left}%`,top:-20,background:p.color,width:p.size,height:p.size,borderRadius:Math.random()>.5?'50%':0,animationDelay:`${p.delay}s`}}/>
+      ))}
+      <div style={{textAlign:'center',position:'relative',zIndex:10002,padding:32}}>
+        <div style={{fontSize:'4em',marginBottom:16}}>🏆</div>
+        <div style={{fontSize:'1.6em',fontWeight:'bold',color:'var(--yellow)',letterSpacing:'.1em',textShadow:'0 0 30px var(--yellow)',marginBottom:8}}>QUEST COMPLETE!</div>
+        <div style={{fontSize:'1.1em',color:'#fff',marginBottom:8}}>{memberName}</div>
+        <div style={{fontSize:'.9em',color:'var(--dim)',marginBottom:16}}>"{quest.title}"</div>
+        <div style={{fontSize:'1.4em',color:'var(--green)',fontWeight:'bold'}}>+{xp} XP 🎉</div>
+        <div className="cdim xs mt12" style={{fontSize:'.72em'}}>tap to dismiss</div>
+      </div>
+    </div>
+  );
+}
+
 // ═══ GAME ════════════════════════════════════════════════════════════════════
 function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const [tab,setTab]=useState('quests');
@@ -3368,12 +3591,27 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         const lastSeen2=chatLastSeenRef.current;
         setChatUnread(msgs.filter(m=>m.ts>lastSeen2&&m.uid!==userId).length);
       }catch(_){}
+      // FEATURE 5: Nemesis/Grudge detection
+      const wi2=getWeekInfo(party?.settings);
+      const allWkQuests=Object.values(aqs).flatMap(wq=>Object.values(wq||{}));
+      const myAssigned=allWkQuests.filter(q=>q.assignedBy===userId&&q.penaltyApplied&&!q.completed);
+      const failCounts={};
+      myAssigned.forEach(q=>{failCounts[q.assignedTo]=(failCounts[q.assignedTo]||0)+1;});
+      Object.entries(failCounts).forEach(([tid,cnt])=>{
+        if(cnt>=3){
+          const nemKey=`ql_nemesis_${partyCode}_${tid}`;
+          if(!localStorage.getItem(nemKey)){
+            localStorage.setItem(nemKey,'1');
+            addToast('😈 NEMESIS ACQUIRED!',`${party?.members?.[tid]?.name||'Someone'} has failed 3+ of your quests. They are your NEMESIS!`,'var(--red)',7000);
+          }
+        }
+      });
     }catch(e){console.warn(e);}
   },[partyCode]);
 
   useEffect(()=>{poll();const t=setInterval(poll,4500);return()=>clearInterval(t);},[poll]);
 
-  const completeQuest=async(qid,difficulty)=>{
+  const completeQuest=async(qid,difficulty,doubled=false)=>{
     setCompleting(qid);
     const wi=getWeekInfo(settings);
     const bonusEvent=getBonusEvent(wi.id);
@@ -3390,6 +3628,11 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     let boostUsed=null;
     if(activeBoosts.xp_boost_2){xp=Math.round(xp*2);boostUsed='xp_boost_2';}
     else if(activeBoosts.xp_boost_1){xp=Math.round(xp*1.5);boostUsed='xp_boost_1';}
+    // FEATURE 3: Double or Nothing
+    if(doubled){xp=Math.round(xp*2);}
+    // FEATURE 2: Hot streak bonus
+    const hotStreak=myMember.hotStreak;
+    if(hotStreak?.date===today()&&hotStreak?.count>=3){xp=Math.round(xp*1.5);}
     // Coins to award
     const coinsEarned=COIN_REWARDS[difficulty]||10;
     const currentCoins=myMember.coins||0;
@@ -3402,6 +3645,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       addToast('✓ QUEST COMPLETE!',`${rnd(FUNNY_COMPLETE)} +${xp+comboBonus+wagerBonus} XP${wagerBonus>0?' (+'+wagerBonus+' wager!)':''} · +${coinsEarned}🪙`,'var(--green)');
       if(comboBonus>0)addToast('🔥 COMBO BONUS!',`${todayDone+1} quests today! +${comboBonus} XP bonus`,'var(--purple)');
       if(boostUsed)addToast(`${boostUsed==='xp_boost_2'?'💥':'⚡'} BOOST ACTIVATED!`,`${boostUsed==='xp_boost_2'?'2×':'1.5×'} XP boost used!`,'var(--p)');
+      if(doubled)addToast('💰 DOUBLED DOWN!',`Paid off! +${xp} XP (2×)!`,'var(--yellow)',5000);
       // Write activity for friends feed
       const qTitle=questData?.title||'a quest';
       api.set(`activity/${userId}/${Date.now()}`,{type:'complete',title:qTitle,difficulty,xp:xp+comboBonus+wagerBonus,name:partyData?.members?.[userId]?.name||userName,ts:Date.now()}).catch(()=>{});
@@ -3422,6 +3666,27 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         await api.patch(`parties/${partyCode}/members/${userId}`,{mysteryBoxes:(myMember.mysteryBoxes||0)+1});
         addToast('📦 MYSTERY BOX!','Check your Profile to open it!','var(--purple)');
       }
+      // FEATURE 1: Victory Lap
+      if(difficulty==='hard'||difficulty==='legendary'){
+        setVictoryQuest({title:questData?.title||'',xp:xp+comboBonus+wagerBonus});
+      }
+      // FEATURE 2: Hot streaks
+      const newTodayCount=todayDone+1;
+      if(newTodayCount>=3){
+        api.patch(`parties/${partyCode}/members/${userId}`,{hotStreak:{date:today(),count:newTodayCount}}).catch(()=>{});
+        if(newTodayCount===3){addToast('🔥 ON FIRE!','3 quests today! +50% XP bonus for the rest of the day!','var(--red)',6000);}
+      }
+      // FEATURE 8: Alliance bonus
+      api.get(`parties/${partyCode}/alliances/${wi.id}/${userId}`).then(async allyData=>{
+        if(allyData?.partner){
+          const allyId=allyData.partner;
+          const allyMember=partyData?.members?.[allyId];
+          if(allyMember){
+            api.patch(`parties/${partyCode}/members/${allyId}`,{allianceXP:(allyMember.allianceXP||0)+15}).catch(()=>{});
+            addToast('⚡ ALLIANCE BONUS!',`Your ally ${allyMember.name} gets +15 XP!`,'var(--yellow)',4000);
+          }
+        }
+      }).catch(()=>{});
     }catch(e){console.error(e);}setCompleting(null);
   };
 
@@ -3606,6 +3871,35 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     document.documentElement.style.setProperty('--glow',color+'44');
   },[settings.themeColor]);
 
+  // FEATURE 1: Victory Lap
+  const [victoryQuest,setVictoryQuest]=useState(null);
+
+  // FEATURE 2: Hot Streaks
+  const today=()=>new Date().toISOString().slice(0,10);
+
+  // FEATURE 3: Loser's Tax
+  const prevWeekId2=Object.keys(allQuests).filter(wk=>wk<(getWeekInfo(settings)).id).sort().pop();
+  const isLoserTax=(()=>{
+    if(!prevWeekId2)return false;
+    const prevQs=allQuests[prevWeekId2]||{};
+    const failMap={};
+    Object.values(prevQs).filter(q=>q.penaltyApplied&&!q.completed).forEach(q=>{failMap[q.assignedTo]=(failMap[q.assignedTo]||0)+1;});
+    const sorted=Object.entries(failMap).sort((a,b)=>b[1]-a[1]);
+    return sorted.length>0&&sorted[0][0]===userId&&sorted[0][1]>0;
+  })();
+
+  // FEATURE 7: Sabotage Cards
+  const [sabotageUsed,setSabotageUsed]=useState(()=>localStorage.getItem(`ql_sab_${partyCode}_${new Date().toISOString().slice(0,10)}`)==='1');
+  const useSabotage=async(targetQid,targetUserId)=>{
+    if(sabotageUsed)return;
+    const wi3=getWeekInfo(settings);
+    const condition=rnd(SABOTAGE_CONDITIONS);
+    await api.patch(`parties/${partyCode}/quests/${wi3.id}/${targetQid}`,{sabotageCondition:condition,sabotagedBy:userId});
+    localStorage.setItem(`ql_sab_${partyCode}_${new Date().toISOString().slice(0,10)}`,'1');
+    setSabotageUsed(true);
+    addToast('💣 SABOTAGE DEPLOYED!',`Condition added: "${condition.slice(0,40)}..."`,'var(--purple)',6000);
+  };
+
   if(loading)return<Loading/>;
 
   const wi=getWeekInfo(settings);
@@ -3635,6 +3929,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     ['board','🏆 BOARD',0],['badges','🏅 BADGES',0],['pet','🐾 PET',0],['shop','🏪 SHOP',0],
     ['profile','👤 PROFILE',0],
     ['spin','🎰 SPIN',0],['bounty','🎯 BOUNTY',0],['duels','⚔️ DUELS',0],
+    ['alliance','⚡ ALLIES',0],['boss','👹 BOSS',0],
     ['friends','👥 FRIENDS',friendRequestCount],
     ['stats','📊 STATS',0],
     ...(chatEnabled?[['chat','💬 CHAT',chatUnread]]:[]),
@@ -3646,6 +3941,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   return(
     <div className="wrap">
       <Toasts toasts={toasts}/>
+      {victoryQuest&&<VictoryLap quest={victoryQuest} memberName={member.name||userName} xp={victoryQuest.xp} onClose={()=>setVictoryQuest(null)}/>}
       {showFeedback&&<FeedbackModal api={api} userName={member.name||userName} partyCode={partyCode} onClose={()=>setShowFeedback(false)}/>}
 
       {showSwitcher&&(
@@ -3690,7 +3986,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
             <button style={{fontSize:'.65em',padding:'2px 8px',marginTop:2}} onClick={()=>{navigator.clipboard.writeText(window.location.origin+window.location.pathname+'?join='+partyCode);addToast('🔗 INVITE LINK COPIED!','Share this link with friends to join your party!','var(--p)');}}>🔗 INVITE LINK</button>
           </div>
           <div style={{textAlign:'right'}}>
-            <div className="cp small">{member.name||userName}</div>
+            <div className="cp small">{member.name||userName}{member.hotStreak?.date===today()&&member.hotStreak?.count>=3&&<span style={{marginLeft:4,animation:'pulse-r 1s infinite'}}>🔥</span>}</div>
             <div style={{color:titleDef.color,fontSize:'.75em'}}>[ {titleDef.name} ]</div>
             <div className="cyellow small">⚡ {myStats.xp} XP {' '}<span style={{color:levelColor(computeLevel(myStats.xp)),fontSize:'.85em'}}>LVL {computeLevel(myStats.xp)}</span> {myStreak.current>=2&&`🔥 ${myStreak.current}wk`}</div>
             <div style={{marginTop:2}}><span className="coin-badge">🪙 {member.coins||0}</span></div>
@@ -3734,6 +4030,8 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         </div>
       )}
 
+      {isLoserTax&&<div className="notif err mb8" style={{borderColor:'var(--red)',textAlign:'center'}}>☠️ <strong>LOSER'S TAX:</strong> You failed the most quests last week — you owe everyone an extra quest assignment this week!</div>}
+
       {/* Timer */}
       {wi.inWindow?(
         <div className={`timer-box ${wi.hoursLeft<12?'urgent':''}`}>
@@ -3773,7 +4071,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         quests={currentQuests} weekId={wi.id} inWindow={wi.inWindow} maxPer={maxPer}
         pendingProofs={pendingProofs} onApprove={approveProof} onReject={rejectProof}
         reviewedIds={reviewedIds} onReviewed={id=>setReviewedIds(s=>new Set([...s,id]))}/>}
-      {tab==='log'&&<QuestLogTab quests={currentQuests} members={members} userId={userId} weekId={wi.id} api={api} partyCode={partyCode}/>}
+      {tab==='log'&&<QuestLogTab quests={currentQuests} members={members} userId={userId} weekId={wi.id} api={api} partyCode={partyCode} onSabotage={useSabotage} sabotageUsed={sabotageUsed}/>}
       {tab==='board'&&<LeaderboardTab members={members} allQuests={allQuests} userId={userId} currentWeekId={wi.id} bonusEvent={bonusEvent} api={api} partyCode={partyCode}/>}
       {tab==='badges'&&<BadgesTab allQuests={allQuests} userId={userId} members={members} savedBadges={savedBadges} onAward={handleAwardBadges}/>}
       {tab==='profile'&&<ProfileTab allQuests={allQuests} userId={userId} members={members} api={api} partyCode={partyCode} onTitleChange={t=>setPartyData(p=>({...p,members:{...p.members,[userId]:{...p.members[userId],selectedTitle:t}}}))}/>}
@@ -3782,6 +4080,8 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       {tab==='spin'&&<DailySpinTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} onSpin={handleSpin}/>}
       {tab==='bounty'&&<BountyTab api={api} partyCode={partyCode} userId={userId} members={members} wi={wi}/>}
       {tab==='duels'&&<DuelTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} wi={wi}/>}
+      {tab==='alliance'&&<AllianceTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} wi={wi}/>}
+      {tab==='boss'&&<BossTab api={api} partyCode={partyCode} userId={userId} members={members} wi={wi}/>}
       {tab==='friends'&&<FriendsTab api={api} userId={userId} userName={member.name||userName}/>}
       {tab==='stats'&&<StatsTab allQuests={allQuests} members={members} userId={userId} partyCode={partyCode} partyData={partyData}/>}
       {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled}/>}
