@@ -781,6 +781,27 @@ function Party({api,userId,onDone,inviteCode=''}){
   const [partyNameInput,setPartyNameInput]=useState('');
   useEffect(()=>{if(inviteCode){setCode(inviteCode);setMode('join');}}, [inviteCode]);
 
+  // Fetch party names from Firebase for any saved group that doesn't have one yet
+  useEffect(()=>{
+    const fetchNames=async()=>{
+      const needsName=savedGroups.filter(g=>!g.partyName);
+      if(needsName.length===0)return;
+      const updated=[...savedGroups];
+      await Promise.all(needsName.map(async g=>{
+        try{
+          const party=await api.get(`parties/${g.code}`);
+          if(party?.partyName){
+            const idx=updated.findIndex(x=>x.code===g.code);
+            if(idx>=0)updated[idx]={...updated[idx],partyName:party.partyName};
+          }
+        }catch(e){}
+      }));
+      setSavedGroups(updated);
+      localStorage.setItem(K.GROUPS,JSON.stringify(updated));
+    };
+    fetchNames();
+  },[]);
+
   const saveGroup=(pc,n,pn)=>{
     const groups=savedGroups.filter(g=>g.code!==pc);
     groups.unshift({code:pc,name:n,partyName:pn||''});
@@ -850,16 +871,17 @@ function Party({api,userId,onDone,inviteCode=''}){
         <div className="box">
           <div className="box-title">📂 YOUR GROUPS</div>
           {savedGroups.map(g=>(
-            <div key={g.code} className="flexb mb6" style={{padding:'8px 10px',background:'var(--card2)',borderRadius:2}}>
+            <div key={g.code} className="flexb mb6" style={{padding:'10px 12px',background:'var(--card2)',borderRadius:2,border:'1px solid var(--border)'}}>
               <div>
-                <div style={{fontWeight:'bold',fontSize:'.9em',color:'var(--pb)'}}>{g.partyName||g.code}</div>
-                <div className="cdim xs mt2">{g.partyName?<span className="code" style={{fontSize:'.8em',cursor:'default'}}>{g.code}</span>:<span>{g.name}</span>}
-                  {g.partyName&&<span style={{marginLeft:6}}>{g.name}</span>}
+                <div style={{fontWeight:'bold',fontSize:'1em',color:'var(--pb)',letterSpacing:'.03em'}}>{g.partyName||g.code}</div>
+                <div className="cdim xs mt2" style={{display:'flex',gap:8,alignItems:'center'}}>
+                  {g.partyName&&<span className="code" style={{fontSize:'.78em',cursor:'default'}}>{g.code}</span>}
+                  <span>{g.name}</span>
                 </div>
               </div>
               <div className="flexi gap6">
-                <button className="btn-ok" style={{padding:'4px 10px',fontSize:'.75em'}} onClick={()=>rejoin(g.code,g.name)} disabled={busy}>REJOIN →</button>
-                <button className="btn-danger" style={{padding:'4px 8px',fontSize:'.72em'}} onClick={()=>removeGroup(g.code)}>✕</button>
+                <button className="btn-ok" style={{padding:'5px 12px',fontSize:'.78em'}} onClick={()=>rejoin(g.code,g.name)} disabled={busy}>REJOIN →</button>
+                <button className="btn-danger" style={{padding:'5px 8px',fontSize:'.72em'}} onClick={()=>removeGroup(g.code)}>✕</button>
               </div>
             </div>
           ))}
