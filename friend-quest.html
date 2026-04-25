@@ -2876,6 +2876,21 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     setTab(t);
   };
 
+  // Friend request count — must be BEFORE any conditional return
+  const [friendRequestCount,setFriendRequestCount]=useState(0);
+  useEffect(()=>{
+    api.get(`friends/${userId}/requests`).then(d=>{setFriendRequestCount(d?Object.keys(d).length:0);}).catch(()=>{});
+  },[userId]);
+  useEffect(()=>{
+    if(loading)return;
+    const name=(partyData?.members?.[userId]?.name)||userName;
+    api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name}).catch(()=>{});
+    const hb=setInterval(()=>{
+      api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name}).catch(()=>{});
+    },30000);
+    return()=>{clearInterval(hb);api.set(`presence/${userId}`,{online:false,lastSeen:Date.now(),name}).catch(()=>{});};
+  },[userId,loading]);
+
   if(loading)return<Loading/>;
 
   const wi=getWeekInfo(settings);
@@ -2895,16 +2910,6 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const titleDef=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
 
   const chatEnabled=settings.chatEnabled!==false;
-
-  // Friend request count for badge
-  const [friendRequestCount,setFriendRequestCount]=useState(0);
-  useEffect(()=>{
-    api.get(`friends/${userId}/requests`).then(d=>{setFriendRequestCount(d?Object.keys(d).length:0);}).catch(()=>{});
-    // Set presence online
-    api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name:member.name||userName}).catch(()=>{});
-    const hb=setInterval(()=>{api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name:member.name||userName}).catch(()=>{});},30000);
-    return()=>{clearInterval(hb);api.set(`presence/${userId}`,{online:false,lastSeen:Date.now(),name:member.name||userName}).catch(()=>{});};
-  },[userId]);
 
   const TABS=[
     ['quests','📋 QUESTS',0],['assign','✏️ ASSIGN',pendingProofCount],['log','📜 LOG',0],
