@@ -759,6 +759,8 @@ function Party({api,userId,onDone,inviteCode=''}){
   const [customSettings,setCustomSettings]=useState({...DEF});
   const [savedGroups,setSavedGroups]=useState(()=>{try{return JSON.parse(localStorage.getItem(K.GROUPS)||'[]');}catch{return[];}});
   const [invBanner,setInvBanner]=useState(!!inviteCode);
+  const [partyPassword,setPartyPassword]=useState('');
+  const [joinPassword,setJoinPassword]=useState('');
   useEffect(()=>{if(inviteCode){setCode(inviteCode);setMode('join');}}, [inviteCode]);
 
   const saveGroup=(pc,n)=>{
@@ -780,7 +782,7 @@ function Party({api,userId,onDone,inviteCode=''}){
     setBusy(true);setErr('');
     try{
       const pc=mkcode();
-      await api.set(`parties/${pc}`,{created:Date.now(),settings:{...customSettings},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}}});
+      await api.set(`parties/${pc}`,{created:Date.now(),settings:{...customSettings},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}},partyPassword:partyPassword.trim()||null});
       localStorage.setItem(K.NAME,name.trim());
       saveGroup(pc,name.trim());
       onDone(pc,name.trim());
@@ -794,6 +796,10 @@ function Party({api,userId,onDone,inviteCode=''}){
       const pc=code.trim().toUpperCase();
       const party=await api.get(`parties/${pc}`);
       if(!party){setBusy(false);return setErr('Party not found — check the code!');}
+      if(party.partyPassword&&party.partyPassword!==joinPassword.trim()){
+        setBusy(false);
+        return setErr('Wrong password — this party is locked 🔒');
+      }
       await api.patch(`parties/${pc}/members/${userId}`,{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'});
       localStorage.setItem(K.NAME,name.trim());
       saveGroup(pc,name.trim());
@@ -865,6 +871,9 @@ function Party({api,userId,onDone,inviteCode=''}){
             <div className="srow"><label>Deadline time</label><select value={customSettings.deadlineHour} onChange={updSetting('deadlineHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
           </div>
         )}
+        <div className="srow mt8"><label>Party password (optional)</label>
+          <input placeholder="Leave blank for open party" value={partyPassword} onChange={e=>setPartyPassword(e.target.value)} style={{width:'auto',flex:1}} maxLength={30}/>
+        </div>
         <button className="btn-big primary" onClick={create} disabled={busy}>{busy?'CREATING...':'[ CREATE PARTY ]'}</button>
         <button onClick={()=>{setMode('pick');setErr('');setShowAdv(false);}}>[ ← BACK ]</button>
       </div>)}
@@ -872,6 +881,7 @@ function Party({api,userId,onDone,inviteCode=''}){
       {mode==='join'&&(<div className="box"><div className="box-title">JOIN PARTY</div>
         <label className="lbl">PARTY CODE</label>
         <input placeholder="e.g. AB3X9Z" value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={6} onKeyDown={e=>e.key==='Enter'&&join()} style={{letterSpacing:'.22em',fontSize:'1.1em'}}/>
+        <input placeholder="Password (if required)" value={joinPassword} onChange={e=>setJoinPassword(e.target.value)} type="password" maxLength={30}/>
         <button className="btn-big primary" onClick={join} disabled={busy}>{busy?'JOINING...':'[ JOIN PARTY ]'}</button>
         <button onClick={()=>{setMode('pick');setErr('');}}>[ ← BACK ]</button>
       </div>)}
@@ -1944,6 +1954,13 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
     const val=current===emoji?null:emoji;
     await api.patch(`parties/${partyCode}/quests/${weekId}/${questId}/reactions`,{[userId]:val});
   };
+  const voteDiff=async(questId,vote)=>{
+    const q=quests[questId];
+    const uid=userId;
+    const existing=q?.diffVotes?.[uid];
+    const newVote=existing===vote?null:vote;
+    await api.patch(`parties/${partyCode}/quests/${weekId}/${questId}/diffVotes`,{[uid]:newVote}).catch(()=>{});
+  };
   return(
     <div className="box">
       <div className="box-title glow">[ FRIEND QUEST ] // WEEK: {weekId}</div>
@@ -1974,6 +1991,21 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode}){
               </div>);
             })}
           </div>
+          {!q.completed&&q.assignedTo!==userId&&q.assignedBy!==userId&&(
+            <div style={{display:'flex',gap:6,marginTop:6,alignItems:'center'}}>
+              <span className="cdim xs" style={{fontSize:'.68em'}}>Fair difficulty?</span>
+              {[['👍','up'],['👎','down']].map(([emoji,vote])=>{
+                const votes=q.diffVotes||{};
+                const myVote=votes[userId];
+                const count=Object.values(votes).filter(v=>v===vote).length;
+                return(
+                  <button key={vote} style={{fontSize:'.72em',padding:'1px 8px',borderColor:myVote===vote?'var(--p)':'var(--border)',color:myVote===vote?'var(--p)':'var(--dim)'}} onClick={()=>voteDiff(q.id,vote)}>
+                    {emoji}{count>0?` ${count}`:''}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -2899,6 +2931,19 @@ function SettingsTab({api,partyCode,settings,onSaved}){
           <div>Window: <span className="cp">{DAYS[local.windowDay]} at {hourLabel(local.windowHour)}</span></div>
           <div>Deadline: <span className="cyellow">{DAYS[(local.windowDay+local.durationDays)%7]} at {hourLabel(local.deadlineHour)}:59</span></div>
         </div>
+        <div className="box-title cdim xs mt12 mb6">🎨 PARTY THEME</div>
+        <div className="srow" style={{alignItems:'flex-start'}}>
+          <label style={{paddingTop:8}}>Accent color</label>
+          <div>
+            <div className="flex-wrap" style={{gap:8,marginTop:4}}>
+              {[['#38bdf8','Sky Blue (default)'],['#a855f7','Purple'],['#22c55e','Green'],['#f97316','Orange'],['#ec4899','Pink'],['#ef4444','Red'],['#fbbf24','Gold'],['#ffffff','White']].map(([c,label])=>(
+                <div key={c} title={label} onClick={()=>setLocal(s=>({...s,themeColor:c}))}
+                  style={{width:30,height:30,borderRadius:'50%',background:c,cursor:'pointer',border:local.themeColor===c||(!local.themeColor&&c==='#38bdf8')?'3px solid #fff':'2px solid transparent',boxShadow:local.themeColor===c?'0 0 8px '+c:'none'}}/>
+              ))}
+            </div>
+            <div className="cdim xs mt6" style={{fontSize:'.7em'}}>Color applies to all party members instantly</div>
+          </div>
+        </div>
         {err&&<div className="notif err">{err}</div>}
         {ok&&<div className="notif ok">{ok}</div>}
         <div className="flexi gap6 mt6">
@@ -2991,6 +3036,202 @@ function BountyTab({api,partyCode,userId,members,wi}){
       {unclaimedBounties.length===0&&myBounties.length===0&&(
         <div className="empty mt10"><div className="ei">🎯</div><div>No bounties yet</div><div className="cdim small mt6">Post a challenge above for anyone to claim!</div></div>
       )}
+    </div>
+  );
+}
+
+// ═══ STATS TAB ════════════════════════════════════════════════════════════════
+function StatsTab({allQuests,members,userId,partyCode,partyData}){
+  // All-time stats
+  const allQuestList=Object.values(allQuests).flatMap(wq=>Object.values(wq||{}));
+  const totalCompleted=allQuestList.filter(q=>q.completed).length;
+  const totalXP=allQuestList.filter(q=>q.completed).reduce((s,q)=>s+(q.xpAwarded||100),0);
+  const totalFails=allQuestList.filter(q=>q.penaltyApplied&&!q.completed).length;
+
+  // Best week
+  const weekStats=Object.entries(allQuests).map(([wk,wq])=>({wk,count:Object.values(wq||{}).filter(q=>q.completed).length})).sort((a,b)=>b.count-a.count);
+  const bestWeek=weekStats[0];
+
+  // Per-member stats
+  const memberStats=Object.entries(members).map(([id,m])=>{
+    const mine=allQuestList.filter(q=>q.assignedTo===id);
+    const done=mine.filter(q=>q.completed).length;
+    const streak=computeStreak(allQuests,id);
+    const xp=mine.filter(q=>q.completed).reduce((s,q)=>s+(q.xpAwarded||100),0);
+    return{id,name:m.name,done,streak:streak.longest,xp,level:computeLevel(xp)};
+  }).sort((a,b)=>b.done-a.done);
+
+  const mostDedicated=memberStats[0];
+  const biggestStreak=memberStats.sort((a,b)=>b.streak-a.streak)[0];
+
+  const founded=partyData?.created?new Date(partyData.created).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}):null;
+
+  const weekCount=Object.keys(allQuests).length;
+
+  return(
+    <div>
+      <div className="box">
+        <div className="box-title">📊 PARTY ALL-TIME STATS</div>
+        {founded&&<div className="cdim xs mb12">Founded {founded} · {weekCount} week{weekCount!==1?'s':''} played</div>}
+        <div className="grid3 mb10">
+          <div className="summary-stat"><div className="s-val">{totalCompleted}</div><div className="s-lbl">Quests Done</div></div>
+          <div className="summary-stat"><div className="s-val" style={{color:'var(--yellow)'}}>{totalXP.toLocaleString()}</div><div className="s-lbl">Total XP</div></div>
+          <div className="summary-stat"><div className="s-val" style={{color:'var(--red)'}}>{totalFails}</div><div className="s-lbl">Failures</div></div>
+        </div>
+        {bestWeek&&bestWeek.count>0&&<div className="notif mb6" style={{fontSize:'.82em'}}>🏅 Best week: <span className="cp">{bestWeek.wk}</span> — <span className="cyellow">{bestWeek.count} quests completed</span></div>}
+        {mostDedicated&&<div className="notif mb6" style={{fontSize:'.82em'}}>⚡ Most dedicated: <span className="cp">{mostDedicated.name}</span> — {mostDedicated.done} quests</div>}
+        {biggestStreak&&biggestStreak.streak>0&&<div className="notif" style={{fontSize:'.82em'}}>🔥 Longest streak: <span className="cp">{biggestStreak.name}</span> — {biggestStreak.streak} weeks</div>}
+      </div>
+      <div className="box">
+        <div className="box-title cdim">MEMBER BREAKDOWN</div>
+        {memberStats.map((m,i)=>(
+          <div key={m.id} className="flexb mb8" style={{padding:'8px 0',borderBottom:'1px solid var(--border)'}}>
+            <div>
+              <div className="bold" style={{color:m.id===userId?'var(--p)':undefined}}>{i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':''}{m.name}</div>
+              <div className="cdim xs mt2">{m.done} quests · {m.xp.toLocaleString()} XP · Streak {m.streak}wk</div>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{color:levelColor(m.level),fontWeight:'bold',fontSize:'.9em'}}>LVL {m.level}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══ DUEL TAB ═════════════════════════════════════════════════════════════════
+function DuelTab({api,partyCode,userId,members,allQuests,wi}){
+  const [duels,setDuels]=useState({});
+  const [title,setTitle]=useState('');
+  const [opponent,setOpponent]=useState('');
+  const [xpBet,setXpBet]=useState(25);
+  const [busy,setBusy]=useState(null);
+  const [err,setErr]=useState('');
+  const others=Object.entries(members).filter(([id])=>id!==userId);
+
+  useEffect(()=>{
+    api.get(`parties/${partyCode}/duels`).then(d=>setDuels(d||{})).catch(()=>{});
+  },[partyCode]);
+
+  const challengeDuel=async()=>{
+    if(!title.trim())return setErr('Enter a challenge title');
+    if(!opponent)return setErr('Select an opponent');
+    setBusy('challenge');setErr('');
+    const did=mkid();
+    const d={title:title.trim(),challenger:userId,challenged:opponent,xpBet,status:'pending',createdAt:Date.now(),challengerDone:false,challengedDone:false,winner:null};
+    await api.set(`parties/${partyCode}/duels/${did}`,d).catch(()=>{});
+    setDuels(prev=>({...prev,[did]:d}));
+    setTitle('');setBusy(null);
+  };
+
+  const acceptDuel=async(did)=>{
+    await api.patch(`parties/${partyCode}/duels/${did}`,{status:'active',startedAt:Date.now()}).catch(()=>{});
+    setDuels(prev=>({...prev,[did]:{...prev[did],status:'active',startedAt:Date.now()}}));
+  };
+
+  const declineDuel=async(did)=>{
+    await api.patch(`parties/${partyCode}/duels/${did}`,{status:'declined'}).catch(()=>{});
+    setDuels(prev=>({...prev,[did]:{...prev[did],status:'declined'}}));
+  };
+
+  const completeDuel=async(did)=>{
+    const d=duels[did];if(!d||d.status!=='active')return;
+    const isChallenger=d.challenger===userId;
+    const myField=isChallenger?'challengerDone':'challengedDone';
+    const theirField=isChallenger?'challengedDone':'challengerDone';
+    const alreadyWon=d[theirField];
+    const winner=alreadyWon?(isChallenger?d.challenged:d.challenger):userId;
+    const updates={[myField]:true};
+    if(alreadyWon){updates.status='complete';updates.winner=d.challenger===winner?'challenger':'challenged';}
+    await api.patch(`parties/${partyCode}/duels/${did}`,updates).catch(()=>{});
+    const newD={...d,...updates};
+    setDuels(prev=>({...prev,[did]:newD}));
+    if(alreadyWon&&winner===userId){
+      api.patch(`parties/${partyCode}/members/${userId}`,{coins:(members[userId]?.coins||0)+d.xpBet}).catch(()=>{});
+    }
+  };
+
+  const myDuels=Object.entries(duels).filter(([,d])=>d.challenger===userId||d.challenged===userId);
+  const pendingForMe=myDuels.filter(([,d])=>d.status==='pending'&&d.challenged===userId);
+  const active=myDuels.filter(([,d])=>d.status==='active');
+  const completed=myDuels.filter(([,d])=>d.status==='complete').slice(0,5);
+
+  return(
+    <div>
+      <div className="box">
+        <div className="box-title">⚔️ CHALLENGE TO A DUEL</div>
+        <div className="cdim xs mb8" style={{fontSize:'.75em'}}>Challenge someone to the same quest — whoever completes it first wins the XP bet!</div>
+        <label className="lbl">DUEL CHALLENGE</label>
+        <input placeholder="e.g. Do 50 push-ups before midnight" value={title} onChange={e=>setTitle(e.target.value)} maxLength={100}/>
+        <label className="lbl">OPPONENT</label>
+        <select value={opponent} onChange={e=>setOpponent(e.target.value)}>
+          <option value="">-- SELECT OPPONENT --</option>
+          {others.map(([id,m])=><option key={id} value={id}>{m.name}</option>)}
+        </select>
+        <label className="lbl">🏆 COINS BET</label>
+        <div className="flex-wrap mb8" style={{gap:6}}>
+          {[10,25,50,100].map(n=>(
+            <button key={n} className={xpBet===n?'primary':''} style={{fontSize:'.8em'}} onClick={()=>setXpBet(n)}>{n}🪙</button>
+          ))}
+        </div>
+        {err&&<div className="notif err">{err}</div>}
+        <button className="btn-big primary" onClick={challengeDuel} disabled={!!busy}>{busy==='challenge'?'SENDING...':'[ SEND CHALLENGE ]'}</button>
+      </div>
+
+      {pendingForMe.length>0&&(
+        <div className="box" style={{borderColor:'var(--yellow)'}}>
+          <div className="box-title cyellow">⚠️ INCOMING CHALLENGES</div>
+          {pendingForMe.map(([did,d])=>(
+            <div key={did} className="flexb mb6">
+              <div><div className="bold">{d.title}</div>
+                <div className="cdim xs">{members[d.challenger]?.name} challenges you · {d.xpBet}🪙 bet</div>
+              </div>
+              <div className="flexi gap6">
+                <button className="btn-ok" style={{fontSize:'.72em',padding:'4px 10px'}} onClick={()=>acceptDuel(did)}>ACCEPT</button>
+                <button style={{fontSize:'.72em',padding:'4px 8px'}} onClick={()=>declineDuel(did)}>✕</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {active.length>0&&(
+        <div className="box" style={{borderColor:'var(--p)'}}>
+          <div className="box-title cp">⚔️ ACTIVE DUELS</div>
+          {active.map(([did,d])=>{
+            const isChallenger=d.challenger===userId;
+            const myDone=isChallenger?d.challengerDone:d.challengedDone;
+            const opponentId=isChallenger?d.challenged:d.challenger;
+            return(
+              <div key={did} className="qcard" style={{borderColor:'var(--p)',marginBottom:6}}>
+                <div className="bold mb4">{d.title}</div>
+                <div className="cdim xs mb6">vs {members[opponentId]?.name} · {d.xpBet}🪙 bet</div>
+                {!myDone?<button className="btn-ok" style={{fontSize:'.8em'}} onClick={()=>completeDuel(did)}>✓ MARK MY QUEST DONE</button>
+                :<div className="notif ok xs">Waiting for opponent...</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {completed.length>0&&(
+        <div className="box">
+          <div className="box-title cdim">RECENT RESULTS</div>
+          {completed.map(([did,d])=>{
+            const won=d.winner&&((d.winner==='challenger'&&d.challenger===userId)||(d.winner==='challenged'&&d.challenged===userId));
+            const opponentId=d.challenger===userId?d.challenged:d.challenger;
+            return(
+              <div key={did} className="flexb mb4" style={{fontSize:'.85em'}}>
+                <span>{d.title}</span>
+                <span style={{color:won?'var(--green)':'var(--red)'}}>{won?'🏆 WON':'💀 LOST'} {d.xpBet}🪙</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {myDuels.length===0&&<div className="empty mt10"><div className="ei">⚔️</div><div>No duels yet</div><div className="cdim small mt6">Challenge someone above to a head-to-head!</div></div>}
     </div>
   );
 }
@@ -3332,6 +3573,39 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     }
   },[loading,_seasonKey,partyCode]);
 
+  // FEATURE 1: Daily login bonus
+  useEffect(()=>{
+    if(!loading){
+      const todayStr=new Date().toISOString().slice(0,10);
+      const dKey=`ql_daily_${userId}`;
+      const stored=JSON.parse(localStorage.getItem(dKey)||'{"date":"","streak":0}');
+      const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+      const newStreak=stored.date===yesterday?stored.streak+1:1;
+      if(stored.date!==todayStr){
+        localStorage.setItem(dKey,JSON.stringify({date:todayStr,streak:newStreak}));
+        const bonusXP=Math.min(100,25+(newStreak-1)*10);
+        const bonusCoins=Math.min(30,10+(newStreak-1)*3);
+        const curMember=partyData?.members?.[userId];
+        if(curMember){
+          api.patch(`parties/${partyCode}/members/${userId}`,{
+            xpBonus:(curMember.xpBonus||0)+bonusXP,
+            coins:(curMember.coins||0)+bonusCoins
+          }).then(()=>{
+            addToast(`☀️ DAILY LOGIN BONUS!`,`+${bonusXP} XP · +${bonusCoins}🪙 · Day ${newStreak} streak!`,'var(--green)',5000);
+          }).catch(()=>{});
+        }
+      }
+    }
+  },[loading,userId,partyCode]);
+
+  // FEATURE 2: Apply theme color
+  useEffect(()=>{
+    const color=settings.themeColor||'#38bdf8';
+    document.documentElement.style.setProperty('--p',color);
+    document.documentElement.style.setProperty('--pb',color);
+    document.documentElement.style.setProperty('--glow',color+'44');
+  },[settings.themeColor]);
+
   if(loading)return<Loading/>;
 
   const wi=getWeekInfo(settings);
@@ -3360,8 +3634,9 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     ['quests','📋 QUESTS',0],['assign','✏️ ASSIGN',pendingProofCount],['log','📜 LOG',0],
     ['board','🏆 BOARD',0],['badges','🏅 BADGES',0],['pet','🐾 PET',0],['shop','🏪 SHOP',0],
     ['profile','👤 PROFILE',0],
-    ['spin','🎰 SPIN',0],['bounty','🎯 BOUNTY',0],
+    ['spin','🎰 SPIN',0],['bounty','🎯 BOUNTY',0],['duels','⚔️ DUELS',0],
     ['friends','👥 FRIENDS',friendRequestCount],
+    ['stats','📊 STATS',0],
     ...(chatEnabled?[['chat','💬 CHAT',chatUnread]]:[]),
     ['rules','📖 RULES',0],['settings','⚙️ SETTINGS',0],
   ];
@@ -3506,7 +3781,9 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       {tab==='shop'&&<ShopTab api={api} partyCode={partyCode} userId={userId} members={members} addToast={addToast} partyData={partyData}/>}
       {tab==='spin'&&<DailySpinTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} onSpin={handleSpin}/>}
       {tab==='bounty'&&<BountyTab api={api} partyCode={partyCode} userId={userId} members={members} wi={wi}/>}
+      {tab==='duels'&&<DuelTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} wi={wi}/>}
       {tab==='friends'&&<FriendsTab api={api} userId={userId} userName={member.name||userName}/>}
+      {tab==='stats'&&<StatsTab allQuests={allQuests} members={members} userId={userId} partyCode={partyCode} partyData={partyData}/>}
       {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled}/>}
       {tab==='rules'&&<RulesTab/>}
       {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})}/>}
