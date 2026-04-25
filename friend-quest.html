@@ -3502,7 +3502,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const [showFeedback,setShowFeedback]=useState(false);
   const [showSwitcher,setShowSwitcher]=useState(false);
   const [reviewedIds,setReviewedIds]=useState(new Set());
-  const [savedGroups]=useState(()=>{try{return JSON.parse(localStorage.getItem(K.GROUPS)||'[]');}catch{return[];}});
+  const [savedGroups,setSavedGroups]=useState(()=>{try{return JSON.parse(localStorage.getItem(K.GROUPS)||'[]');}catch{return[];}});
   const chatLastSeenRef=useRef(parseInt(localStorage.getItem(K.CHAT_TS)||'0'));
   const instaFiredRef=useRef(false);
 
@@ -3812,6 +3812,16 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     let link=document.querySelector('link[rel="icon"]');if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link);}
     link.href=canvas.toDataURL();
   },[_penCount,_proofCount,chatUnread,friendRequestCount]);
+
+  // Sync party name to localStorage whenever partyData changes
+  useEffect(()=>{
+    if(partyData?.partyName){
+      const groups=JSON.parse(localStorage.getItem(K.GROUPS)||'[]');
+      const updated=groups.map(g=>g.code===partyCode?{...g,partyName:partyData.partyName}:g);
+      localStorage.setItem(K.GROUPS,JSON.stringify(updated));
+      setSavedGroups(updated);
+    }
+  },[partyData?.partyName,partyCode]);
 
   // Party milestones — must be BEFORE conditional return (hooks rule)
   const _MS=[10,25,50,100,250,500];
