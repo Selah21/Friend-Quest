@@ -778,11 +778,12 @@ function Party({api,userId,onDone,inviteCode=''}){
   const [invBanner,setInvBanner]=useState(!!inviteCode);
   const [partyPassword,setPartyPassword]=useState('');
   const [joinPassword,setJoinPassword]=useState('');
+  const [partyNameInput,setPartyNameInput]=useState('');
   useEffect(()=>{if(inviteCode){setCode(inviteCode);setMode('join');}}, [inviteCode]);
 
-  const saveGroup=(pc,n)=>{
+  const saveGroup=(pc,n,pn)=>{
     const groups=savedGroups.filter(g=>g.code!==pc);
-    groups.unshift({code:pc,name:n});
+    groups.unshift({code:pc,name:n,partyName:pn||''});
     const trimmed=groups.slice(0,10);
     localStorage.setItem(K.GROUPS,JSON.stringify(trimmed));
     setSavedGroups(trimmed);
@@ -799,9 +800,10 @@ function Party({api,userId,onDone,inviteCode=''}){
     setBusy(true);setErr('');
     try{
       const pc=mkcode();
-      await api.set(`parties/${pc}`,{created:Date.now(),settings:{...customSettings},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}},partyPassword:partyPassword.trim()||null});
+      const pn=partyNameInput.trim()||'My Party';
+      await api.set(`parties/${pc}`,{created:Date.now(),partyName:pn,settings:{...customSettings},members:{[userId]:{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'}},partyPassword:partyPassword.trim()||null});
       localStorage.setItem(K.NAME,name.trim());
-      saveGroup(pc,name.trim());
+      saveGroup(pc,name.trim(),pn);
       onDone(pc,name.trim());
     }catch(e){setErr(e.message);}setBusy(false);
   };
@@ -819,7 +821,7 @@ function Party({api,userId,onDone,inviteCode=''}){
       }
       await api.patch(`parties/${pc}/members/${userId}`,{name:name.trim(),joinedAt:Date.now(),selectedTitle:'SLACKER'});
       localStorage.setItem(K.NAME,name.trim());
-      saveGroup(pc,name.trim());
+      saveGroup(pc,name.trim(),party.partyName||'');
       onDone(pc,name.trim());
     }catch(e){setErr(e.message);}setBusy(false);
   };
@@ -848,10 +850,12 @@ function Party({api,userId,onDone,inviteCode=''}){
         <div className="box">
           <div className="box-title">📂 YOUR GROUPS</div>
           {savedGroups.map(g=>(
-            <div key={g.code} className="flexb mb6" style={{padding:'8px',background:'var(--card2)',borderRadius:2}}>
+            <div key={g.code} className="flexb mb6" style={{padding:'8px 10px',background:'var(--card2)',borderRadius:2}}>
               <div>
-                <span className="code" style={{fontSize:'.9em',cursor:'default'}}>{g.code}</span>
-                <span className="cdim xs" style={{marginLeft:8}}>{g.name}</span>
+                <div style={{fontWeight:'bold',fontSize:'.9em',color:'var(--pb)'}}>{g.partyName||g.code}</div>
+                <div className="cdim xs mt2">{g.partyName?<span className="code" style={{fontSize:'.8em',cursor:'default'}}>{g.code}</span>:<span>{g.name}</span>}
+                  {g.partyName&&<span style={{marginLeft:6}}>{g.name}</span>}
+                </div>
               </div>
               <div className="flexi gap6">
                 <button className="btn-ok" style={{padding:'4px 10px',fontSize:'.75em'}} onClick={()=>rejoin(g.code,g.name)} disabled={busy}>REJOIN →</button>
@@ -875,7 +879,9 @@ function Party({api,userId,onDone,inviteCode=''}){
       </div>)}
 
       {mode==='create'&&(<div className="box"><div className="box-title">NEW PARTY</div>
-        <p className="cdim small mb6">A 6-character party code will be generated for your group.</p>
+        <label className="lbl">PARTY NAME</label>
+        <input placeholder="e.g. Work Crew, Family Group, College Friends..." value={partyNameInput} onChange={e=>setPartyNameInput(e.target.value)} maxLength={30}/>
+        <p className="cdim small mb6">A 6-character code will be generated for your group.</p>
         <button style={{fontSize:'.75em',marginBottom:8,borderColor:showAdv?'var(--p)':'var(--pd)'}} onClick={()=>setShowAdv(a=>!a)}>
           ⚙️ {showAdv?'▲ HIDE':'▼ SHOW'} DEADLINE SETTINGS
         </button>
@@ -2940,23 +2946,42 @@ function RulesTab(){
 }
 
 // ═══ SETTINGS TAB ════════════════════════════════════════════════════════════
-function SettingsTab({api,partyCode,settings,onSaved}){
+function SettingsTab({api,partyCode,settings,onSaved,partyData}){
   const [local,setLocal]=useState({...DEF,...settings});
   const [busy,setBusy]=useState(false);
   const [ok,setOk]=useState('');
   const [err,setErr]=useState('');
+  const [nameInput,setNameInput]=useState(partyData?.partyName||'');
+  const [savingName,setSavingName]=useState(false);
   const upd=k=>e=>setLocal(s=>({...s,[k]:Number(e.target.value)}));
   const save=async()=>{
     setBusy(true);setOk('');setErr('');
     try{await api.patch(`parties/${partyCode}/settings`,local);onSaved(local);setOk('Settings saved! All members see the new schedule.');setTimeout(()=>setOk(''),4000);}
     catch(e){setErr(e.message);}setBusy(false);
   };
+  const saveName=async()=>{
+    if(!nameInput.trim())return;
+    setSavingName(true);
+    try{
+      await api.patch(`parties/${partyCode}`,{partyName:nameInput.trim()});
+      setOk('Party name updated!');setTimeout(()=>setOk(''),3000);
+    }catch(e){setErr(e.message);}
+    setSavingName(false);
+  };
   return(
     <div>
       <div className="box">
         <div className="box-title">⚙️ PARTY SETTINGS</div>
         <div className="notif mb12 small">Settings are shared across all party members and saved to Firebase.</div>
-        <div className="box-title cdim xs mb6">QUEST WINDOW</div>
+        <div className="box-title cdim xs mb6">PARTY IDENTITY</div>
+        <div className="srow">
+          <label>Party name</label>
+          <div style={{display:'flex',gap:6,flex:1}}>
+            <input value={nameInput} onChange={e=>setNameInput(e.target.value)} maxLength={30} placeholder="e.g. Work Crew, Family Group..." style={{margin:0,flex:1}}/>
+            <button style={{flexShrink:0,fontSize:'.75em',padding:'4px 10px'}} onClick={saveName} disabled={savingName||!nameInput.trim()}>{savingName?'...':'SAVE'}</button>
+          </div>
+        </div>
+        <div className="box-title cdim xs mt12 mb6">QUEST WINDOW</div>
         <div className="srow"><label>Window opens on</label><select value={local.windowDay} onChange={upd('windowDay')}>{DAYS.map((d,i)=><option key={i} value={i}>{d}</option>)}</select></div>
         <div className="srow"><label>Opens at</label><select value={local.windowHour} onChange={upd('windowHour')}>{Array.from({length:24},(_,i)=><option key={i} value={i}>{hourLabel(i)}</option>)}</select></div>
         <div className="srow"><label>Duration (days)</label><select value={local.durationDays} onChange={upd('durationDays')}>{[1,2,3,4,5,6,7].map(n=><option key={n} value={n}>{n} day{n>1?'s':''}</option>)}</select></div>
@@ -3948,15 +3973,15 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         <div className="modal-bg" onClick={()=>setShowSwitcher(false)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <div className="modal-title">⇄ SWITCH GROUP</div>
-            <div className="cdim xs mb12">Current group: <span className="code" style={{cursor:'default'}}>{partyCode}</span></div>
+            <div className="cdim xs mb12">Current: <span style={{color:'var(--pb)',fontWeight:'bold'}}>{partyData?.partyName||partyCode}</span>{partyData?.partyName&&<span className="code" style={{marginLeft:6,fontSize:'.78em',cursor:'default'}}>{partyCode}</span>}</div>
             {savedGroups.filter(g=>g.code!==partyCode).length===0?(
               <div className="notif mb12">No other saved groups. Use the Groups screen to join or create one.</div>
             ):(
               savedGroups.filter(g=>g.code!==partyCode).map(g=>(
                 <div key={g.code} className="flexb mb6" style={{padding:'10px 12px',background:'var(--card2)',borderRadius:3,border:'1px solid var(--border)'}}>
                   <div>
-                    <span className="code" style={{cursor:'default',fontSize:'.88em'}}>{g.code}</span>
-                    <span className="cdim xs" style={{marginLeft:8}}>{g.name}</span>
+                    <div style={{fontWeight:'bold',color:'var(--pb)',fontSize:'.9em'}}>{g.partyName||g.code}</div>
+                    <div className="cdim xs mt2">{g.partyName&&<span className="code" style={{fontSize:'.78em',cursor:'default'}}>{g.code} · </span>}{g.name}</div>
                   </div>
                   <button className="btn-ok" style={{fontSize:'.8em',padding:'5px 14px'}} onClick={()=>{setShowSwitcher(false);onSwitchParty(g.code,g.name);}}>→ SWITCH</button>
                 </div>
@@ -3980,7 +4005,9 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         <div className="flexb" style={{flexWrap:'wrap',gap:8}}>
           <div>
             <h1 style={{fontSize:'clamp(1.1rem,3.5vw,1.7rem)'}}>[ FRIEND QUEST ]</h1>
-            <div className="sub">PARTY: <span className="code" onClick={()=>{navigator.clipboard.writeText(partyCode);setCopied(true);setTimeout(()=>setCopied(false),2000);}}>{partyCode}</span>
+            <div className="sub">
+              {partyData?.partyName&&<span style={{color:'var(--pb)',fontWeight:'bold',marginRight:6}}>{partyData.partyName}</span>}
+              <span className="code" style={{fontSize:partyData?.partyName?'.8em':'1em'}} onClick={()=>{navigator.clipboard.writeText(partyCode);setCopied(true);setTimeout(()=>setCopied(false),2000);}}>{partyCode}</span>
               {copied&&<span className="cgreen xs"> ✓</span>}
             </div>
             <button style={{fontSize:'.65em',padding:'2px 8px',marginTop:2}} onClick={()=>{navigator.clipboard.writeText(window.location.origin+window.location.pathname+'?join='+partyCode);addToast('🔗 INVITE LINK COPIED!','Share this link with friends to join your party!','var(--p)');}}>🔗 INVITE LINK</button>
@@ -4086,7 +4113,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       {tab==='stats'&&<StatsTab allQuests={allQuests} members={members} userId={userId} partyCode={partyCode} partyData={partyData}/>}
       {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled}/>}
       {tab==='rules'&&<RulesTab/>}
-      {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})}/>}
+      {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})} partyData={partyData}/>}
 
       <div className="mob-nav">
         {[['quests','📋','QUESTS'],['assign','✏️','ASSIGN'],['friends','👥','FRIENDS'],['pet','🐾','PET'],['spin','🎰','SPIN']].map(([id,icon,label])=>(
