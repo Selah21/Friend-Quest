@@ -2434,38 +2434,59 @@ function FriendsTab({api,userId,userName}){
     setBusy(false);
   };
 
+  const [accepting,setAccepting]=useState(null);
+  const [declining,setDeclining]=useState(null);
+
   const acceptRequest=async(fromId,fromName)=>{
+    setAccepting(fromId);
     try{
+      // Add to both friend lists first
       await Promise.all([
         api.set(`friends/${userId}/list/${fromId}`,{name:fromName,addedAt:Date.now()}),
         api.set(`friends/${fromId}/list/${userId}`,{name:userName,addedAt:Date.now()}),
-        api.set(`friends/${userId}/requests/${fromId}`,null),
-        api.set(`friends/${fromId}/outgoing/${userId}`,null),
       ]);
+      // Then delete the request and outgoing entries
+      await Promise.all([
+        api.del(`friends/${userId}/requests/${fromId}`),
+        api.del(`friends/${fromId}/outgoing/${userId}`),
+      ]);
+      // Update UI — remove request immediately, add to friends list
       setIncoming(prev=>{const n={...prev};delete n[fromId];return n;});
       setFriends(prev=>({...prev,[fromId]:{name:fromName,addedAt:Date.now()}}));
-    }catch(e){}
+    }catch(e){console.error('acceptRequest failed',e);}
+    setAccepting(null);
   };
 
   const declineRequest=async fromId=>{
+    setDeclining(fromId);
     try{
-      await Promise.all([api.set(`friends/${userId}/requests/${fromId}`,null),api.set(`friends/${fromId}/outgoing/${userId}`,null)]);
+      await Promise.all([
+        api.del(`friends/${userId}/requests/${fromId}`),
+        api.del(`friends/${fromId}/outgoing/${userId}`),
+      ]);
       setIncoming(prev=>{const n={...prev};delete n[fromId];return n;});
-    }catch(e){}
+    }catch(e){console.error('declineRequest failed',e);}
+    setDeclining(null);
   };
 
   const removeFriend=async fid=>{
     try{
-      await Promise.all([api.set(`friends/${userId}/list/${fid}`,null),api.set(`friends/${fid}/list/${userId}`,null)]);
+      await Promise.all([
+        api.del(`friends/${userId}/list/${fid}`),
+        api.del(`friends/${fid}/list/${userId}`),
+      ]);
       setFriends(prev=>{const n={...prev};delete n[fid];return n;});
-    }catch(e){}
+    }catch(e){console.error('removeFriend failed',e);}
   };
 
   const cancelRequest=async toId=>{
     try{
-      await Promise.all([api.set(`friends/${userId}/outgoing/${toId}`,null),api.set(`friends/${toId}/requests/${userId}`,null)]);
+      await Promise.all([
+        api.del(`friends/${userId}/outgoing/${toId}`),
+        api.del(`friends/${toId}/requests/${userId}`),
+      ]);
       setOutgoing(prev=>{const n={...prev};delete n[toId];return n;});
-    }catch(e){}
+    }catch(e){console.error('cancelRequest failed',e);}
   };
 
   const incomingCount=Object.keys(incoming).length;
@@ -2528,8 +2549,8 @@ function FriendsTab({api,userId,userName}){
                     <div style={{fontWeight:'bold',fontSize:'.9em'}}>{r.name||'Unknown'}</div>
                     <div className="cdim xs mt2">Wants to be your friend</div>
                   </div>
-                  <button className="btn-ok" style={{fontSize:'.72em',padding:'4px 10px',flexShrink:0}} onClick={()=>acceptRequest(fromId,r.name)}>✓ ACCEPT</button>
-                  <button style={{fontSize:'.72em',padding:'4px 8px',flexShrink:0}} onClick={()=>declineRequest(fromId)}>✕</button>
+                  <button className="btn-ok" style={{fontSize:'.72em',padding:'4px 10px',flexShrink:0}} disabled={accepting===fromId||declining===fromId} onClick={()=>acceptRequest(fromId,r.name)}>{accepting===fromId?'..':'✓ ACCEPT'}</button>
+                  <button style={{fontSize:'.72em',padding:'4px 8px',flexShrink:0}} disabled={accepting===fromId||declining===fromId} onClick={()=>declineRequest(fromId)}>{declining===fromId?'..':'✕'}</button>
                 </div>
               ))}
             </div>
