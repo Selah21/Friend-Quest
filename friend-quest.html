@@ -3050,6 +3050,34 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     return()=>{clearInterval(hb);api.set(`presence/${userId}`,{online:false,lastSeen:Date.now(),name}).catch(()=>{});};
   },[userId,loading]);
 
+  // Favicon badge — must be BEFORE conditional return (hooks rule)
+  const _wi=getWeekInfo(settings);
+  const _cq=allQuests[_wi.id]||{};
+  const _penCount=Object.values(_cq).filter(q=>q.penaltyApplied&&!q.penaltyChosen&&q.assignedTo===userId).length;
+  const _proofCount=Object.values(_cq).filter(q=>q.proofStatus==='pending'&&q.assignedBy===userId).length;
+  useEffect(()=>{
+    const count=_penCount+_proofCount+chatUnread+friendRequestCount;
+    const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#0284c7';ctx.beginPath();ctx.arc(16,16,16,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('FQ',16,17);
+    if(count>0){ctx.fillStyle='#f43f5e';ctx.beginPath();ctx.arc(25,8,8,0,2*Math.PI);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 9px monospace';ctx.fillText(count>9?'9+':String(count),25,9);}
+    let link=document.querySelector('link[rel="icon"]');if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link);}
+    link.href=canvas.toDataURL();
+  },[_penCount,_proofCount,chatUnread,friendRequestCount]);
+
+  // Party milestones — must be BEFORE conditional return (hooks rule)
+  const _MS=[10,25,50,100,250,500];
+  const _totalDone=Object.values(allQuests).flatMap(wq=>Object.values(wq||{})).filter(q=>q.completed).length;
+  const _lastMS=_MS.filter(m=>m<=_totalDone).pop()||0;
+  const _msKey=`ql_ms_${partyCode}`;
+  useEffect(()=>{
+    if(!loading&&_lastMS>0){
+      const cel=parseInt(localStorage.getItem(_msKey)||'0');
+      if(_lastMS>cel){localStorage.setItem(_msKey,String(_lastMS));addToast('🎉 PARTY MILESTONE!',`${_lastMS} quests completed together! 🏆`,'var(--yellow)',6000);}
+    }
+  },[loading,_lastMS,_msKey]);
+
   if(loading)return<Loading/>;
 
   const wi=getWeekInfo(settings);
@@ -3068,21 +3096,9 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const member=members[userId]||{};
   const titleDef=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
 
-  // Party milestones
-  const MILESTONES=[10,25,50,100,250,500];
-  const totalCompleted=Object.values(allQuests).flatMap(wq=>Object.values(wq||{})).filter(q=>q.completed).length;
-  const nextMilestone=MILESTONES.find(m=>m>totalCompleted);
-  const lastMilestone=MILESTONES.filter(m=>m<=totalCompleted).pop()||0;
-  const milestoneKey=`ql_ms_${partyCode}`;
-  useEffect(()=>{
-    if(!loading&&lastMilestone>0){
-      const celebrated=parseInt(localStorage.getItem(milestoneKey)||'0');
-      if(lastMilestone>celebrated){
-        localStorage.setItem(milestoneKey,String(lastMilestone));
-        addToast(`🎉 PARTY MILESTONE!`,`${lastMilestone} quests completed together! 🏆`,'var(--yellow)',6000);
-      }
-    }
-  },[loading,lastMilestone,milestoneKey]);
+  // Party milestones display values (non-hooks, safe after conditional return)
+  const totalCompleted=_totalDone;
+  const nextMilestone=_MS.find(m=>m>totalCompleted);
 
   const chatEnabled=settings.chatEnabled!==false;
 
@@ -3096,21 +3112,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     ['rules','📖 RULES',0],['settings','⚙️ SETTINGS',0],
   ];
 
-  // Favicon badge
-  useEffect(()=>{
-    const count=pendingPenaltyCount+(pendingProofs.filter(q=>q.assignedBy===userId).length)+chatUnread+friendRequestCount;
-    const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;
-    const ctx=canvas.getContext('2d');
-    ctx.fillStyle='#0284c7';ctx.beginPath();ctx.arc(16,16,16,0,2*Math.PI);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('FQ',16,17);
-    if(count>0){
-      ctx.fillStyle='#f43f5e';ctx.beginPath();ctx.arc(25,8,8,0,2*Math.PI);ctx.fill();
-      ctx.fillStyle='#fff';ctx.font='bold 9px monospace';ctx.fillText(count>9?'9+':String(count),25,9);
-    }
-    let link=document.querySelector('link[rel="icon"]');
-    if(!link){link=document.createElement('link');link.rel='icon';document.head.appendChild(link);}
-    link.href=canvas.toDataURL();
-  },[pendingPenaltyCount,pendingProofs,chatUnread,friendRequestCount,userId]);
+  // (favicon badge rendered in JSX-independent effect — see before conditional return)
 
   return(
     <div className="wrap">
