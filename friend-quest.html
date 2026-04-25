@@ -2375,6 +2375,202 @@ const TUTORIAL_STEPS = [
   },
 ];
 
+// ═══ FRIENDS TAB ═════════════════════════════════════════════════════════════
+function FriendsTab({api,userId,userName}){
+  const [friends,setFriends]=useState({});
+  const [incoming,setIncoming]=useState({});
+  const [outgoing,setOutgoing]=useState({});
+  const [presence,setPresence]=useState({});
+  const [section,setSection]=useState('friends');
+  const [addId,setAddId]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [err,setErr]=useState('');
+  const [ok,setOk]=useState('');
+  const [copied,setCopied]=useState(false);
+  const [loading,setLoading]=useState(true);
+
+  useEffect(()=>{
+    const load=async()=>{
+      setLoading(true);
+      try{
+        await api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name:userName});
+        const [fl,inc,out]=await Promise.all([
+          api.get(`friends/${userId}/list`).catch(()=>null),
+          api.get(`friends/${userId}/requests`).catch(()=>null),
+          api.get(`friends/${userId}/outgoing`).catch(()=>null),
+        ]);
+        const fd=fl||{},id=inc||{},od=out||{};
+        setFriends(fd);setIncoming(id);setOutgoing(od);
+        const pd={};
+        await Promise.all(Object.keys(fd).map(async fid=>{
+          try{const p=await api.get(`presence/${fid}`);if(p)pd[fid]=p;}catch(e){}
+        }));
+        setPresence(pd);
+      }catch(e){}
+      setLoading(false);
+    };
+    load();
+    const hb=setInterval(()=>{api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name:userName}).catch(()=>{});},30000);
+    return()=>{clearInterval(hb);api.set(`presence/${userId}`,{online:false,lastSeen:Date.now(),name:userName}).catch(()=>{});};
+  },[userId,userName]);
+
+  const isOnline=fid=>{const p=presence[fid];if(!p||!p.online)return false;return(Date.now()-(p.lastSeen||0))<90000;};
+
+  const copyId=()=>{navigator.clipboard.writeText(userId);setCopied(true);setTimeout(()=>setCopied(false),2000);};
+
+  const sendRequest=async()=>{
+    const t=addId.trim();
+    if(!t)return setErr('Enter a User ID');
+    if(t===userId)return setErr("You can't add yourself!");
+    if(friends[t])return setErr('Already friends!');
+    if(outgoing[t])return setErr('Request already sent to this person');
+    setBusy(true);setErr('');setOk('');
+    try{
+      await api.set(`friends/${t}/requests/${userId}`,{name:userName,sentAt:Date.now()});
+      await api.set(`friends/${userId}/outgoing/${t}`,{sentAt:Date.now()});
+      setOutgoing(prev=>({...prev,[t]:{sentAt:Date.now()}}));
+      setOk('Friend request sent! ✓');setAddId('');
+    }catch(e){setErr('Could not send request. Double-check the ID.');}
+    setBusy(false);
+  };
+
+  const acceptRequest=async(fromId,fromName)=>{
+    try{
+      await Promise.all([
+        api.set(`friends/${userId}/list/${fromId}`,{name:fromName,addedAt:Date.now()}),
+        api.set(`friends/${fromId}/list/${userId}`,{name:userName,addedAt:Date.now()}),
+        api.set(`friends/${userId}/requests/${fromId}`,null),
+        api.set(`friends/${fromId}/outgoing/${userId}`,null),
+      ]);
+      setIncoming(prev=>{const n={...prev};delete n[fromId];return n;});
+      setFriends(prev=>({...prev,[fromId]:{name:fromName,addedAt:Date.now()}}));
+    }catch(e){}
+  };
+
+  const declineRequest=async fromId=>{
+    try{
+      await Promise.all([api.set(`friends/${userId}/requests/${fromId}`,null),api.set(`friends/${fromId}/outgoing/${userId}`,null)]);
+      setIncoming(prev=>{const n={...prev};delete n[fromId];return n;});
+    }catch(e){}
+  };
+
+  const removeFriend=async fid=>{
+    try{
+      await Promise.all([api.set(`friends/${userId}/list/${fid}`,null),api.set(`friends/${fid}/list/${userId}`,null)]);
+      setFriends(prev=>{const n={...prev};delete n[fid];return n;});
+    }catch(e){}
+  };
+
+  const cancelRequest=async toId=>{
+    try{
+      await Promise.all([api.set(`friends/${userId}/outgoing/${toId}`,null),api.set(`friends/${toId}/requests/${userId}`,null)]);
+      setOutgoing(prev=>{const n={...prev};delete n[toId];return n;});
+    }catch(e){}
+  };
+
+  const incomingCount=Object.keys(incoming).length;
+  const friendCount=Object.keys(friends).length;
+  const onlineCount=Object.keys(friends).filter(isOnline).length;
+
+  return(
+    <div>
+      <div className="flex-wrap mb12" style={{gap:6}}>
+        {[['friends',`👥 FRIENDS (${friendCount})`],['requests',`📬 REQUESTS`],['add','➕ ADD FRIEND']].map(([s,l])=>(
+          <button key={s} className={section===s?'active':''} onClick={()=>setSection(s)} style={{position:'relative'}}>
+            {l}{s==='requests'&&incomingCount>0&&<span className="notif-dot" style={{marginLeft:4,verticalAlign:'middle'}}/>}
+          </button>
+        ))}
+      </div>
+
+      {section==='friends'&&(
+        <div>
+          <div className="box" style={{marginBottom:8}}>
+            <div className="cdim xs mb6" style={{letterSpacing:'.1em'}}>🔑 YOUR FRIEND ID</div>
+            <div style={{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+              <span className="code" style={{cursor:'default',userSelect:'all',fontSize:'.85em',wordBreak:'break-all'}}>{userId}</span>
+              <button style={{fontSize:'.7em',padding:'3px 10px'}} onClick={copyId}>{copied?'✓ COPIED!':'📋 COPY'}</button>
+            </div>
+            <div className="cdim xs mt6" style={{fontSize:'.7em'}}>Share this ID so others can send you friend requests</div>
+          </div>
+          {friendCount>0&&<div className="cdim xs mb8" style={{textAlign:'right',fontSize:'.78em'}}><span style={{color:'#22c55e'}}>● {onlineCount} online</span>{' · '}{friendCount} total</div>}
+          {loading?(<div className="empty"><div className="cdim">Loading...</div></div>):friendCount===0?(
+            <div className="empty mt10"><div className="ei">👥</div><div>No friends yet</div><div className="cdim small mt6">Share your Friend ID or use the Add Friend tab!</div></div>
+          ):(
+            Object.entries(friends).map(([fid,f])=>{
+              const online=isOnline(fid);
+              return(
+                <div key={fid} className="box" style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',marginBottom:4}}>
+                  <div style={{position:'relative',flexShrink:0}}>
+                    <div className="avatar" style={{width:44,height:44,fontSize:'1.2em',background:'var(--card2)',fontWeight:'bold'}}>{(f.name||'?')[0].toUpperCase()}</div>
+                    <div style={{position:'absolute',bottom:1,right:1,width:12,height:12,borderRadius:'50%',background:online?'#22c55e':'#6b7280',border:'2px solid var(--card)',boxSizing:'border-box',boxShadow:online?'0 0 6px rgba(34,197,94,.6)':undefined}}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:'bold',fontSize:'.92em'}}>{f.name||'Unknown'}</div>
+                    <div style={{fontSize:'.72em',marginTop:2,color:online?'#22c55e':'var(--dim)'}}>{online?'● Online now':'○ Offline'}</div>
+                  </div>
+                  <button className="btn-danger" style={{fontSize:'.68em',padding:'3px 8px',flexShrink:0}} onClick={()=>removeFriend(fid)}>REMOVE</button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {section==='requests'&&(
+        <div>
+          {incomingCount>0&&(
+            <div className="mb12">
+              <div className="cdim xs mb8" style={{letterSpacing:'.1em'}}>⬇ INCOMING</div>
+              {Object.entries(incoming).map(([fromId,r])=>(
+                <div key={fromId} className="box" style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',marginBottom:4,borderColor:'var(--p)'}}>
+                  <div className="avatar" style={{width:44,height:44,fontSize:'1.2em',background:'var(--card2)',fontWeight:'bold',flexShrink:0}}>{(r.name||'?')[0].toUpperCase()}</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontWeight:'bold',fontSize:'.9em'}}>{r.name||'Unknown'}</div>
+                    <div className="cdim xs mt2">Wants to be your friend</div>
+                  </div>
+                  <button className="btn-ok" style={{fontSize:'.72em',padding:'4px 10px',flexShrink:0}} onClick={()=>acceptRequest(fromId,r.name)}>✓ ACCEPT</button>
+                  <button style={{fontSize:'.72em',padding:'4px 8px',flexShrink:0}} onClick={()=>declineRequest(fromId)}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {Object.keys(outgoing).length>0&&(
+            <div>
+              <div className="cdim xs mb8" style={{letterSpacing:'.1em'}}>⬆ SENT</div>
+              {Object.entries(outgoing).map(([toId])=>(
+                <div key={toId} className="box" style={{display:'flex',alignItems:'center',gap:12,padding:'10px 14px',marginBottom:4,opacity:.75}}>
+                  <div className="avatar" style={{width:44,height:44,fontSize:'1em',background:'var(--card2)',color:'var(--dim)',flexShrink:0}}>?</div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:'.75em',color:'var(--dim)',wordBreak:'break-all'}}>{toId}</div>
+                    <div className="cdim xs mt2">⏳ Pending...</div>
+                  </div>
+                  <button style={{fontSize:'.68em',padding:'3px 8px',flexShrink:0}} onClick={()=>cancelRequest(toId)}>CANCEL</button>
+                </div>
+              ))}
+            </div>
+          )}
+          {incomingCount===0&&Object.keys(outgoing).length===0&&(<div className="empty mt10"><div className="ei">📬</div><div>No pending requests</div></div>)}
+        </div>
+      )}
+
+      {section==='add'&&(
+        <div>
+          <div className="box">
+            <div className="box-title">➕ SEND FRIEND REQUEST</div>
+            <label className="lbl">PASTE THEIR FRIEND ID</label>
+            <input placeholder="e.g. m8x2k4jf9..." value={addId} onChange={e=>{setAddId(e.target.value);setErr('');setOk('');}} onKeyDown={e=>e.key==='Enter'&&sendRequest()} maxLength={80}/>
+            <div className="cdim xs mb8" style={{fontSize:'.72em'}}>Ask your friend to copy their Friend ID from the Friends tab and share it with you</div>
+            {err&&<div className="notif err">{err}</div>}
+            {ok&&<div className="notif ok">{ok}</div>}
+            <button className="btn-big primary" onClick={sendRequest} disabled={busy||!addId.trim()}>{busy?'SENDING...':'[ SEND REQUEST ]'}</button>
+          </div>
+          <div className="notif mt10" style={{fontSize:'.75em'}}>💡 Friends are cross-group — you can be friends with anyone playing Friend Quest, even if they're in a different party!</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RulesTab(){
   const [section,setSection]=useState('tutorial');
   return(
@@ -2699,11 +2895,23 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
   const titleDef=TITLES.find(t=>t.id===member.selectedTitle)||TITLES[0];
 
   const chatEnabled=settings.chatEnabled!==false;
+
+  // Friend request count for badge
+  const [friendRequestCount,setFriendRequestCount]=useState(0);
+  useEffect(()=>{
+    api.get(`friends/${userId}/requests`).then(d=>{setFriendRequestCount(d?Object.keys(d).length:0);}).catch(()=>{});
+    // Set presence online
+    api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name:member.name||userName}).catch(()=>{});
+    const hb=setInterval(()=>{api.set(`presence/${userId}`,{online:true,lastSeen:Date.now(),name:member.name||userName}).catch(()=>{});},30000);
+    return()=>{clearInterval(hb);api.set(`presence/${userId}`,{online:false,lastSeen:Date.now(),name:member.name||userName}).catch(()=>{});};
+  },[userId]);
+
   const TABS=[
     ['quests','📋 QUESTS',0],['assign','✏️ ASSIGN',pendingProofCount],['log','📜 LOG',0],
     ['board','🏆 BOARD',0],['badges','🏅 BADGES',0],['pet','🐾 PET',0],['shop','🏪 SHOP',0],
     ['profile','👤 PROFILE',0],
     ['spin','🎰 SPIN',0],
+    ['friends','👥 FRIENDS',friendRequestCount],
     ...(chatEnabled?[['chat','💬 CHAT',chatUnread]]:[]),
     ['rules','📖 RULES',0],['settings','⚙️ SETTINGS',0],
   ];
@@ -2804,6 +3012,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       {tab==='pet'&&<PetTab allQuests={allQuests} userId={userId} badges={savedBadges} stats={myStats}/>}
       {tab==='shop'&&<ShopTab api={api} partyCode={partyCode} userId={userId} members={members} addToast={addToast} partyData={partyData}/>}
       {tab==='spin'&&<DailySpinTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} onSpin={handleSpin}/>}
+      {tab==='friends'&&<FriendsTab api={api} userId={userId} userName={member.name||userName}/>}
       {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled}/>}
       {tab==='rules'&&<RulesTab/>}
       {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})}/>}
