@@ -319,6 +319,9 @@ const SUGGESTIONS = {
   "Wild":      ["Eat something you've never tried before","Watch a movie in a genre you never pick","Try cold shower for 30 seconds","Write a list of 10 things you're grateful for","Do something that scares you slightly"],
 };
 
+// ═══ QUEST CATEGORIES (Feature 7) ═══════════════════════════════════════════
+const QUEST_CATEGORIES=['💪 Fitness','🧠 Learning','🤝 Social','🎨 Creative','🏠 Home','⚡ Productive','🌿 Wellness','🎯 Challenge'];
+
 // ═══ BONUS EVENTS ═══════════════════════════════════════════════════════════
 const EVENTS = [
   { id:'double',    name:'⚡ DOUBLE XP WEEK!',      desc:'All quests worth 2× XP this week!',        multi:2, color:'var(--yellow)' },
@@ -1653,6 +1656,9 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
   const [proofQuest,setProofQuest]=useState(null);
   // FEATURE 3: Double or Nothing
   const [doubledQuests,setDoubledQuests]=useState(new Set());
+  // FEATURE 9: Custom Penalty Wheel
+  const [spinning,setSpinning]=useState({});
+  const [spinResult,setSpinResult]=useState({});
   const getWeekInfo2=()=>{const w=new Date();const day=w.getDay();const diff=w.getDate()-day+(day===0?-6:1);const start=new Date(w.setDate(diff));const id=`${start.getFullYear()}-W${String(Math.ceil(((start-new Date(start.getFullYear(),0,1))/86400000+1)/7)).padStart(2,'0')}`;return{id};};
   const wi2=getWeekInfo2();
   const mine=Object.entries(quests).filter(([,q])=>q.assignedTo===userId).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
@@ -1698,17 +1704,55 @@ function MyQuestsTab({quests,members,userId,inWindow,onComplete,completing,bonus
                 </div>
               </div>
 
-              {/* Inline penalty choices — shown immediately, no button needed */}
+              {/* FEATURE 9: Custom Penalty Wheel */}
               {!q.penaltyChosen?(
                 <div style={{border:'2px solid var(--red)',borderTop:'none',padding:'12px 14px',borderRadius:'0 0 4px 4px',background:'rgba(10,2,8,.6)'}}>
                   <div style={{marginBottom:8}}>
                     <span className="cred bold xs">☠ CHOOSE YOUR PUNISHMENT</span>
                     <span className="cdim xs" style={{marginLeft:8}}>— kicks in Wednesday 😈</span>
                   </div>
-                  {(q.penaltyOptions||[]).map((opt,i)=>(
-                    <PenaltyChoice key={i} opt={opt} index={i} onPick={()=>onPickPenalty(q.id,opt)}/>
-                  ))}
-                  {(!q.penaltyOptions||q.penaltyOptions.length===0)&&(
+                  {!spinResult[q.id]?(
+                    <div style={{textAlign:'center',padding:'12px 0'}}>
+                      <button className="btn-big" style={{borderColor:'var(--red)',color:'var(--red)',fontSize:'.9em',letterSpacing:'.08em',animation:spinning[q.id]?'pulse-r .5s infinite':undefined}}
+                        disabled={spinning[q.id]}
+                        onClick={()=>{
+                          setSpinning(s=>({...s,[q.id]:true}));
+                          const opts=q.penaltyOptions||[];
+                          let count=0;
+                          const interval=setInterval(()=>{
+                            count++;
+                            setSpinResult(s=>({...s,[q.id]:opts[count%opts.length]}));
+                            if(count>15){
+                              clearInterval(interval);
+                              const final=opts[Math.floor(Math.random()*opts.length)];
+                              setSpinResult(s=>({...s,[q.id]:final}));
+                              setSpinning(s=>({...s,[q.id]:false}));
+                            }
+                          },120);
+                        }}>
+                        {spinning[q.id]?'🎰 SPINNING...':'🎰 SPIN THE WHEEL'}
+                      </button>
+                    </div>
+                  ):null}
+                  {spinResult[q.id]&&!spinning[q.id]&&(
+                    <div style={{marginTop:10}}>
+                      <div className="cred bold mb6" style={{fontSize:'.85em',textAlign:'center'}}>LANDED ON:</div>
+                      <div style={{padding:'10px 14px',border:'2px solid var(--red)',borderRadius:4,fontSize:'.82em',marginBottom:10,textAlign:'center'}}>{spinResult[q.id]}</div>
+                      <button className="btn-big primary" style={{borderColor:'var(--red)',color:'var(--red)'}} onClick={()=>{onPickPenalty(q.id,spinResult[q.id]);setSpinResult(s=>{const n={...s};delete n[q.id];return n;});}}>
+                        ☠ ACCEPT THIS PENALTY
+                      </button>
+                      <button style={{fontSize:'.75em',marginTop:6,width:'100%'}} onClick={()=>{
+                        setSpinning(s=>({...s,[q.id]:true}));
+                        const opts=q.penaltyOptions||[];
+                        let count=0;
+                        const interval=setInterval(()=>{
+                          count++;setSpinResult(s=>({...s,[q.id]:opts[count%opts.length]}));
+                          if(count>15){clearInterval(interval);const final=opts[Math.floor(Math.random()*opts.length)];setSpinResult(s=>({...s,[q.id]:final}));setSpinning(s=>({...s,[q.id]:false}));}
+                        },120);
+                      }}>🎰 SPIN AGAIN</button>
+                    </div>
+                  )}
+                  {(!q.penaltyOptions||q.penaltyOptions.length===0)&&!spinResult[q.id]&&(
                     <div className="cdim xs">No penalty options stored — reassign quest to generate options.</div>
                   )}
                 </div>
@@ -1823,6 +1867,8 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
   const [showChain,setShowChain]=useState(false);
   // FEATURE 4: Mystery Quests
   const [mystery,setMystery]=useState(false);
+  // FEATURE 7: Custom Quest Categories
+  const [category,setCategory]=useState('');
   const saveTemplate=()=>{
     if(!title.trim()||templates.includes(title.trim()))return;
     const t=[title.trim(),...templates].slice(0,15);
@@ -1851,9 +1897,9 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
         completed:false,completedAt:null,penaltyApplied:false,penaltyOptions:penOpts,penaltyChosen:null,
         proof:null,proofStatus:null,proofRejectedReason:null,reactions:{},createdAt:Date.now(),wager:wager||0,xpAwarded:null,
         recurring:recurring||false,chain:chainTitle.trim()?{title:chainTitle.trim(),difficulty:chainDiff}:null,
-        mystery:mystery||false,
+        mystery:mystery||false,category:category||'',
       });
-      setTitle('');setWager(0);setRecurring(false);setChainTitle('');setShowChain(false);setMystery(false);setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
+      setTitle('');setWager(0);setRecurring(false);setChainTitle('');setShowChain(false);setMystery(false);setCategory('');setOk(`Quest assigned to ${members[to]?.name}! ✓`);setTimeout(()=>setOk(''),3000);
     }catch(e){setErr(e.message);}setBusy(false);
   };
 
@@ -1937,6 +1983,12 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
           ))}
         </div>
         {wager>0&&<div className="cdim xs mb6" style={{fontSize:'.72em'}}>🎯 If they complete it, they earn an extra {wager} XP bonus!</div>}
+        <label className="lbl">CATEGORY (optional)</label>
+        <div className="flex-wrap mb8" style={{gap:4}}>
+          {QUEST_CATEGORIES.map(c=>(
+            <button key={c} style={{fontSize:'.72em',padding:'3px 8px'}} className={category===c?'primary':''} onClick={()=>setCategory(category===c?'':c)}>{c}</button>
+          ))}
+        </div>
         {/* FEATURE 4: Mystery Quests */}
         <div className="flexb mb6">
           <label className="lbl" style={{margin:0}}>🎭 MYSTERY QUEST</label>
@@ -2017,8 +2069,11 @@ function AssignTab({api,partyCode,userId,members,quests,weekId,inWindow,maxPer,p
 }
 
 // ═══ QUEST LOG TAB (with reactions) ══════════════════════════════════════════
-function QuestLogTab({quests,members,userId,weekId,api,partyCode,onSabotage,sabotageUsed}){
-  const list=Object.entries(quests).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
+function QuestLogTab({quests,members,userId,weekId,api,partyCode,onSabotage,sabotageUsed,searchQuery=''}){
+  const [search,setSearch]=useState(searchQuery);
+  const allList=Object.entries(quests).map(([id,q])=>({id,...q})).sort((a,b)=>a.createdAt-b.createdAt);
+  const searchLower=search.toLowerCase();
+  const list=search?allList.filter(q=>(q.title||'').toLowerCase().includes(searchLower)):allList;
   const toggleReaction=async(questId,emoji)=>{
     const q=quests[questId];
     const current=q?.reactions?.[userId];
@@ -2033,10 +2088,14 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode,onSabotage,sabo
     await api.patch(`parties/${partyCode}/quests/${weekId}/${questId}/diffVotes`,{[uid]:newVote}).catch(()=>{});
   };
   return(
-    <div className="box">
-      <div className="box-title glow">[ FRIEND QUEST ] // WEEK: {weekId}</div>
-      {list.length===0?(<div className="empty"><div className="ei">📜</div><div className="cdim">NO ENTRIES YET</div></div>)
-      :list.map((q,i)=>(
+    <div>
+      <div className="box" style={{padding:'8px 12px',marginBottom:8}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search quest history..." style={{margin:0,fontSize:'.85em'}} maxLength={60}/>
+      </div>
+      <div className="box">
+        <div className="box-title glow">[ FRIEND QUEST ] // WEEK: {weekId}</div>
+        {list.length===0?(<div className="empty"><div className="ei">📜</div><div className="cdim">{search?'NO MATCHES FOUND':'NO ENTRIES YET'}</div></div>)
+        :list.map((q,i)=>(
         <div key={q.id} className="log-e">
           <div className="ll"><span className="cdim">QUEST_ID: </span><span className="cyellow">#{String(i).padStart(3,'0')}</span>
             <span className={`diff ${getDiffClass(q.difficulty)}`} style={{marginLeft:8}}>{DIFF[q.difficulty]?.icon} {DIFF[q.difficulty]?.label}</span>
@@ -2083,6 +2142,7 @@ function QuestLogTab({quests,members,userId,weekId,api,partyCode,onSabotage,sabo
           {q.sabotageCondition&&<div className="notif" style={{borderColor:'var(--purple)',color:'var(--purple)',fontSize:'.72em',marginTop:4}}>💣 CONDITION: {q.sabotageCondition}</div>}
         </div>
       ))}
+      </div>
     </div>
   );
 }
@@ -2145,6 +2205,7 @@ function LeaderboardTab({members,allQuests,userId,currentWeekId,bonusEvent,api,p
                     <span className={isMe?'cgreen bold':'cp'}>{m.name}{isMe?' (YOU)':''}</span>
                     {m.streak?.current>=2&&<span className="ibadge purple">🔥 {m.streak.current}wk</span>}
                     {m.badgeCount>0&&<span className="ibadge" style={{background:'rgba(56,189,248,.1)',color:'var(--pb)',border:'1px solid var(--pd)'}}>🏅 {m.badgeCount}</span>}
+                    {members[m.id]?.bio&&<div className="cdim xs mt2" style={{fontStyle:'italic',fontSize:'.72em'}}>"{members[m.id].bio}"</div>}
                     <div className="xs mt6" style={{color:titleDef.color}}>[ {titleDef.name} ]</div>
                     <div className="cdim xs">{m.completed}/{m.total} quests{m.penalties>0?` · 💀 ${m.penalties} failed`:''}</div>
                     <div className="pbar" style={{width:100}}><div className={`fill ${m.penalties>0?'red':''}`} style={{width:`${pct}%`}}></div></div>
@@ -2298,6 +2359,14 @@ function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
   const [customTitleInput,setCustomTitleInput]=useState(member.customTitle?.name||'');
   const [customTitleColor,setCustomTitleColor]=useState(member.customTitle?.color||'var(--p)');
   const [savingCustom,setSavingCustom]=useState(false);
+  // FEATURE 8: Profile Bio
+  const [bio,setBio]=useState(member.bio||'');
+  const [savingBio,setSavingBio]=useState(false);
+  const saveBio=async()=>{
+    setSavingBio(true);
+    await api.patch(`parties/${partyCode}/members/${userId}`,{bio:bio.slice(0,80)}).catch(()=>{});
+    setSavingBio(false);
+  };
 
   const openBox=async()=>{
     if(boxes<1||openingBox)return;
@@ -2392,6 +2461,13 @@ function ProfileTab({allQuests,userId,members,api,partyCode,onTitleChange}){
           <button className="btn-purple btn-big" onClick={openBox} disabled={openingBox}>{openingBox?'OPENING...':'📦 OPEN MYSTERY BOX'}</button>
         </div>)}
       </div>)}
+
+      <div className="box">
+        <div className="box-title">✍️ BIO</div>
+        <textarea value={bio} onChange={e=>setBio(e.target.value)} placeholder="Write a short bio (max 80 chars)..." maxLength={80} style={{minHeight:60,resize:'none'}}/>
+        <div className="cdim xs mb6" style={{textAlign:'right',fontSize:'.7em'}}>{bio.length}/80</div>
+        <button onClick={saveBio} disabled={savingBio} style={{fontSize:'.78em',padding:'4px 12px'}}>{savingBio?'SAVING...':'SAVE BIO'}</button>
+      </div>
 
       <div className="box">
         <div className="box-title">🎭 YOUR TITLES</div>
@@ -2515,10 +2591,11 @@ function DailySpinTab({api,partyCode,userId,members,allQuests,onSpin}){
 }
 
 // ═══ CHAT TAB ════════════════════════════════════════════════════════════════
-function ChatTab({api,partyCode,userId,members,chatMessages,onSend,enabled}){
+function ChatTab({api,partyCode,userId,members,chatMessages,onSend,enabled,typingUsers=[]}){
   const [text,setText]=useState('');
   const [busy,setBusy]=useState(false);
   const bottomRef=useRef(null);
+  const typingRef=useRef(null);
   const memberColorMap=['#0ea5e9','#6366f1','#8b5cf6','#ec4899','#10b981','#f59e0b','#ef4444'];
   const getMemberColor=uid=>{const ids=Object.keys(members);return memberColorMap[ids.indexOf(uid)%memberColorMap.length];};
 
@@ -2529,7 +2606,12 @@ function ChatTab({api,partyCode,userId,members,chatMessages,onSend,enabled}){
   const send=async()=>{
     if(!text.trim()||busy)return;
     setBusy(true);
-    try{await onSend(text.trim());setText('');}catch(e){console.error(e);}
+    try{
+      await onSend(text.trim());
+      setText('');
+      api.patch(`parties/${partyCode}/typing`,{[userId]:null}).catch(()=>{});
+      clearTimeout(typingRef.current);
+    }catch(e){console.error(e);}
     setBusy(false);
   };
 
@@ -2569,11 +2651,21 @@ function ChatTab({api,partyCode,userId,members,chatMessages,onSend,enabled}){
               </div>
             );
           })}
+          {Object.keys(typingUsers).length>0&&(
+            <div className="cdim xs" style={{padding:'4px 12px',fontStyle:'italic'}}>
+              {Object.values(typingUsers).join(', ')} {Object.keys(typingUsers).length===1?'is':'are'} typing...
+            </div>
+          )}
           <div ref={bottomRef}/>
         </div>
         <div className="chat-input-row">
           <input style={{flex:1,margin:0}} placeholder="Type a message..." value={text}
-            onChange={e=>setText(e.target.value)}
+            onChange={e=>{
+              setText(e.target.value);
+              api.patch(`parties/${partyCode}/typing`,{[userId]:{name:members[userId]?.name||'?',ts:Date.now()}}).catch(()=>{});
+              clearTimeout(typingRef.current);
+              typingRef.current=setTimeout(()=>api.patch(`parties/${partyCode}/typing`,{[userId]:null}).catch(()=>{}),3000);
+            }}
             onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}}
             maxLength={500}/>
           <button className="btn-ok" onClick={send} disabled={busy||!text.trim()} style={{flexShrink:0,margin:0,padding:'7px 14px'}}>
@@ -2968,7 +3060,7 @@ function RulesTab(){
 }
 
 // ═══ SETTINGS TAB ════════════════════════════════════════════════════════════
-function SettingsTab({api,partyCode,settings,onSaved,partyData}){
+function SettingsTab({api,partyCode,settings,onSaved,partyData,onExport}){
   const [local,setLocal]=useState({...DEF,...settings});
   const [busy,setBusy]=useState(false);
   const [ok,setOk]=useState('');
@@ -3044,6 +3136,12 @@ function SettingsTab({api,partyCode,settings,onSaved,partyData}){
           <button className="btn-big primary" style={{flex:2}} onClick={save} disabled={busy}>{busy?'SAVING...':'[ SAVE SETTINGS ]'}</button>
           <button style={{flex:1}} onClick={()=>setLocal({...DEF})}>[ RESET ]</button>
         </div>
+      </div>
+
+      <div className="box mt10">
+        <div className="box-title cdim">📥 EXPORT DATA</div>
+        <div className="cdim xs mb8" style={{fontSize:'.78em'}}>Download a full text summary of your party's quest history and member stats.</div>
+        <button style={{width:'100%',fontSize:'.82em'}} onClick={onExport}>📥 EXPORT STATS TO FILE</button>
       </div>
     </div>
   );
@@ -3479,6 +3577,30 @@ function BossTab({api,partyCode,userId,members,wi}){
   );
 }
 
+// ═══ RATING MODAL (Feature 4) ════════════════════════════════════════════════
+function RatingModal({quest,onRate,onSkip}){
+  const [stars,setStars]=useState(0);
+  return(
+    <div className="modal-bg">
+      <div className="modal" style={{textAlign:'center',maxWidth:320}}>
+        <div className="modal-title">⭐ HOW HARD WAS IT?</div>
+        <div className="cdim xs mb12">&ldquo;{(quest.title||'').slice(0,50)}&rdquo;</div>
+        <div style={{display:'flex',justifyContent:'center',gap:8,marginBottom:16}}>
+          {[1,2,3,4,5].map(n=>(
+            <button key={n} style={{fontSize:'1.8em',padding:'4px 8px',background:'transparent',border:'none',opacity:stars>=n?1:.3,transition:'opacity .15s'}}
+              onClick={()=>setStars(n)} onMouseEnter={()=>setStars(n)}>⭐</button>
+          ))}
+        </div>
+        <div className="cdim xs mb12">{['','😴 Too easy','🙂 Easy','😤 Fair','💪 Hard','🔥 Brutal'][stars]||'Select a rating'}</div>
+        <div style={{display:'flex',gap:8}}>
+          <button className="btn-big primary" style={{flex:2}} disabled={!stars} onClick={()=>onRate(stars)}>[ SUBMIT ]</button>
+          <button style={{flex:1}} onClick={onSkip}>SKIP</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ═══ VICTORY LAP ═════════════════════════════════════════════════════════════
 function VictoryLap({quest,memberName,xp,onClose}){
   const colors=['#f43f5e','#fbbf24','#34d399','#38bdf8','#a855f7','#f97316'];
@@ -3680,6 +3802,9 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     // FEATURE 2: Hot streak bonus
     const hotStreak=myMember.hotStreak;
     if(hotStreak?.date===today()&&hotStreak?.count>=3){xp=Math.round(xp*1.5);}
+    // FEATURE 5: Comeback bonus for last-place player
+    const cb=(()=>{if(Object.keys(partyData?.members||{}).length<3)return false;const rnks=Object.keys(partyData?.members||{}).map(id=>computeStats(allQuests,id).xp).sort((a,b)=>b-a);const myXp=computeStats(allQuests,userId).xp;return myXp===rnks[rnks.length-1]&&myXp<rnks[0]*0.6;})();
+    if(cb)xp=Math.round(xp*1.25);
     // Coins to award
     const coinsEarned=COIN_REWARDS[difficulty]||10;
     const currentCoins=myMember.coins||0;
@@ -3693,6 +3818,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       if(comboBonus>0)addToast('🔥 COMBO BONUS!',`${todayDone+1} quests today! +${comboBonus} XP bonus`,'var(--purple)');
       if(boostUsed)addToast(`${boostUsed==='xp_boost_2'?'💥':'⚡'} BOOST ACTIVATED!`,`${boostUsed==='xp_boost_2'?'2×':'1.5×'} XP boost used!`,'var(--p)');
       if(doubled)addToast('💰 DOUBLED DOWN!',`Paid off! +${xp} XP (2×)!`,'var(--yellow)',5000);
+      if(cb)addToast('🔄 COMEBACK BONUS!','You\'re in last — +25% XP on this quest! Catch up! 💪','var(--purple)',5000);
       // Write activity for friends feed
       const qTitle=questData?.title||'a quest';
       api.set(`activity/${userId}/${Date.now()}`,{type:'complete',title:qTitle,difficulty,xp:xp+comboBonus+wagerBonus,name:partyData?.members?.[userId]?.name||userName,ts:Date.now()}).catch(()=>{});
@@ -3717,6 +3843,8 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       if(difficulty==='hard'||difficulty==='legendary'){
         setVictoryQuest({title:questData?.title||'',xp:xp+comboBonus+wagerBonus});
       }
+      // FEATURE 4: Quest Difficulty Rating (post-completion)
+      setRatingQuest({id:qid,title:questData?.title||''});
       // FEATURE 2: Hot streaks
       const newTodayCount=todayDone+1;
       if(newTodayCount>=3){
@@ -3957,6 +4085,92 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     addToast('💣 SABOTAGE DEPLOYED!',`Condition added: "${condition.slice(0,40)}..."`,'var(--purple)',6000);
   };
 
+  // FEATURE 1: Live Typing Indicators in Chat
+  const [typingUsers,setTypingUsers]=useState({});
+  const typingRef=useRef(null);
+  useEffect(()=>{
+    const interval=setInterval(()=>{
+      api.get(`parties/${partyCode}/typing`).then(d=>{
+        if(!d)return setTypingUsers({});
+        const now=Date.now();
+        const active={};
+        Object.entries(d).forEach(([id,v])=>{if(v&&id!==userId&&(now-v.ts)<4000)active[id]=v.name;});
+        setTypingUsers(active);
+      }).catch(()=>{});
+    },1500);
+    return()=>clearInterval(interval);
+  },[partyCode,userId]);
+
+  // FEATURE 2: Reaction Notifications
+  const prevReactionsRef=useRef({});
+  useEffect(()=>{
+    if(!loading){
+      const wi2=getWeekInfo(settings);
+      const myQuests=Object.values(allQuests[wi2.id]||{}).filter(q=>q.assignedTo===userId&&q.completed);
+      myQuests.forEach(q=>{
+        const prevR=prevReactionsRef.current[q.id]||{};
+        const currR=q.reactions||{};
+        Object.entries(currR).forEach(([uid,emoji])=>{
+          if(!prevR[uid]&&uid!==userId){
+            const name=partyData?.members?.[uid]?.name||'Someone';
+            addToast(`${emoji} Reaction!`,`${name} reacted ${emoji} to your quest "${(q.title||'').slice(0,30)}"`, 'var(--yellow)',4000);
+          }
+        });
+        prevReactionsRef.current[q.id]=currR;
+      });
+    }
+  },[loading,allQuests,userId,settings]);
+
+  // FEATURE 3: Live Activity Ticker
+  const [ticker,setTicker]=useState([]);
+  const tickerSeenRef=useRef(new Set());
+  useEffect(()=>{
+    if(!loading){
+      const wi2=getWeekInfo(settings);
+      const recent=Object.values(allQuests[wi2.id]||{})
+        .filter(q=>q.completed&&q.completedAt&&(Date.now()-q.completedAt)<300000)
+        .sort((a,b)=>b.completedAt-a.completedAt).slice(0,3);
+      const newItems=recent.filter(q=>!tickerSeenRef.current.has(q.id+q.completedAt));
+      newItems.forEach(q=>{
+        tickerSeenRef.current.add(q.id+q.completedAt);
+        const name=partyData?.members?.[q.assignedTo]?.name||'Someone';
+        setTicker(prev=>[{id:q.id,text:`🎯 ${name} just completed "${(q.title||'').slice(0,35)}"!`,ts:Date.now()},...prev].slice(0,5));
+      });
+    }
+  },[loading,allQuests,settings]);
+
+  // FEATURE 4: Quest Difficulty Rating (post-completion)
+  const [ratingQuest,setRatingQuest]=useState(null);
+
+  // FEATURE 5: Comeback Mechanic
+  const comebackBonus=(()=>{
+    if(Object.keys(partyData?.members||{}).length<3)return false;
+    const rankings=Object.keys(partyData?.members||{}).map(id=>computeStats(allQuests,id).xp).sort((a,b)=>b-a);
+    return computeStats(allQuests,userId).xp===rankings[rankings.length-1]&&computeStats(allQuests,userId).xp<rankings[0]*0.6;
+  })();
+
+  // FEATURE 6: Weekly MVP Vote
+  const [mvpVote,setMvpVote]=useState(null);
+  const [myMvpVote,setMyMvpVote]=useState(null);
+  useEffect(()=>{
+    if(!loading){
+      const wi2=getWeekInfo(settings);
+      api.get(`parties/${partyCode}/mvp/${wi2.id}`).then(d=>{
+        if(d){setMvpVote(d);setMyMvpVote(d[userId]||null);}
+      }).catch(()=>{});
+    }
+  },[loading,partyCode,settings]);
+  const castMvpVote=async(targetId)=>{
+    const wi2=getWeekInfo(settings);
+    await api.patch(`parties/${partyCode}/mvp/${wi2.id}`,{[userId]:targetId}).catch(()=>{});
+    setMyMvpVote(targetId);
+    setMvpVote(prev=>({...(prev||{}),[userId]:targetId}));
+    addToast('🏅 MVP VOTE CAST!',`You voted for ${partyData?.members?.[targetId]?.name||'?'}!`,'var(--yellow)',4000);
+  };
+
+  // FEATURE 10: Quest History Search
+  const [questSearch,setQuestSearch]=useState('');
+
   if(loading)return<Loading/>;
 
   const wi=getWeekInfo(settings);
@@ -3993,12 +4207,39 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     ['rules','📖 RULES',0],['settings','⚙️ SETTINGS',0],
   ];
 
+  // FEATURE 11: Export Stats
+  const exportStats=()=>{
+    const lines=[`FRIEND QUEST — PARTY STATS EXPORT`,`Party: ${partyData?.partyName||partyCode} (${partyCode})`,`Exported: ${new Date().toLocaleString()}`,``,`=== MEMBER STATS ===`];
+    Object.entries(members).forEach(([id,m])=>{
+      const s=computeStats(allQuests,id);
+      const streak=computeStreak(allQuests,id);
+      lines.push(``,`${m.name}`,`  XP: ${s.xp} | Level: ${computeLevel(s.xp)} | Completed: ${s.completed} | Failed: ${s.penalties} | Streak: ${streak.longest}wk best`);
+    });
+    lines.push(``,`=== QUEST HISTORY ===`);
+    Object.entries(allQuests).sort().forEach(([wk,wqs])=>{
+      lines.push(``,`Week: ${wk}`);
+      Object.values(wqs||{}).forEach(q=>{
+        lines.push(`  [${q.completed?'✓':'✗'}] ${q.title||'?'} (${q.difficulty||'?'}) → ${members[q.assignedTo]?.name||'?'}`);
+      });
+    });
+    const blob=new Blob([lines.join('\n')],{type:'text/plain'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=`friendquest-${partyCode}-${today()}.txt`;a.click();URL.revokeObjectURL(url);
+    addToast('📥 EXPORTED!','Stats downloaded as a .txt file','var(--green)',4000);
+  };
+
   // (favicon badge rendered in JSX-independent effect — see before conditional return)
 
   return(
     <div className="wrap">
       <Toasts toasts={toasts}/>
       {victoryQuest&&<VictoryLap quest={victoryQuest} memberName={member.name||userName} xp={victoryQuest.xp} onClose={()=>setVictoryQuest(null)}/>}
+      {/* FEATURE 4: Rating Modal */}
+      {ratingQuest&&<RatingModal quest={ratingQuest} onRate={async(stars)=>{
+        const wi2=getWeekInfo(settings);
+        await api.patch(`parties/${partyCode}/quests/${wi2.id}/${ratingQuest.id}`,{diffRating:stars}).catch(()=>{});
+        setRatingQuest(null);
+      }} onSkip={()=>setRatingQuest(null)}/>}
       {showFeedback&&<FeedbackModal api={api} userName={member.name||userName} partyCode={partyCode} onClose={()=>setShowFeedback(false)}/>}
 
       {showSwitcher&&(
@@ -4047,7 +4288,7 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
           <div style={{textAlign:'right'}}>
             <div className="cp small">{member.name||userName}{member.hotStreak?.date===today()&&member.hotStreak?.count>=3&&<span style={{marginLeft:4,animation:'pulse-r 1s infinite'}}>🔥</span>}</div>
             <div style={{color:titleDef.color,fontSize:'.75em'}}>[ {titleDef.name} ]</div>
-            <div className="cyellow small">⚡ {myStats.xp} XP {' '}<span style={{color:levelColor(computeLevel(myStats.xp)),fontSize:'.85em'}}>LVL {computeLevel(myStats.xp)}</span> {myStreak.current>=2&&`🔥 ${myStreak.current}wk`}</div>
+            <div className="cyellow small">⚡ {myStats.xp} XP {' '}<span style={{color:levelColor(computeLevel(myStats.xp)),fontSize:'.85em'}}>LVL {computeLevel(myStats.xp)}</span> {myStreak.current>=2&&`🔥 ${myStreak.current}wk`}{comebackBonus&&<span style={{color:'var(--purple)',fontSize:'.75em',marginLeft:4}}>🔄 COMEBACK</span>}</div>
             <div style={{marginTop:2}}><span className="coin-badge">🪙 {member.coins||0}</span></div>
             <button style={{fontSize:'.7em',padding:'2px 7px',marginTop:3}} onClick={()=>setShowFeedback(true)}>💌 FEEDBACK</button>
           </div>
@@ -4123,6 +4364,37 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
         </div>
       )}
 
+      {/* FEATURE 3: Live Activity Ticker */}
+      {ticker.length>0&&(
+        <div style={{background:'rgba(56,189,248,.08)',borderBottom:'1px solid var(--border)',padding:'6px 14px',fontSize:'.78em',overflow:'hidden',whiteSpace:'nowrap'}}>
+          <span className="cdim xs" style={{marginRight:8}}>LIVE</span>
+          <span className="cp">{ticker[0]?.text}</span>
+          <button style={{float:'right',fontSize:'.7em',padding:'0 6px',margin:0,border:'none',opacity:.5}} onClick={()=>setTicker([])}>✕</button>
+        </div>
+      )}
+
+      {/* FEATURE 6: MVP Vote Banner */}
+      {tab==='quests'&&wi.inWindow&&wi.hoursLeft<=12&&wi.hoursLeft>0&&!myMvpVote&&Object.keys(members).length>1&&(
+        <div className="box mb8" style={{borderColor:'var(--yellow)',background:'rgba(251,191,36,.05)'}}>
+          <div className="flexb mb6">
+            <span className="cyellow bold" style={{fontSize:'.85em'}}>🏅 MVP VOTE — who crushed it this week?</span>
+          </div>
+          <div className="flex-wrap" style={{gap:6}}>
+            {Object.entries(members).filter(([id])=>id!==userId).map(([id,m])=>{
+              const votes=Object.values(mvpVote||{}).filter(v=>v===id).length;
+              return(
+                <button key={id} style={{fontSize:'.78em'}} onClick={()=>castMvpVote(id)}>
+                  {m.name} {votes>0&&<span className="cyellow">({votes})</span>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {tab==='quests'&&myMvpVote&&wi.inWindow&&wi.hoursLeft<=12&&(
+        <div className="notif mb8" style={{fontSize:'.78em'}}>🏅 You voted for <span className="cyellow">{partyData?.members?.[myMvpVote]?.name}</span> as MVP!</div>
+      )}
+
       {tab==='quests'&&<MyQuestsTab quests={currentQuests} members={members} userId={userId} inWindow={wi.inWindow}
         onComplete={completeQuest} completing={completing} bonusEvent={bonusEvent}
         onProofSubmit={submitProof} onPickPenalty={pickPenalty}/>}
@@ -4143,9 +4415,9 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       {tab==='boss'&&<BossTab api={api} partyCode={partyCode} userId={userId} members={members} wi={wi}/>}
       {tab==='friends'&&<FriendsTab api={api} userId={userId} userName={member.name||userName}/>}
       {tab==='stats'&&<StatsTab allQuests={allQuests} members={members} userId={userId} partyCode={partyCode} partyData={partyData}/>}
-      {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled}/>}
+      {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled} typingUsers={typingUsers}/>}
       {tab==='rules'&&<RulesTab/>}
-      {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})} partyData={partyData}/>}
+      {tab==='settings'&&<SettingsTab api={api} partyCode={partyCode} settings={settings} onSaved={s=>setSettings({...DEF,...s})} partyData={partyData} onExport={exportStats}/>}
 
       <div className="mob-nav">
         {[['quests','📋','QUESTS'],['assign','✏️','ASSIGN'],['friends','👥','FRIENDS'],['pet','🐾','PET'],['spin','🎰','SPIN']].map(([id,icon,label])=>(
