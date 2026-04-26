@@ -388,20 +388,7 @@ const SECRET_DEFS = {
 const RARITY_COLOR = { common:'var(--text)', uncommon:'var(--green)', rare:'var(--p)', epic:'var(--yellow)' };
 
 // ═══ GUARDIAN PET SYSTEM ════════════════════════════════════════════════════
-const MONTHLY_PETS = {
-  1: {name:'Frost Fox',    emoji:'🦊',color:'#7dd3fc',desc:'A silver-tipped fox from the frozen north'},
-  2: {name:'Heart Bunny',  emoji:'🐰',color:'#38bdf8',desc:'Soft and warm — brings love wherever it hops'},
-  3: {name:'Moss Frog',    emoji:'🐸',color:'#0ea5e9',desc:'A little herald of spring, born from the first rain'},
-  4: {name:'Storm Raven',  emoji:'🐦',color:'#0284c7',desc:'Dark and electric — carries lightning in its wings'},
-  5: {name:'Sun Moth',     emoji:'🦋',color:'#60a5fa',desc:'A radiant moth drawn to the growing warmth'},
-  6: {name:'Sea Turtle',   emoji:'🐢',color:'#0369a1',desc:'Patient and ancient — carries wisdom on its shell'},
-  7: {name:'Blaze Cat',    emoji:'🐱',color:'#075985',desc:'Fierce and fast — born from the heart of summer'},
-  8: {name:'Tide Crab',    emoji:'🦀',color:'#38bdf8',desc:'Tenacious and curious — rides the last waves of summer'},
-  9: {name:'Harvest Owl',  emoji:'🦉',color:'#3b82f6',desc:'Wise and sharp-eyed, watching over the harvest'},
-  10:{name:'Shadow Bat',   emoji:'🦇',color:'#1d4ed8',desc:'A mysterious creature from the veil of twilight'},
-  11:{name:'Ember Wolf',   emoji:'🐺',color:'#1e5a8c',desc:'Fierce and steadfast — runs through the winter dark'},
-  12:{name:'Snow Bear',    emoji:'🐻',color:'#bae6fd',desc:'Ancient and patient — guardian of the long night'},
-};
+// Monthly pets removed — Akane is the sole guardian
 const AKANE_GUARDIAN={id:'akane',name:'Akane',emoji:'🐓',color:'#f97316',desc:"Born of sacred fire — her golden flame feathers illuminate the path for those who keep their word. She watches over every quest completed in her presence."};
 
 const PET_STATES = {
@@ -1255,7 +1242,7 @@ function PetTab({allQuests,userId,badges,stats}){
   const allItemsExtended=[...ALL_PET_ITEMS,...shopPetItems.filter(si=>!ALL_PET_ITEMS.find(i=>i.id===si.id))];
 
   const currentMonth=new Date().getMonth()+1;
-  const pet=MONTHLY_PETS[currentMonth];
+  const pet=AKANE_GUARDIAN; // Akane is the sole guardian
   const monthKey=getPetMonthKey();
   const petState=computePetState(allQuests,userId);
   const stateDef=PET_STATES[petState];
@@ -1298,7 +1285,7 @@ function PetTab({allQuests,userId,badges,stats}){
     <div>
       {/* Section tabs */}
       <div className="flex-wrap mb12" style={{gap:6}}>
-        {[['guardian','🐾 Guardian'],['wardrobe','👗 Wardrobe'],['archive','📚 Archive']].map(([s,l])=>(
+        {[['guardian','🐾 Guardian'],['archive','📚 Archive']].map(([s,l])=>(
           <button key={s} className={section===s?'active':''} onClick={()=>setSection(s)}>{l}</button>
         ))}
       </div>
@@ -1318,30 +1305,6 @@ function PetTab({allQuests,userId,badges,stats}){
               <span style={{fontSize:'.72em',color:'#fcd34d',background:'rgba(253,211,77,.12)',padding:'2px 10px',borderRadius:20}}>✨ Quest Witness</span>
               <span style={{fontSize:'.72em',color:'#f97316',background:'rgba(249,115,22,.12)',padding:'2px 10px',borderRadius:20}}>👑 Majestic</span>
             </div>
-          </div>
-          {/* Monthly Pet display card */}
-          <div className="box" style={{textAlign:'center',borderColor:pet.color,background:`${pet.color}12`,paddingTop:22,paddingBottom:22}}>
-            <div className="cdim xs mb8" style={{letterSpacing:'.12em'}}>{MONTHS[currentMonth-1].toUpperCase()} GUARDIAN</div>
-            <PetDisplay pet={pet} state={petState} equipped={equipped} big={true} allItems={allItemsExtended}/>
-            <div style={{fontSize:'1.25em',marginTop:14,color:pet.color,letterSpacing:'.06em',fontWeight:'bold'}}>
-              {petNickname?petNickname:<span>{pet.name}</span>}
-            </div>
-            {petNickname&&<div className="cdim xs" style={{marginTop:2}}>({pet.name})</div>}
-            {!editingName?(
-              <button style={{marginTop:8,fontSize:'.7em',padding:'2px 10px'}} onClick={()=>{setNameInput(petNickname);setEditingName(true);}}>
-                {petNickname?'✏️ RENAME PET':'+ NAME YOUR PET'}
-              </button>
-            ):(
-              <div style={{display:'flex',gap:6,marginTop:8,justifyContent:'center',alignItems:'center',flexWrap:'wrap'}}>
-                <input style={{width:160,margin:0,padding:'4px 8px',fontSize:'.8em',textAlign:'center'}} maxLength={20}
-                  placeholder={pet.name} value={nameInput} onChange={e=>setNameInput(e.target.value)}
-                  onKeyDown={e=>{if(e.key==='Enter')savePetName();if(e.key==='Escape')setEditingName(false);}}
-                  autoFocus/>
-                <button className="btn-ok" style={{fontSize:'.72em',padding:'4px 10px'}} onClick={savePetName}>SAVE</button>
-                <button style={{fontSize:'.72em',padding:'4px 10px'}} onClick={()=>setEditingName(false)}>✕</button>
-              </div>
-            )}
-            <div className="cdim xs mt6" style={{maxWidth:260,margin:'6px auto 0'}}>{pet.desc}</div>
           </div>
           {/* Health + state */}
           <div className="box mt6">
@@ -1366,52 +1329,15 @@ function PetTab({allQuests,userId,badges,stats}){
         </div>
       )}
 
-      {section==='wardrobe'&&(
-        <div>
-          {seasonalNow.length>0&&(
-            <div className="notif purple mb10">
-              🎉 Limited-time {seasonalNow.map(i=>i.seasonName).filter((v,i,a)=>a.indexOf(v)===i).join(' / ')} items available this month!
-            </div>
-          )}
-          <div className="flex-wrap mb10" style={{gap:4}}>
-            {['all','hat','wings','collar','aura','seasonal'].map(f=>(
-              <button key={f} className={itemFilter===f?'active':''} style={{padding:'3px 9px',fontSize:'.73em'}} onClick={()=>setItemFilter(f)}>{f.toUpperCase()}</button>
-            ))}
-          </div>
-          <div className="item-grid">
-            {filteredItems.map(item=>{
-              const seasonal=!!item.month;
-              const isShopItem=shopItems.includes(item.id);
-              const unlocked=isShopItem||isPetItemUnlocked(item,petStats,badges);
-              const isEquipped=equipped[item.type]===item.id;
-              return(
-                <div key={item.id}
-                  className={`item-card ${unlocked?'unlocked':''} ${isEquipped?'equipped':''} ${seasonal?'seasonal':''} ${!unlocked?'locked':''}`}
-                  onClick={()=>unlocked&&equip(item.type,item.id)}
-                >
-                  <div style={{fontSize:'1.9em',marginBottom:4}}>{item.icon}</div>
-                  <div style={{fontSize:'.72em',letterSpacing:'.02em',marginBottom:3}}>{item.name}</div>
-                  {seasonal&&<div style={{fontSize:'.63em',color:'var(--purple)'}}>{item.seasonName}</div>}
-                  {isEquipped&&<div style={{fontSize:'.62em',color:'var(--yellow)',marginTop:2}}>✓ EQUIPPED</div>}
-                  {!unlocked&&!seasonal&&<div style={{fontSize:'.62em',color:'var(--dim)',marginTop:2}}>{item.unlockDesc}</div>}
-                  {!unlocked&&seasonal&&<div style={{fontSize:'.62em',color:'var(--dim)',marginTop:2}}>Available in {MONTHS[item.month-1]}</div>}
-                </div>
-              );
-            })}
-          </div>
-          {filteredItems.length===0&&<div className="empty mt12"><div className="ei">🔒</div><div>No items here</div></div>}
-          <div className="notif mt12" style={{fontSize:'.75em'}}>💡 Items are unlocked by completing quests, earning badges, and maintaining streaks. Extra cosmetics can be purchased in the 🏪 Shop tab with your coins!</div>
-        </div>
-      )}
 
       {section==='archive'&&(
         <div>
           {/* Current month always shown first */}
-          <div className="archive-card" style={{borderColor:pet.color,background:`${pet.color}0a`}}>
-            <div style={{fontSize:'2.5em'}}><PetDisplay pet={pet} state={petState} equipped={equipped} big={false} allItems={allItemsExtended}/></div>
+          <div className="archive-card" style={{borderColor:'#f97316',background:'rgba(249,115,22,.06)'}}>
+            <div style={{fontSize:'2.5em'}}><AkaneHen size="2.5em"/></div>
             <div style={{flex:1}}>
-              <div style={{color:pet.color,fontSize:'.9em',fontWeight:'bold'}}>{pet.name}</div>
-              <div className="cdim xs">{MONTHS[currentMonth-1]} {new Date().getFullYear()} — CURRENT</div>
+              <div style={{color:'#f97316',fontSize:'.9em',fontWeight:'bold'}}>Akane — Legendary Guardian</div>
+              <div className="cdim xs">{new Date().getFullYear()} — CURRENT</div>
               <div style={{fontSize:'.76em',marginTop:3}}><span style={{color:stateDef.color}}>{stateDef.icon} {stateDef.label}</span></div>
             </div>
           </div>
