@@ -438,10 +438,6 @@ const SHOP_ITEMS = [
   {id:'xp_boost_1',      name:'XP Boost 1.5×',  icon:'⚡', price:75,  type:'consumable', desc:'Next quest earns 1.5× XP',                qty:1},
   {id:'xp_boost_2',      name:'XP Boost 2×',    icon:'💥', price:150, type:'consumable', desc:'Next quest earns 2× XP',                  qty:1},
   {id:'shop_box',        name:'Mystery Box',     icon:'📦', price:100, type:'consumable', desc:'Randomly awarded bonus XP (50–200)',      qty:1},
-  {id:'shop_hat_gem',    name:'Gem Crown',       icon:'💎', price:80,  type:'pet_hat',    desc:'A radiant gem crown for your guardian',   unlock:true},
-  {id:'shop_wings_star', name:'Star Wings',      icon:'⭐', price:90,  type:'pet_wings',  desc:'Shimmering star-dust wings',              unlock:true},
-  {id:'shop_aura_rainbow',name:'Rainbow Aura',   icon:'🌈', price:120, type:'pet_aura',   desc:'A prismatic aura of pure energy',         unlock:true},
-  {id:'shop_collar_gem', name:'Crystal Collar',  icon:'🔷', price:60,  type:'pet_collar', desc:'A glittering crystal collar',             unlock:true},
 ];
 const SHOP_PET_ITEM_MAP = {
   shop_hat_gem:    {id:'shop_hat_gem',    name:'Gem Crown',       icon:'💎',type:'hat'},
@@ -4125,8 +4121,8 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
     ['quests','📋 QUESTS',0],['assign','✏️ ASSIGN',pendingProofCount],['log','📜 LOG',0],
     ['board','🏆 BOARD',0],['badges','🏅 BADGES',0],['pet','🐾 PET',0],['shop','🏪 SHOP',0],
     ['profile','👤 PROFILE',0],
-    ['spin','🎰 SPIN',0],['bounty','🎯 BOUNTY',0],['duels','⚔️ DUELS',0],
-    ['alliance','⚡ ALLIES',0],['boss','👹 BOSS',0],
+    ['spin','🎰 SPIN',0],['duels','⚔️ DUELS',0],
+    ['alliance','⚡ ALLIES',0],
     ['friends','👥 FRIENDS',friendRequestCount],
     ['stats','📊 STATS',0],
     ...(chatEnabled?[['chat','💬 CHAT',chatUnread]]:[]),
@@ -4335,10 +4331,8 @@ function Game({api,userId,partyCode,userName,onLeave,onSwitchParty}){
       {tab==='pet'&&<PetTab allQuests={allQuests} userId={userId} badges={savedBadges} stats={myStats}/>}
       {tab==='shop'&&<ShopTab api={api} partyCode={partyCode} userId={userId} members={members} addToast={addToast} partyData={partyData}/>}
       {tab==='spin'&&<DailySpinTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} onSpin={handleSpin}/>}
-      {tab==='bounty'&&<BountyTab api={api} partyCode={partyCode} userId={userId} members={members} wi={wi}/>}
       {tab==='duels'&&<DuelTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} wi={wi}/>}
       {tab==='alliance'&&<AllianceTab api={api} partyCode={partyCode} userId={userId} members={members} allQuests={allQuests} wi={wi}/>}
-      {tab==='boss'&&<BossTab api={api} partyCode={partyCode} userId={userId} members={members} wi={wi}/>}
       {tab==='friends'&&<FriendsTab api={api} userId={userId} userName={member.name||userName}/>}
       {tab==='stats'&&<StatsTab allQuests={allQuests} members={members} userId={userId} partyCode={partyCode} partyData={partyData}/>}
       {tab==='chat'&&<ChatTab api={api} partyCode={partyCode} userId={userId} members={members} chatMessages={chatMessages} onSend={sendChat} enabled={chatEnabled} typingUsers={typingUsers}/>}
